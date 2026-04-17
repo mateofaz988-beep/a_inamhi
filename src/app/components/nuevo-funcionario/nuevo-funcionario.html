@@ -1,0 +1,286 @@
+<div class="nuevo-container">
+
+  <div class="nuevo-header">
+    <div class="header-info">
+      <h2 class="title">Nuevo Funcionario</h2>
+      <p class="subtitle">Registro institucional de personal</p>
+    </div>
+
+    <button class="btn-volver" (click)="volver()">
+      <i class="bi bi-arrow-left-short"></i>
+      Volver
+    </button>
+  </div>
+
+  <div class="form-card">
+
+    <div class="card-header-custom">
+      <div>
+        <h5 class="mb-1">Formulario de Registro</h5>
+        <small>Complete los datos del nuevo funcionario</small>
+      </div>
+
+      <span class="header-badge">INAMHI</span>
+    </div>
+
+    <div class="card-body-custom">
+
+      <div class="form-grid-top">
+
+        <!-- DATOS PRINCIPALES -->
+        <section class="section-block">
+          <div class="section-title">
+            <i class="bi bi-person-vcard"></i>
+            <span>Datos Principales</span>
+          </div>
+
+          <div class="form-grid three">
+            <div class="field">
+              <label>Nro</label>
+              <input
+                [(ngModel)]="nuevo.nro"
+                class="form-control custom-input"
+                placeholder="Nro"
+              >
+            </div>
+
+            <div class="field">
+              <label>Cédula</label>
+              <input
+                [(ngModel)]="nuevo.cedula"
+                class="form-control custom-input"
+                placeholder="Cédula"
+                maxlength="10"
+              >
+            </div>
+
+            <div class="field field-span-2">
+              <label>Nombres Completos</label>
+              <input
+                [(ngModel)]="nuevo.nombres"
+                class="form-control custom-input"
+                placeholder="Nombres completos"
+              >
+            </div>
+
+            <div class="field">
+              <label>Modalidad</label>
+              <select [(ngModel)]="nuevo.modalidad" class="form-select custom-input">
+                <option value="">Seleccione</option>
+                <option *ngFor="let item of modalidades" [value]="item">{{ item }}</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Cargo</label>
+              <select
+                [(ngModel)]="nuevo.cargo"
+                class="form-select custom-input"
+                (change)="onCargoChange()"
+              >
+                <option value="">Seleccione</option>
+                <option *ngFor="let item of cargos" [value]="item">{{ item }}</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>RMU</label>
+              <input
+                [(ngModel)]="nuevo.rmu"
+                class="form-control custom-input"
+                placeholder="RMU"
+                type="number"
+                min="0"
+              >
+            </div>
+
+            <div class="field field-span-2">
+              <label>Unidad Administrativa</label>
+              <select [(ngModel)]="nuevo.unidad" class="form-select custom-input">
+                <option value="">Seleccione</option>
+                <option *ngFor="let item of unidades" [value]="item">{{ item }}</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Fecha de Ingreso</label>
+              <input
+                type="date"
+                [(ngModel)]="nuevo.fecha_ingreso"
+                class="form-control custom-input"
+              >
+            </div>
+
+            <div class="field">
+              <label>Fecha de Nacimiento</label>
+              <input
+                type="date"
+                [(ngModel)]="nuevo.fecha_nacimiento"
+                class="form-control custom-input"
+              >
+            </div>
+          </div>
+        </section>
+
+        <!-- CONTACTO -->
+        <section class="section-block">
+          <div class="section-title">
+            <i class="bi bi-telephone"></i>
+            <span>Contacto</span>
+          </div>
+
+          <div class="form-grid one">
+            <div class="field">
+              <label>Dirección Domiciliaria</label>
+              <input
+                [(ngModel)]="nuevo.direccion"
+                class="form-control custom-input"
+                placeholder="Dirección"
+              >
+            </div>
+
+            <div class="field">
+              <label>Correo Institucional</label>
+              <input
+                [(ngModel)]="nuevo.email_inst"
+                class="form-control custom-input"
+                placeholder="correo@institucion.gob.ec"
+                type="email"
+              >
+            </div>
+
+            <div class="field">
+              <label>Teléfono</label>
+              <input
+                [(ngModel)]="nuevo.telefono"
+                class="form-control custom-input"
+                placeholder="Teléfono"
+              >
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <div class="form-grid-bottom">
+
+        <!-- INFORMACIÓN PERSONAL -->
+        <section class="section-block">
+          <div class="section-title">
+            <i class="bi bi-card-checklist"></i>
+            <span>Información Personal</span>
+          </div>
+
+          <div class="form-grid two">
+            <div class="field">
+              <label>Género</label>
+              <select [(ngModel)]="nuevo.genero" class="form-select custom-input">
+                <option value="">Seleccione</option>
+                <option value="Masculino">Masculino</option>
+                <option value="Femenino">Femenino</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Nivel de Instrucción</label>
+              <select [(ngModel)]="nuevo.instruccion" class="form-select custom-input">
+                <option value="">Seleccione</option>
+                <option *ngFor="let item of nivelesInstruccion" [value]="item">{{ item }}</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Profesión</label>
+              <input
+                [(ngModel)]="nuevo.profesion"
+                class="form-control custom-input"
+                placeholder="Profesión"
+              >
+            </div>
+
+            <div class="field">
+              <label>Vulnerable</label>
+              <select [(ngModel)]="nuevo.vulnerable" class="form-select custom-input">
+                <option value="">Seleccione</option>
+                <option *ngFor="let item of opcionesVulnerable" [value]="item">{{ item }}</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Discapacidad</label>
+              <select
+                [(ngModel)]="nuevo.tipo_discapacidad"
+                class="form-select custom-input"
+                (change)="onDiscapacidadChange()"
+              >
+                <option value="">Seleccione</option>
+                <option *ngFor="let item of tiposDiscapacidad" [value]="item">{{ item }}</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>% Discapacidad</label>
+              <input
+                [(ngModel)]="nuevo.porcentaje_disc"
+                class="form-control custom-input"
+                placeholder="%"
+                type="number"
+                min="0"
+                max="100"
+                [disabled]="porcentajeBloqueado"
+              >
+            </div>
+          </div>
+        </section>
+
+        <!-- DATOS ADICIONALES -->
+        <section class="section-block">
+          <div class="section-title">
+            <i class="bi bi-diagram-3"></i>
+            <span>Datos Adicionales</span>
+          </div>
+
+          <div class="form-grid two">
+            <div class="field">
+              <label>Etnia</label>
+              <select [(ngModel)]="nuevo.etnia" class="form-select custom-input">
+                <option value="">Seleccione</option>
+                <option *ngFor="let item of etnias" [value]="item">{{ item }}</option>
+              </select>
+            </div>
+
+            <div class="field field-full">
+              <label>Observaciones</label>
+              <textarea
+                [(ngModel)]="nuevo.observaciones"
+                class="form-control custom-input custom-textarea"
+                rows="5"
+                placeholder="Observaciones adicionales"
+              ></textarea>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+
+    <div class="card-footer-custom">
+      <button class="btn-clear" (click)="limpiarFormulario()" [disabled]="guardando">
+        <i class="bi bi-eraser me-1"></i>
+        Limpiar
+      </button>
+
+      <button class="btn-cancel" (click)="volver()" [disabled]="guardando">
+        <i class="bi bi-x-circle me-1"></i>
+        Cancelar
+      </button>
+
+      <button class="btn-save" (click)="guardar()" [disabled]="guardando">
+        <i class="bi bi-check-circle me-1"></i>
+        {{ guardando ? 'Guardando...' : 'Guardar Funcionario' }}
+      </button>
+    </div>
+
+  </div>
+</div>

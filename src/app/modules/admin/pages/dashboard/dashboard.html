@@ -1,0 +1,40 @@
+<div class="dashboard-container">
+
+  <!-- HEADER -->
+  <header class="dashboard-header">
+
+    <div class="header-left">
+      <h1 class="title">Panel de Control</h1>
+      <p class="subtitle">Bienvenido, {{ adminName }}</p>
+    </div>
+
+    <button
+      class="btn-nuevo"
+      routerLink="/admin/nuevo-funcionario">
+      <i class="bi bi-person-plus-fill me-2"></i>
+      Nuevo Funcionario
+    </button>
+
+  </header>
+
+  <!-- CARD PRINCIPAL -->
+  <div class="main-card">
+
+    <div class="card-header-custom">
+      <h2 class="card-title">
+        MATRIZ INTEGRAL DE PERSONAL
+      </h2>
+
+      <span class="badge-mode">
+        Modo Editor
+      </span>
+    </div>
+
+    <!-- TABLA -->
+    <div class="card-body-custom">
+      <app-tabla-empleados></app-tabla-empleados>
+    </div>
+
+  </div>
+
+</div>

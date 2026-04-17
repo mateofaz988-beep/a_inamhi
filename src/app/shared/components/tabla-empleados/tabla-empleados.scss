@@ -1,0 +1,476 @@
+/* =========================
+   CONTENEDOR GENERAL
+========================= */
+.matriz-container {
+  padding: 1.2rem;
+  background: linear-gradient(135deg, #f4f7fb 0%, #eef3f9 100%);
+}
+
+/* =========================
+   CARD PRINCIPAL
+========================= */
+.card {
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* =========================
+   HEADER
+========================= */
+.bg-dark-blue {
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+}
+
+.card-header {
+  border-bottom: none;
+}
+
+.icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.text-blue-200 {
+  color: #bfdbfe;
+}
+
+/* =========================
+   BUSCADOR
+========================= */
+.search-wrapper {
+  width: 290px;
+
+  @media (min-width: 1200px) {
+    width: 360px;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+}
+
+.search-input {
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #dbe4ee;
+  background: #ffffff;
+  font-size: 0.95rem;
+  color: #0f172a;
+  transition: all 0.25s ease;
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.16);
+    background: #ffffff;
+  }
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  color: #64748b;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* =========================
+   BOTONES HEADER
+========================= */
+.action-btn {
+  min-height: 40px;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  border: none;
+
+  i {
+    font-size: 0.95rem;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+/* =========================
+   COLORES BOTONES HEADER
+========================= */
+.btn-success.action-btn,
+.btn-danger.action-btn,
+.btn-primary.action-btn {
+  color: #fff !important;
+}
+
+.btn-success.action-btn {
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  border: none !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #15803d, #166534) !important;
+    box-shadow: 0 10px 18px rgba(34, 197, 94, 0.22);
+  }
+}
+
+.btn-danger.action-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  border: none !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    box-shadow: 0 10px 18px rgba(239, 68, 68, 0.22);
+  }
+}
+
+.btn-primary.action-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  border: none !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+    box-shadow: 0 10px 18px rgba(37, 99, 235, 0.22);
+  }
+}
+
+/* =========================
+   TABLA
+========================= */
+.custom-table {
+  font-size: 0.87rem;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  thead th {
+    background: #f8fafc;
+    color: #0f172a;
+    font-weight: 800;
+    white-space: nowrap;
+    border-bottom: 2px solid #e2e8f0;
+    box-shadow: inset 0 -1px 0 #e5e7eb;
+  }
+
+  tbody td {
+    vertical-align: middle;
+    white-space: nowrap;
+    border-bottom: 1px solid #eef2f7;
+    color: #334155;
+    background: #ffffff;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+/* =========================
+   FILAS
+========================= */
+.row-hover {
+  transition: background 0.2s ease, transform 0.2s ease;
+
+  &:hover td {
+    background: #f8fbff;
+  }
+}
+
+/* =========================
+   COLUMNAS STICKY
+========================= */
+.sticky-col-id,
+.sticky-col-nro,
+.sticky-col-name {
+  position: sticky;
+  z-index: 3;
+  background: #ffffff;
+}
+
+thead .sticky-col-id,
+thead .sticky-col-nro,
+thead .sticky-col-name {
+  background: #f8fafc;
+  z-index: 5;
+}
+
+.sticky-col-id {
+  left: 0;
+  min-width: 70px;
+  box-shadow: 1px 0 0 #e5e7eb;
+}
+
+.sticky-col-nro {
+  left: 70px;
+  min-width: 90px;
+  box-shadow: 1px 0 0 #e5e7eb;
+}
+
+.sticky-col-name {
+  left: 160px;
+  box-shadow: 1px 0 0 #e5e7eb;
+}
+
+/* =========================
+   ANCHOS PERSONALIZADOS
+========================= */
+.min-w-100 { min-width: 100px; }
+.min-w-120 { min-width: 120px; }
+.min-w-150 { min-width: 150px; }
+.min-w-180 { min-width: 180px; }
+.min-w-200 { min-width: 200px; }
+.min-w-220 { min-width: 220px; }
+.min-w-300 { min-width: 300px; }
+.min-w-400 { min-width: 400px; }
+
+/* =========================
+   INPUTS EN EDICIÓN
+========================= */
+.form-control-sm,
+.form-control,
+.form-select {
+  border-radius: 10px;
+  border: 1px solid #dbe4ee;
+  transition: all 0.2s ease;
+
+  &:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+  }
+}
+
+/* =========================
+   OBSERVACIONES
+========================= */
+.text-wrap {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.45;
+  color: #475569;
+}
+
+/* =========================
+   BOTONES TABLA
+========================= */
+.action-btn-table {
+  min-width: 105px;
+  border-radius: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0.4rem 0.7rem;
+  border: none;
+  transition: all 0.2s ease;
+
+  i {
+    font-size: 0.9rem;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+/* =========================
+   COLORES BOTONES TABLA
+========================= */
+.btn-warning.action-btn-table {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #fff !important;
+  border: none !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #d97706, #b45309) !important;
+    box-shadow: 0 8px 16px rgba(245, 158, 11, 0.22);
+  }
+}
+
+.btn-success.action-btn-table {
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  color: #fff !important;
+  border: none !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #15803d, #166534) !important;
+    box-shadow: 0 8px 16px rgba(34, 197, 94, 0.22);
+  }
+}
+
+.btn-secondary.action-btn-table {
+  background: linear-gradient(135deg, #64748b, #475569) !important;
+  color: #fff !important;
+  border: none !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #475569, #334155) !important;
+    box-shadow: 0 8px 16px rgba(100, 116, 139, 0.22);
+  }
+}
+
+.btn-danger.action-btn-table {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #fff !important;
+  border: none !important;
+
+  &:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    box-shadow: 0 8px 16px rgba(239, 68, 68, 0.22);
+  }
+}
+
+/* =========================
+   SCROLL PERSONALIZADO
+========================= */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+  background-clip: content-box;
+}
+
+/* =========================
+   FOOTER
+========================= */
+.card-footer {
+  font-size: 0.92rem;
+  color: #475569;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc !important;
+}
+
+/* =========================
+   BADGES / TEXTO AUXILIAR
+========================= */
+.opacity-75 {
+  opacity: 0.8 !important;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 992px) {
+  .card-header {
+    align-items: stretch !important;
+  }
+
+  .search-wrapper {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .matriz-container {
+    padding: 0.75rem;
+  }
+
+  .card-header {
+    padding: 1rem !important;
+  }
+
+  .icon-box {
+    width: 42px;
+    height: 42px;
+  }
+
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .custom-table {
+  font-size: 0.87rem;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  /* =========================
+     CABECERA
+  ========================= */
+  thead th {
+    background: #f1f5f9;
+    color: #0f172a;
+    font-weight: 800;
+    white-space: nowrap;
+
+    /* 🔥 separación clara columnas */
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 2px solid #cbd5e1;
+
+    padding: 10px 12px;
+  }
+
+  thead th:last-child {
+    border-right: none;
+  }
+
+  /* =========================
+     CUERPO
+  ========================= */
+  tbody td {
+    vertical-align: middle;
+    white-space: nowrap;
+
+    /* 🔥 líneas horizontales */
+    border-bottom: 1px solid #e5e7eb;
+
+    /* 🔥 líneas verticales */
+    border-right: 1px solid #eef2f7;
+
+    padding: 10px 12px;
+
+    background: #ffffff;
+    color: #334155;
+  }
+
+  tbody td:last-child {
+    border-right: none;
+  }
+  tbody td {
+  border-right: 1px dashed #e2e8f0;
+}
+
+  /* =========================
+     FILAS
+  ========================= */
+  tbody tr {
+    transition: all 0.2s ease;
+
+    &:hover td {
+      background: #f8fbff;
+    }
+  }
+}
+}

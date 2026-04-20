@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AuditoriaComponent } from './components/auditoria/auditoria'; // importa tu componente standalone
 
 export const routes: Routes = [
 
@@ -21,6 +22,14 @@ export const routes: Routes = [
   },
 
   // =========================
+  // AUDITORÍA (standalone)
+  // =========================
+  {
+    path: 'admin/auditoria',
+    component: AuditoriaComponent
+  },
+
+  // =========================
   // VISITANTE
   // =========================
   {
@@ -37,10 +46,8 @@ export const routes: Routes = [
     redirectTo: 'auth',
     pathMatch: 'full'
   },
-
   {
     path: '**',
     redirectTo: 'auth'
   }
-
 ];

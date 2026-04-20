@@ -3,7 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { DashboardComponent } from './pages/dashboard/dashboard';
 import { NuevoFuncionarioComponent } from '../../components/nuevo-funcionario/nuevo-funcionario';
-
+import { AuditoriaComponent } from '../../components/auditoria/auditoria';
 const routes: Routes = [
 
   // =========================
@@ -21,6 +21,10 @@ const routes: Routes = [
     path: 'nuevo-funcionario',
     component: NuevoFuncionarioComponent
   },
+  {
+  path: 'auditoria',
+  component: AuditoriaComponent
+},
 
   // =========================
   // REDIRECCIÓN POR DEFECTO

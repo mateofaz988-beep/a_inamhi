@@ -15,13 +15,10 @@
           <small class="text-blue-200 opacity-75">INAMHI</small>
         </div>
       </div>
-      <br>
-     
 
       <!-- BUSCADOR -->
       <div class="search-wrapper position-relative">
         <i class="bi bi-search search-icon"></i>
-
         <input
           type="text"
           class="form-control search-input ps-5"
@@ -30,13 +27,11 @@
           (input)="buscar()"
         >
       </div>
-
-       <br>
       <br>
+      
 
       <!-- ACCIONES -->
       <div class="d-flex gap-2 flex-wrap align-items-center">
-
         <button
           class="btn btn-success btn-sm text-white action-btn"
           (click)="exportarExcel()"
@@ -44,8 +39,10 @@
           <i class="bi bi-file-earmark-excel-fill me-2"></i>
           Exportar Excel
         </button>
- <br>
-      <br>
+        <br>
+        <br>
+        <br>
+
         <button
           class="btn btn-danger btn-sm text-white action-btn"
           (click)="exportarPDF()"
@@ -53,13 +50,11 @@
           <i class="bi bi-file-earmark-pdf-fill me-2"></i>
           Exportar PDF
         </button>
-
       </div>
     </div>
 
     <!-- TABLA -->
     <div class="card-body p-0">
-
       <div
         class="table-responsive custom-scrollbar"
         style="overflow-x:auto; overflow-y:auto; max-height: 70vh;"
@@ -73,28 +68,28 @@
           <!-- HEAD -->
           <thead class="table-light sticky-top">
             <tr>
-              <th class="sticky-col-id px-3 py-1">ID</th>
-              <th class="sticky-col-nro px-3 py-3">Nro</th>
-              <th class="min-w-120 px-3 py-3">Cédula</th>
-              <th class="min-w-300 sticky-col-name px-3 py-3">Nombres Completos</th>
-              <th class="min-w-150 px-3 py-3">Modalidad</th>
-              <th class="min-w-200 px-3 py-3">Cargo</th>
-              <th class="min-w-120 px-3 py-3">RMU</th>
-              <th class="min-w-200 px-3 py-3">Unidad Administrativa</th>
-              <th class="min-w-120 px-3 py-3">F. Ingreso</th>
-              <th class="min-w-120 px-3 py-3">F. Nacimiento</th>
-              <th class="min-w-300 px-3 py-3">Dirección Domiciliaria</th>
-              <th class="min-w-220 px-3 py-3">Correo Institucional</th>
-              <th class="min-w-150 px-3 py-3">Teléfono</th>
-              <th class="min-w-100 text-center px-3 py-3">Género</th>
-              <th class="min-w-180 px-3 py-3">Instrucción</th>
-              <th class="min-w-180 px-3 py-3">Profesión</th>
-              <th class="min-w-120 text-center px-3 py-3">Vulnerable</th>
-              <th class="min-w-150 px-3 py-3">Discapacidad</th>
-              <th class="min-w-120 text-center px-3 py-3">% Disc.</th>
-              <th class="min-w-150 px-3 py-3">Etnia</th>
-              <th class="min-w-150 px-3 py-3">Rol de Usuario</th>
-              <th class="min-w-400 px-3 py-3">Observaciones</th>
+              <th class="sticky-col-id px-3 py-3 text-center">ID</th>
+              <th class="sticky-col-nro px-3 py-3 text-center">Nro</th>
+              <th class="min-w-120 px-3 py-3 text-center">Cédula</th>
+              <th class="min-w-300 sticky-col-name px-3 py-3 text-start">Nombres Completos</th>
+              <th class="min-w-150 px-3 py-3 text-start">Modalidad</th>
+              <th class="min-w-200 px-3 py-3 text-start">Cargo</th>
+              <th class="min-w-120 px-3 py-3 text-center">RMU</th>
+              <th class="min-w-200 px-3 py-3 text-start">Unidad Administrativa</th>
+              <th class="min-w-120 px-3 py-3 text-center">F. Ingreso</th>
+              <th class="min-w-120 px-3 py-3 text-center">F. Nacimiento</th>
+              <th class="min-w-300 px-3 py-3 text-start">Dirección Domiciliaria</th>
+              <th class="min-w-220 px-3 py-3 text-start">Correo Institucional</th>
+              <th class="min-w-150 px-3 py-3 text-center">Teléfono</th>
+              <th class="min-w-100 px-3 py-3 text-center">Género</th>
+              <th class="min-w-180 px-3 py-3 text-start">Instrucción</th>
+              <th class="min-w-180 px-3 py-3 text-start">Profesión</th>
+              <th class="min-w-120 px-3 py-3 text-center">Vulnerable</th>
+              <th class="min-w-150 px-3 py-3 text-start">Discapacidad</th>
+              <th class="min-w-120 px-3 py-3 text-center">% Disc.</th>
+              <th class="min-w-150 px-3 py-3 text-start">Etnia</th>
+              <th class="min-w-150 px-3 py-3 text-start">Rol de Usuario</th>
+              <th class="min-w-400 px-3 py-3 text-start">Observaciones</th>
               <th *ngIf="authService.isAdmin()" class="px-3 py-3 text-center">Acciones</th>
             </tr>
           </thead>
@@ -105,38 +100,38 @@
 
               <td class="sticky-col-id text-center">{{ emp.id }}</td>
 
-              <td class="sticky-col-nro">
+              <td class="sticky-col-nro text-center">
                 <span *ngIf="editIndex !== i">{{ emp.nro }}</span>
                 <input *ngIf="editIndex === i" [(ngModel)]="emp.nro" class="form-control form-control-sm">
               </td>
 
-              <td>
+              <td class="text-center">
                 <span *ngIf="editIndex !== i">{{ emp.cedula }}</span>
                 <input *ngIf="editIndex === i" [(ngModel)]="emp.cedula" class="form-control form-control-sm">
               </td>
 
-              <td class="sticky-col-name">
+              <td class="sticky-col-name text-start">
                 <span *ngIf="editIndex !== i">{{ emp.nombres }}</span>
                 <input *ngIf="editIndex === i" [(ngModel)]="emp.nombres" class="form-control form-control-sm">
               </td>
 
-              <td>
+              <td class="text-start">
                 <span *ngIf="editIndex !== i">{{ emp.modalidad }}</span>
                 <input *ngIf="editIndex === i" [(ngModel)]="emp.modalidad" class="form-control form-control-sm">
               </td>
 
-              <td>
+              <td class="text-start">
                 <span *ngIf="editIndex !== i">{{ emp.cargo }}</span>
                 <input *ngIf="editIndex === i" [(ngModel)]="emp.cargo" class="form-control form-control-sm">
               </td>
 
               <td class="text-end">{{ emp.rmu }}</td>
-              <td>{{ emp.unidad }}</td>
-              <td>{{ emp.fecha_ingreso }}</td>
-              <td>{{ emp.fecha_nacimiento }}</td>
-              <td>{{ emp.direccion }}</td>
-              <td>{{ emp.email_inst }}</td>
-              <td>{{ emp.telefono }}</td>
+              <td class="text-start">{{ emp.unidad }}</td>
+              <td class="text-center">{{ emp.fecha_ingreso }}</td>
+              <td class="text-center">{{ emp.fecha_nacimiento }}</td>
+              <td class="text-start">{{ emp.direccion }}</td>
+              <td class="text-start">{{ emp.email_inst }}</td>
+              <td class="text-center">{{ emp.telefono }}</td>
 
               <td class="text-center">
                 <span *ngIf="editIndex !== i">{{ emp.genero }}</span>
@@ -146,15 +141,15 @@
                 </select>
               </td>
 
-              <td>{{ emp.instruccion }}</td>
-              <td>{{ emp.profesion }}</td>
+              <td class="text-start">{{ emp.instruccion }}</td>
+              <td class="text-start">{{ emp.profesion }}</td>
               <td class="text-center">{{ emp.vulnerable }}</td>
-              <td>{{ emp.tipo_discapacidad }}</td>
+              <td class="text-start">{{ emp.tipo_discapacidad }}</td>
               <td class="text-center">{{ emp.porcentaje_disc }}</td>
-              <td>{{ emp.etnia }}</td>
-              <td>{{ emp.rol }}</td>
+              <td class="text-start">{{ emp.etnia }}</td>
+              <td class="text-start">{{ emp.rol }}</td>
 
-              <td class="min-w-400">
+              <td class="min-w-400 text-start">
                 <div class="text-wrap">
                   {{ emp.observaciones || 'Sin observaciones' }}
                 </div>
@@ -190,6 +185,9 @@
                     <i class="bi bi-x-circle-fill me-1"></i>
                     Cancelar
                   </button>
+                  <br>
+                  <br>
+                  <br>
 
                   <button
                     class="btn btn-danger btn-sm action-btn-table"
@@ -206,7 +204,7 @@
 
             <!-- SIN RESULTADOS -->
             <tr *ngIf="personalFiltrado.length === 0">
-              <td colspan="23" class="text-center py-5">
+              <td [attr.colspan]="authService.isAdmin() ? 23 : 22" class="text-center py-5">
                 No hay resultados
               </td>
             </tr>

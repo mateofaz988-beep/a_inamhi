@@ -1,0 +1,133 @@
+<div class="auditoria-container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h2>Auditoría del Sistema</h2>
+      <p>Historial detallado de acciones realizadas en el sistema</p>
+    </div>
+
+    <button class="btn-volver" (click)="volver()">
+      <i class="bi bi-arrow-left me-2"></i>
+      Volver
+    </button>
+  </div>
+
+  <!-- BUSCADOR -->
+  <div class="search-box">
+    <i class="bi bi-search"></i>
+    <input
+      type="text"
+      placeholder="Buscar por usuario, acción, tabla, detalle, IP o fecha..."
+      [(ngModel)]="searchText"
+      (input)="buscar()"
+    >
+  </div>
+
+  <!-- TABLA -->
+  <div class="table-wrapper custom-scrollbar">
+    <table class="table table-hover auditoria-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Usuario</th>
+          <th>Acción</th>
+          <th>Tabla</th>
+          <th>ID Registro</th>
+          <th>Detalle</th>
+          <th>IP</th>
+          <th>Fecha</th>
+          <th>Ver Cambios</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngIf="cargando">
+          <td colspan="9" class="text-center py-4">
+            Cargando auditoría...
+          </td>
+        </tr>
+
+        <ng-container *ngFor="let item of auditoriaFiltrada">
+          <tr class="row-hover">
+            <td>{{ item.id }}</td>
+            <td>{{ item.usuario }}</td>
+
+            <td>
+              <span class="badge-accion" [ngClass]="obtenerClaseAccion(item.accion)">
+                {{ traducirAccion(item.accion) }}
+              </span>
+            </td>
+
+            <td>{{ item.tabla_afectada }}</td>
+            <td>{{ item.registro_id || '-' }}</td>
+            <td class="text-start">{{ item.detalle || 'Sin detalle' }}</td>
+            <td>{{ item.ip_usuario || '-' }}</td>
+            <td>{{ formatearFecha(item.fecha) }}</td>
+
+            <td>
+              <button class="btn-toggle" (click)="toggleDetalle(item.id)">
+                <i class="bi" [ngClass]="expandedId === item.id ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+                {{ expandedId === item.id ? 'Ocultar' : 'Ver' }}
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="expandedId === item.id" class="detail-row">
+            <td colspan="9">
+              <div class="changes-panel">
+
+                <div class="changes-header">
+                  <div class="changes-title">
+                    <i class="bi bi-arrow-repeat me-2"></i>
+                    Resumen de cambios
+                  </div>
+                </div>
+
+                <div *ngIf="parseCambios(item.datos_anteriores, item.datos_nuevos).length > 0; else sinCambios" class="changes-list">
+
+                  <div
+                    class="change-item"
+                    *ngFor="let cambio of parseCambios(item.datos_anteriores, item.datos_nuevos)"
+                  >
+                    <div class="change-field">
+                      <i class="bi bi-dot"></i>
+                      {{ cambio.campo }}
+                    </div>
+
+                    <div class="change-values">
+                      <div class="value-box before-box">
+                        <span class="label">Antes</span>
+                        <div class="value-text">{{ cambio.antes }}</div>
+                      </div>
+
+                      <div class="value-box after-box">
+                        <span class="label">Ahora</span>
+                        <div class="value-text">{{ cambio.despues }}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <ng-template #sinCambios>
+                  <div class="no-changes">
+                    No hay diferencias detalladas para mostrar.
+                  </div>
+                </ng-template>
+
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+
+        <tr *ngIf="!cargando && auditoriaFiltrada.length === 0">
+          <td colspan="9" class="text-center py-4">
+            No hay registros
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

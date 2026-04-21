@@ -232,6 +232,45 @@ def obtener_personal():
             conexion.close()
 
 # =========================
+# 🔎 GET PERSONAL POR CÉDULA
+# =========================
+@app.route('/api/personal/cedula/<cedula>', methods=['GET'])
+def obtener_personal_por_cedula(cedula):
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    conexion = None
+    cursor = None
+
+    try:
+        conexion = get_connection()
+        cursor = conexion.cursor(dictionary=True)
+
+        query = """
+            SELECT *
+            FROM personal
+            WHERE cedula = %s
+            LIMIT 1
+        """
+        cursor.execute(query, (cedula,))
+        resultado = cursor.fetchone()
+
+        if not resultado:
+            return jsonify({"error": "No se encontró información para esa cédula"}), 404
+
+        return jsonify(resultado), 200
+
+    except Exception as e:
+        print("ERROR CONSULTANDO CEDULA:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexion:
+            conexion.close()
+
+# =========================
 # ➕ CREATE PERSONAL
 # =========================
 @app.route('/api/personal', methods=['POST'])
@@ -434,20 +473,20 @@ def obtener_auditoria():
         cursor = conexion.cursor(dictionary=True)
 
         query = """
-    SELECT
-        id,
-        usuario,
-        accion,
-        tabla_afectada,
-        registro_id,
-        datos_anteriores,
-        datos_nuevos,
-        detalle,
-        ip_usuario,
-        DATE_FORMAT(fecha, '%Y-%m-%d %H:%i:%s') AS fecha
-    FROM auditoria
-    ORDER BY fecha DESC, id DESC
-"""
+            SELECT
+                id,
+                usuario,
+                accion,
+                tabla_afectada,
+                registro_id,
+                datos_anteriores,
+                datos_nuevos,
+                detalle,
+                ip_usuario,
+                DATE_FORMAT(fecha, '%Y-%m-%d %H:%i:%s') AS fecha
+            FROM auditoria
+            ORDER BY fecha DESC, id DESC
+        """
 
         cursor.execute(query)
         resultados = cursor.fetchall()

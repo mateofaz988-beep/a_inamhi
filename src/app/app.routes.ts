@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuditoriaComponent } from './components/auditoria/auditoria'; // importa tu componente standalone
+import { SolicitudPermisosComponent } from './components/solicitud-permisos/solicitud-permisos';
 
 export const routes: Routes = [
 
@@ -37,6 +38,10 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./modules/visitante/visitante-module').then(m => m.VisitanteModule)
   },
+  {
+  path: 'solicitud-permisos',
+  component: SolicitudPermisosComponent
+},
 
   // =========================
   // REDIRECCIONES

@@ -1,0 +1,818 @@
+.solicitud-container {
+  padding: 1.5rem;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.07), transparent 25%),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.07), transparent 20%),
+    linear-gradient(135deg, #f4f7fb, #eef3f9);
+  color: #0f172a;
+  box-sizing: border-box;
+}
+
+.solicitud-container * {
+  box-sizing: border-box;
+}
+
+.solicitud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.header-info {
+  h2 {
+    margin: 0;
+    font-size: 1.9rem;
+    font-weight: 900;
+    letter-spacing: -0.4px;
+    color: #0f172a;
+  }
+
+  p {
+    margin: 0.25rem 0 0;
+    color: #64748b;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.btn-volver,
+.btn-clear,
+.btn-pdf,
+.btn-consultar,
+.btn-selector {
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.btn-volver,
+.btn-clear,
+.btn-pdf,
+.btn-selector {
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+}
+
+.btn-volver {
+  background: linear-gradient(135deg, #64748b, #475569);
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(100, 116, 139, 0.18);
+}
+
+.btn-clear {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(245, 158, 11, 0.18);
+}
+
+.btn-pdf {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.18);
+}
+
+.btn-consultar {
+  min-height: 42px;
+  padding: 0.55rem 0.95rem;
+  font-size: 0.86rem;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  white-space: nowrap;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
+}
+
+.btn-selector-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+}
+
+.btn-selector-secondary {
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  color: #0f172a;
+}
+
+/* SELECTOR */
+.page-selector-card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+  box-shadow:
+    0 18px 34px rgba(15, 23, 42, 0.06),
+    0 6px 14px rgba(15, 23, 42, 0.04);
+}
+
+.page-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 900;
+  }
+
+  p {
+    margin: 0.2rem 0 0;
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+}
+
+.page-selector-actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.page-selector-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.docs-grid {
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+}
+
+.page-option {
+  display: block;
+  cursor: pointer;
+
+  input {
+    display: none;
+  }
+}
+
+.page-option-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  border: 2px solid #dbe4ee;
+  border-radius: 16px;
+  background: #fff;
+  transition: all 0.22s ease;
+}
+
+.page-option input:checked + .page-option-box,
+.page-option input:checked ~ .page-option-box {
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.05);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.page-option-title {
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.page-option-text {
+  font-size: 0.86rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.page-option-pages {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+.page-selector-summary {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: rgba(22, 163, 74, 0.08);
+  color: #166534;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.page-selector-summary.warning {
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+}
+
+/* PANEL */
+.control-panel {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 1.2rem;
+  margin-bottom: 1.4rem;
+  box-shadow:
+    0 18px 34px rgba(15, 23, 42, 0.06),
+    0 6px 14px rgba(15, 23, 42, 0.04);
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+
+  label {
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+    color: #475569;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.65rem 0.8rem;
+    border-radius: 12px;
+    border: 1px solid #dbe4ee;
+    background: #fff;
+    color: #0f172a;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.22s ease;
+    resize: vertical;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.13);
+    }
+  }
+
+  input,
+  select {
+    height: 44px;
+  }
+
+  textarea {
+    min-height: 96px;
+  }
+}
+
+.field-span-2 {
+  grid-column: span 2;
+}
+
+.cedula-field {
+  grid-column: span 2;
+}
+
+.cedula-box {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.55rem;
+}
+
+/* PDF */
+.pdf-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+}
+
+.pdf-content {
+  width: 210mm;
+}
+
+.pdf-page {
+  width: 210mm;
+  min-height: 297mm;
+  background: #fff;
+  color: #000;
+  padding: 7mm 7mm 9mm;
+  box-shadow:
+    0 20px 40px rgba(15, 23, 42, 0.12),
+    0 8px 16px rgba(15, 23, 42, 0.06);
+  border: 1px solid #dbe4ee;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10px;
+  line-height: 1.16;
+  page-break-after: always;
+  margin-bottom: 8mm;
+}
+
+.pdf-page:last-child {
+  page-break-after: auto;
+  margin-bottom: 0;
+}
+
+.doc-header-table,
+.doc-table,
+.footer-table,
+.signatures-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.doc-header-table {
+  margin-bottom: 6px;
+
+  td {
+    border: 1px solid #000;
+    vertical-align: middle;
+    padding: 4px;
+  }
+}
+
+.logo-cell {
+  width: 18%;
+  text-align: center;
+}
+
+.logo-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.logo-img {
+  max-width: 100%;
+  max-height: 42px;
+  object-fit: contain;
+}
+
+.title-cell {
+  width: 58%;
+  text-align: center;
+}
+
+.code-cell {
+  width: 24%;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.doc-title {
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.code-row {
+  padding: 2px 0;
+}
+
+.doc-table {
+  margin-bottom: 6px;
+
+  td,
+  th {
+    border: 1px solid #000;
+    padding: 4px 5px;
+    vertical-align: middle;
+  }
+}
+
+.compact-table td,
+.compact-table th {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+.section-header {
+  text-align: center;
+  font-size: 9.7px;
+  font-weight: 900;
+  text-transform: uppercase;
+  background: #f1f1f1;
+}
+
+.left-align {
+  text-align: left;
+}
+
+.center-text {
+  text-align: center;
+}
+
+.right-text {
+  text-align: right;
+}
+
+.label-cell {
+  width: 18%;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: #fafafa;
+}
+
+.value-cell {
+  width: 32%;
+  min-height: 18px;
+}
+
+.narrow-label {
+  width: 14%;
+}
+
+.mini-top-note {
+  font-size: 9px;
+  font-style: italic;
+}
+
+.small-line-text {
+  font-size: 8.7px;
+}
+
+.reference-line {
+  font-size: 8.4px;
+  padding: 4px 6px !important;
+}
+
+.full-header {
+  width: 100%;
+}
+
+.multiline-cell {
+  line-height: 1.3;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.page1-legal-cell {
+  min-height: 72px;
+}
+
+.page1-observaciones-cell {
+  min-height: 34px;
+}
+
+.checkbox-grid-cell {
+  padding: 6px !important;
+}
+
+.checkbox-grid {
+  display: grid;
+  gap: 5px 12px;
+}
+
+.page1-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+}
+
+.check-box {
+  width: 13px;
+  height: 13px;
+  border: 1px solid #000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.small-check {
+  width: 11px;
+  height: 11px;
+  margin-left: 8px;
+}
+
+.posecion-cell {
+  min-height: 72px;
+}
+
+.approval-box {
+  vertical-align: top !important;
+  min-height: 100px;
+}
+
+.approval-title {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+.approval-sign-line {
+  border-bottom: 1px solid #000;
+  margin-bottom: 6px;
+}
+
+.approval-field {
+  font-size: 8.8px;
+  margin-top: 4px;
+}
+
+.page-footer-note {
+  text-align: center;
+  font-size: 8px;
+  margin-top: 8px;
+}
+
+/* DOC 1 PAG 2 */
+.top-title-table {
+  margin-bottom: 8px;
+}
+
+.firma-card {
+  height: 120px;
+  vertical-align: top !important;
+}
+
+.firma-row {
+  margin-bottom: 8px;
+  font-size: 9px;
+}
+
+.reason-row {
+  line-height: 1.35;
+}
+
+.mini-firma-card {
+  height: 88px;
+  vertical-align: bottom !important;
+}
+
+.firma-line-mini {
+  border-bottom: 1px solid #000;
+  margin: 12px 0 8px;
+}
+
+.mini-data {
+  font-size: 8.7px;
+  margin-top: 4px;
+}
+
+.talento-humano-title {
+  margin: 12px 0 8px;
+  padding-top: 8px;
+  border-top: 2px dashed #777;
+  font-weight: 900;
+  font-size: 12px;
+  color: #555;
+}
+
+.talento-box {
+  .talento-content {
+    min-height: 210px;
+    padding: 14px 16px !important;
+  }
+}
+
+.notif-row {
+  font-size: 9px;
+  margin-bottom: 14px;
+}
+
+.split-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.notif-signature {
+  margin: 50px 0 12px;
+  text-align: center;
+}
+
+.notif-line {
+  border-bottom: 1px solid #000;
+  margin-bottom: 4px;
+}
+
+.notif-caption {
+  font-size: 8.8px;
+  font-weight: 700;
+}
+
+/* DOC 2 */
+.permiso-page {
+  .doc2-header td {
+    padding: 6px;
+  }
+}
+
+.doc2-left-brand {
+  width: 20%;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+
+  span {
+    font-size: 7px;
+    font-weight: 400;
+  }
+}
+
+.doc2-center-brand {
+  width: 60%;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.doc2-right-brand {
+  width: 20%;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.doc2-title-row {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.doc2-table {
+  margin-top: 6px;
+}
+
+.doc2-signatures-area {
+  position: relative;
+  min-height: 290px;
+  margin-top: 18px;
+}
+
+.doc2-sign-box {
+  width: 210px;
+  min-height: 110px;
+  border: 1px solid #000;
+  padding: 10px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.doc2-sign-box.left-box {
+  margin: 36px 0 0 50px;
+}
+
+.doc2-sign-title {
+  font-size: 10px;
+  margin-bottom: 26px;
+}
+
+.doc2-sign-line {
+  border-bottom: 1px solid #000;
+  margin-bottom: 4px;
+}
+
+.doc2-sign-name {
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.doc2-sign-role {
+  font-size: 8.5px;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+.doc2-footer td {
+  font-size: 8.8px;
+}
+
+.no-print {
+  display: block;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .solicitud-container {
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .pdf-wrapper {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .pdf-page {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    page-break-after: always;
+  }
+
+  .pdf-page:last-child {
+    page-break-after: auto;
+  }
+}
+
+@media (max-width: 1200px) {
+  .control-grid {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  }
+
+  .docs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .control-grid {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+
+  .cedula-field,
+  .field-span-2 {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .solicitud-container {
+    padding: 1rem;
+  }
+
+  .solicitud-header,
+  .page-selector-header {
+    align-items: stretch;
+  }
+
+  .header-actions,
+  .page-selector-actions {
+    width: 100%;
+  }
+
+  .header-actions button,
+  .page-selector-actions button {
+    width: 100%;
+  }
+
+  .control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cedula-field,
+  .field-span-2 {
+    grid-column: span 1;
+  }
+
+  .cedula-box {
+    grid-template-columns: 1fr;
+  }
+
+  .page1-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

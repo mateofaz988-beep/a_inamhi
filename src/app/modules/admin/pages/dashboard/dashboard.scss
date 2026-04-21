@@ -1,144 +1,197 @@
-/* CONTENEDOR GENERAL */
+/* =========================
+   CONTENEDOR PRINCIPAL
+========================= */
 .dashboard-container {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f4f7fb, #eef3f9);
   min-height: 100vh;
-  padding: 2rem;
-  background: linear-gradient(135deg, #f4f7fb, #eef2f7);
 }
 
-/* HEADER */
+/* =========================
+   HEADER
+========================= */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
+/* =========================
+   TITULOS
+========================= */
 .header-left {
   .title {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 800;
-    color: #1e293b;
+    color: #0f172a;
     margin: 0;
   }
 
   .subtitle {
+    font-size: 0.95rem;
     color: #64748b;
-    font-weight: 500;
-    margin-top: 4px;
+    margin: 0;
   }
 }
 
-/* BOTÓN NUEVO */
-.btn-nuevo {
-  background: linear-gradient(135deg, #059669, #10b981);
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 12px;
-  font-weight: 700;
-  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
-  transition: all 0.25s ease;
-
-  display: flex;
-  align-items: center;
-  gap: 6px;
-
-  &:hover {
-    transform: translateY(-2px);
-    background: linear-gradient(135deg, #047857, #059669);
-    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
-  }
-
-  &:active {
-    transform: scale(0.97);
-  }
-}
-
-/* CARD PRINCIPAL */
-.main-card {
-  background: #ffffff;
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-}
-
-/* HEADER DE CARD */
-.card-header-custom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #1e3a8a, #2563eb);
-  color: #fff;
-}
-
-.card-title {
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  margin: 0;
-}
-
-/* BADGE */
-.badge-mode {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-/* BODY */
-.card-body-custom {
-  padding: 1.5rem;
-}
+/* =========================
+   CONTENEDOR BOTONES
+========================= */
 .header-actions {
-  display: flex;
-  gap: 10px;
-}
-
-/* BOTÓN AUDITORÍA */
-.btn-auditoria {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
-  color: #fff;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  transition: all 0.25s ease;
-
-  &:hover {
-    background: linear-gradient(135deg, #4f46e5, #3730a3);
-    transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(99, 102, 241, 0.3);
-  }
-  .header-actions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.btn-auditoria {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
-  color: #fff;
-  border: none;
-  padding: 10px 18px;
+/* =========================
+   ESTILO BASE BOTONES
+========================= */
+.header-actions button {
+  min-height: 42px;
   border-radius: 12px;
+  padding: 0.6rem 1.2rem;
+
+  font-size: 0.9rem;
   font-weight: 700;
-  display: flex;
+
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  border: none;
+  cursor: pointer;
   transition: all 0.25s ease;
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+/* =========================
+   BOTÓN NUEVO FUNCIONARIO
+========================= */
+.btn-nuevo {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: white;
+  box-shadow: 0 6px 14px rgba(34, 197, 94, 0.25);
+
+  &:hover {
+    background: linear-gradient(135deg, #15803d, #166534);
+    box-shadow: 0 10px 20px rgba(34, 197, 94, 0.35);
+  }
+}
+
+/* =========================
+   BOTÓN AUDITORÍA
+========================= */
+.btn-auditoria {
+  background: linear-gradient(135deg, #0ea5e9, #0369a1);
+  color: white;
+  box-shadow: 0 6px 14px rgba(14, 165, 233, 0.25);
+
+  &:hover {
+    background: linear-gradient(135deg, #0284c7, #075985);
+    box-shadow: 0 10px 20px rgba(14, 165, 233, 0.35);
+  }
+}
+
+/* =========================
+   BOTÓN SOLICITUD PERMISOS
+========================= */
+.btn-solicitud {
+  background: linear-gradient(135deg, #6366f1, #4338ca);
+  color: white;
+  box-shadow: 0 6px 14px rgba(99, 102, 241, 0.25);
 
   &:hover {
     background: linear-gradient(135deg, #4f46e5, #3730a3);
-    transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.35);
   }
 }
+
+/* =========================
+   CARD PRINCIPAL
+========================= */
+.main-card {
+  background: #ffffff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, 0.08);
+}
+
+/* =========================
+   HEADER DE CARD
+========================= */
+.card-header-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+  color: white;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+/* =========================
+   BADGE MODO
+========================= */
+.badge-mode {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.3rem 0.7rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* =========================
+   BODY CARD
+========================= */
+.card-body-custom {
+  padding: 0;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 992px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
 }

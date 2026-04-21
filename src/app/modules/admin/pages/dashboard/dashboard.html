@@ -1,31 +1,42 @@
 <div class="dashboard-container">
 
-<header class="dashboard-header">
+  <header class="dashboard-header">
 
-  <div class="header-left">
-    <h1 class="title">Panel de Control</h1>
-    <p class="subtitle">Bienvenido, {{ adminName }}</p>
-  </div>
+    <div class="header-left">
+      <h1 class="title">Panel de Control</h1>
+      <p class="subtitle">Bienvenido, {{ adminName }}</p>
+    </div>
 
-  <!-- Botón Nuevo Funcionario -->
-  <button
-    class="btn-nuevo"
-    routerLink="/admin/nuevo-funcionario">
-    <i class="bi bi-person-plus-fill me-2"></i>
-    Nuevo Funcionario
-  </button>
+    <div class="header-actions">
 
-  <!-- Botón Auditoría (mismo estilo que Nuevo Funcionario) -->
- <button
-    class="btn-auditoria"
-    routerLink="/admin/auditoria">
-    <i class="bi bi-clock-history me-2"></i>
-    Auditoría
-  </button>
+      <!-- Botón Nuevo Funcionario -->
+      <button
+        class="btn-nuevo"
+        routerLink="/admin/nuevo-funcionario">
+        <i class="bi bi-person-plus-fill me-2"></i>
+        Nuevo Funcionario
+      </button>
 
-</header>
+      <!-- Botón Auditoría -->
+      <button
+        class="btn-auditoria"
+        routerLink="/admin/auditoria">
+        <i class="bi bi-clock-history me-2"></i>
+        Auditoría
+      </button>
 
+ <!-- BOTÓN SOLICITUD PERMISOS -->
+<button
+  class="btn-solicitud"
+  routerLink="/admin/solicitud-permisos"
+>
+  <i class="bi bi-file-earmark-text-fill"></i>
+  <span>Solicitud Permisos</span>
+</button>
 
+    </div>
+
+  </header>
 
   <!-- CARD PRINCIPAL -->
   <div class="main-card">

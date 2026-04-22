@@ -4,12 +4,11 @@
 
     <div class="header-left">
       <h1 class="title">Panel de Control</h1>
-      <p class="subtitle">Bienvenido, {{ adminName }}</p>
+      <p class="subtitle">Bienvenidos</p>
     </div>
 
     <div class="header-actions">
 
-      <!-- Botón Nuevo Funcionario -->
       <button
         class="btn-nuevo"
         routerLink="/admin/nuevo-funcionario">
@@ -17,7 +16,6 @@
         Nuevo Funcionario
       </button>
 
-      <!-- Botón Auditoría -->
       <button
         class="btn-auditoria"
         routerLink="/admin/auditoria">
@@ -25,20 +23,26 @@
         Auditoría
       </button>
 
- <!-- BOTÓN SOLICITUD PERMISOS -->
-<button
-  class="btn-solicitud"
-  routerLink="/admin/solicitud-permisos"
->
-  <i class="bi bi-file-earmark-text-fill"></i>
-  <span>Solicitud Permisos</span>
-</button>
+      <button
+        class="btn-solicitud"
+        routerLink="/admin/solicitud-permisos">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Solicitudes</span>
+        <br>
+        <span>Documentaciòn</span>
+      </button>
+
+      <button
+        class="btn-usuarios"
+        routerLink="/admin/usuarios">
+        <i class="bi bi-people-fill me-2"></i>
+        Registros Usuarios
+      </button>
 
     </div>
 
   </header>
 
-  <!-- CARD PRINCIPAL -->
   <div class="main-card">
 
     <div class="card-header-custom">
@@ -51,7 +55,6 @@
       </span>
     </div>
 
-    <!-- TABLA -->
     <div class="card-body-custom">
       <app-tabla-empleados></app-tabla-empleados>
     </div>

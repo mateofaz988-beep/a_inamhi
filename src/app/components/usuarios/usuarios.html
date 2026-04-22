@@ -1,0 +1,270 @@
+<div class="usuarios-container">
+
+  <div class="usuarios-header">
+    <div class="header-info">
+      <span class="section-tag">
+        <i class="bi bi-shield-lock-fill me-2"></i>
+        Administración del sistema
+      </span>
+
+      <h2>Gestión de Usuarios</h2>
+      <p>Registre, visualice, cambie roles y elimine accesos del sistema</p>
+    </div>
+
+    <button class="btn-volver" (click)="volver()">
+      <i class="bi bi-arrow-left me-2"></i>
+      Volver al Dashboard
+    </button>
+  </div>
+
+  <div class="usuarios-layout">
+
+    <!-- COLUMNA IZQUIERDA -->
+    <div class="left-column">
+
+      <!-- FORMULARIO -->
+      <div class="usuarios-card main-card">
+
+        <div class="card-header-custom">
+          <div class="card-title-block">
+            <div class="card-icon">
+              <i class="bi bi-person-badge-fill"></i>
+            </div>
+
+            <div>
+              <h5 class="card-title">Nuevo Usuario</h5>
+              <p class="card-subtitle">Crear un nuevo acceso al sistema</p>
+            </div>
+          </div>
+
+          <span class="header-badge">INAMHI</span>
+        </div>
+
+        <div class="card-body-custom">
+
+          <div class="form-grid">
+
+            <div class="field">
+              <label>Usuario</label>
+              <div class="input-with-icon">
+                <i class="bi bi-person-fill"></i>
+                <input
+                  type="text"
+                  [(ngModel)]="nuevoUsuario.usuario"
+                  class="form-control custom-input with-left-icon"
+                  placeholder="Ej: adminrrhh"
+                >
+              </div>
+              <small class="field-help">Solo letras, números y guion bajo</small>
+            </div>
+
+            <div class="field">
+              <label>Rol</label>
+              <div class="input-with-icon">
+                <i class="bi bi-diagram-3-fill"></i>
+                <select [(ngModel)]="nuevoUsuario.rol" class="form-select custom-input with-left-icon">
+                  <option *ngFor="let item of roles" [value]="item.value">
+                    {{ item.label }}
+                  </option>
+                </select>
+              </div>
+              <small class="field-help">Seleccione el nivel de acceso</small>
+            </div>
+
+            <div class="field">
+              <label>Contraseña</label>
+              <div class="password-wrapper">
+                <i class="bi bi-key-fill left-inside-icon"></i>
+                <input
+                  [type]="mostrarPassword ? 'text' : 'password'"
+                  [(ngModel)]="nuevoUsuario.password"
+                  class="form-control custom-input with-left-icon password-input"
+                  placeholder="Ingrese la contraseña"
+                >
+                <button type="button" class="toggle-btn" (click)="mostrarPassword = !mostrarPassword">
+                  <i class="bi" [ngClass]="mostrarPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+                </button>
+              </div>
+              <small class="field-help">Mínimo 4 caracteres</small>
+            </div>
+
+            <div class="field">
+              <label>Confirmar Contraseña</label>
+              <div class="password-wrapper">
+                <i class="bi bi-shield-lock-fill left-inside-icon"></i>
+                <input
+                  [type]="mostrarConfirmPassword ? 'text' : 'password'"
+                  [(ngModel)]="nuevoUsuario.confirmPassword"
+                  class="form-control custom-input with-left-icon password-input"
+                  placeholder="Repita la contraseña"
+                >
+                <button type="button" class="toggle-btn" (click)="mostrarConfirmPassword = !mostrarConfirmPassword">
+                  <i class="bi" [ngClass]="mostrarConfirmPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+                </button>
+              </div>
+              <small class="field-help">Debe coincidir con la contraseña</small>
+            </div>
+
+          </div>
+
+          <div class="security-alert">
+            <div class="security-icon">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+
+            <div class="security-text">
+              <strong>Importante:</strong>
+              el rol <span>Administrador</span> tendrá acceso total a funciones sensibles del sistema.
+            </div>
+          </div>
+
+        </div>
+
+        <div class="card-footer-custom">
+          <button class="btn-action btn-clear" (click)="limpiarFormulario()" [disabled]="guardando">
+            <i class="bi bi-eraser me-1"></i>
+            Limpiar
+          </button>
+
+          <button class="btn-action btn-cancel" (click)="volver()" [disabled]="guardando">
+            <i class="bi bi-x-circle me-1"></i>
+            Cancelar
+          </button>
+
+          <button class="btn-action btn-save" (click)="guardar()" [disabled]="guardando">
+            <i class="bi bi-person-plus-fill me-1"></i>
+            {{ guardando ? 'Guardando...' : 'Registrar Usuario' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- TABLA USUARIOS -->
+      <div class="usuarios-card table-card">
+        <div class="table-card-header">
+          <div class="table-title-block">
+            <i class="bi bi-people-fill"></i>
+            <div>
+              <h5>Usuarios Registrados</h5>
+              <small>Administrar roles y accesos existentes</small>
+            </div>
+          </div>
+
+          <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input
+              type="text"
+              [(ngModel)]="searchText"
+              (input)="buscar()"
+              placeholder="Buscar usuario o rol..."
+            >
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="usuarios-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngIf="cargandoUsuarios">
+                <td colspan="4" class="empty-state">Cargando usuarios...</td>
+              </tr>
+
+              <tr *ngFor="let usuario of usuariosFiltrados">
+                <td>{{ usuario.id }}</td>
+                <td class="usuario-name-cell">{{ usuario.usuario }}</td>
+
+                <td>
+                  <ng-container *ngIf="editandoId !== usuario.id; else editRol">
+                    <span class="role-badge" [ngClass]="obtenerClaseRol(usuario.rol)">
+                      {{ traducirRol(usuario.rol) }}
+                    </span>
+                  </ng-container>
+
+                  <ng-template #editRol>
+                    <select [(ngModel)]="rolEditando" class="role-select">
+                      <option *ngFor="let item of roles" [value]="item.value">
+                        {{ item.label }}
+                      </option>
+                    </select>
+                  </ng-template>
+                </td>
+
+                <td class="text-center">
+                  <div class="table-actions" *ngIf="editandoId !== usuario.id; else editActions">
+                    <button class="btn-table btn-edit" (click)="iniciarEdicion(usuario)">
+                      <i class="bi bi-pencil-square"></i>
+                      Editar rol
+                    </button>
+
+                    <button class="btn-table btn-delete" (click)="eliminar(usuario)">
+                      <i class="bi bi-trash-fill"></i>
+                      Eliminar
+                    </button>
+                  </div>
+
+                  <ng-template #editActions>
+                    <div class="table-actions">
+                      <button class="btn-table btn-save-table" (click)="guardarRol(usuario)">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Guardar
+                      </button>
+
+                      <button class="btn-table btn-cancel-table" (click)="cancelarEdicion()">
+                        <i class="bi bi-x-circle-fill"></i>
+                        Cancelar
+                      </button>
+                    </div>
+                  </ng-template>
+                </td>
+              </tr>
+
+              <tr *ngIf="!cargandoUsuarios && usuariosFiltrados.length === 0">
+                <td colspan="4" class="empty-state">No hay usuarios registrados</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- COLUMNA DERECHA -->
+    <div class="usuarios-card side-card">
+      <div class="side-card-header">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        Recomendaciones
+      </div>
+
+      <div class="side-card-body">
+        <div class="tip-box">
+          <div class="tip-title">Usuario Administrador</div>
+          <div class="tip-text">
+            Debe asignarse solo a personal autorizado, ya que podrá gestionar registros y control del sistema.
+          </div>
+        </div>
+
+        <div class="tip-box">
+          <div class="tip-title">Usuario Visitante</div>
+          <div class="tip-text">
+            Ideal para consultas y visualización sin permisos de edición o eliminación.
+          </div>
+        </div>
+
+        <div class="tip-box">
+          <div class="tip-title">Control de accesos</div>
+          <div class="tip-text">
+            Revise periódicamente qué usuarios siguen activos y qué rol tiene cada uno.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

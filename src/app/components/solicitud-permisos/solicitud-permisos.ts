@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { AuthService } from '../../core/services/auth';
 
 @Component({
@@ -22,11 +23,8 @@ export class SolicitudPermisosComponent {
   consultando = false;
   exportando = false;
 
-  // =========================
-  // SELECTOR DE DOCUMENTOS
-  // =========================
-  mostrarDocumento1 = true; // Acción de Personal (2 páginas)
-  mostrarDocumento2 = true; // Solicitud Permisos (1 página)
+  mostrarDocumento1 = true;
+  mostrarDocumento2 = true;
 
   tiposPermiso: string[] = ['Vacaciones', 'Licencia', 'Permiso'];
 
@@ -54,7 +52,6 @@ export class SolicitudPermisosComponent {
   ];
 
   formulario: any = {
-    // Comunes
     cedula: '',
     apellidos: '',
     nombres: '',
@@ -65,7 +62,6 @@ export class SolicitudPermisosComponent {
     unidad: '',
     rmu: '',
 
-    // Documento 1
     numero_accion: '',
     fecha_elaboracion: this.obtenerFechaActual(),
     desde: '',
@@ -126,7 +122,6 @@ export class SolicitudPermisosComponent {
     notificado_por: '',
     puesto_notificado: '',
 
-    // Documento 2
     fecha_solicitud: this.obtenerFechaActual(),
     tipo_permiso: 'Vacaciones',
     fecha_inicio: '',
@@ -215,9 +210,6 @@ export class SolicitudPermisosComponent {
     };
   }
 
-  // =========================
-  // SELECTOR DOCUMENTOS
-  // =========================
   seleccionarTodosDocumentos() {
     this.mostrarDocumento1 = true;
     this.mostrarDocumento2 = true;
@@ -239,9 +231,6 @@ export class SolicitudPermisosComponent {
     return docs.join(', ');
   }
 
-  // =========================
-  // CONSULTA POR CÉDULA
-  // =========================
   consultarCedula() {
     const cedula = (this.formulario.cedula || '').trim();
 
@@ -274,16 +263,10 @@ export class SolicitudPermisosComponent {
         this.formulario.unidad = data.unidad || '';
         this.formulario.rmu = data.rmu || '';
 
-        // Documento 1
-        this.formulario.proceso_institucional_actual = this.formulario.proceso_institucional_actual || '';
-        this.formulario.nivel_gestion_actual = this.formulario.nivel_gestion_actual || '';
         this.formulario.unidad_actual = data.unidad || '';
         this.formulario.lugar_trabajo_actual = this.formulario.ciudad || 'Quito';
         this.formulario.denominacion_actual = data.cargo || '';
-        this.formulario.grupo_actual = this.formulario.grupo_actual || '';
-        this.formulario.grado_actual = this.formulario.grado_actual || '';
         this.formulario.remuneracion_actual = data.rmu || '';
-        this.formulario.partida_actual = this.formulario.partida_actual || '';
 
         this.formulario.unidad_propuesta = data.unidad || '';
         this.formulario.lugar_trabajo_propuesta = this.formulario.ciudad || 'Quito';
@@ -293,7 +276,6 @@ export class SolicitudPermisosComponent {
         this.formulario.aceptacion_servidor = data.nombres || '';
         this.formulario.elaborado_por = this.formulario.elaborado_por || data.nombres || '';
 
-        // Documento 2
         this.formulario.solicitado_por = data.nombres || '';
         this.formulario.puesto_solicitante = data.cargo || '';
         this.formulario.impreso_por = data.nombres || '';
@@ -323,9 +305,6 @@ export class SolicitudPermisosComponent {
     });
   }
 
-  // =========================
-  // LIMPIAR
-  // =========================
   limpiarFormulario() {
     this.formulario = {
       cedula: '',
@@ -413,9 +392,6 @@ export class SolicitudPermisosComponent {
     };
   }
 
-  // =========================
-  // VALIDACIÓN
-  // =========================
   validarAntesDeExportar(): boolean {
     if (!this.hayDocumentosSeleccionados()) {
       Swal.fire('Atención', 'Seleccione al menos un documento', 'warning');
@@ -440,12 +416,8 @@ export class SolicitudPermisosComponent {
     return true;
   }
 
-  // =========================
-  // PDF
-  // =========================
   async exportarPDF() {
     if (!this.validarAntesDeExportar()) return;
-
     if (!this.pdfContent) {
       Swal.fire('Error', 'No se encontró el contenido para exportar', 'error');
       return;
@@ -454,24 +426,43 @@ export class SolicitudPermisosComponent {
     this.exportando = true;
 
     try {
-      const doc = new jsPDF('p', 'mm', 'a4');
-      const element = this.pdfContent.nativeElement;
+      const contenedor = this.pdfContent.nativeElement as HTMLElement;
+      const paginas = contenedor.querySelectorAll('.pdf-page-a4');
 
-      await doc.html(element, {
-        callback: (pdf) => {
-          pdf.save(`documentos-inamhi-${this.formulario.cedula || 'sin-cedula'}.pdf`);
-          this.exportando = false;
-        },
-        x: 4,
-        y: 4,
-        width: 202,
-        windowWidth: 1600,
-        margin: [4, 4, 4, 4],
-        autoPaging: 'text'
-      });
-    } catch (error) {
+      if (!paginas.length) {
+        this.exportando = false;
+        Swal.fire('Error', 'No hay páginas seleccionadas para exportar', 'error');
+        return;
+      }
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      for (let i = 0; i < paginas.length; i++) {
+        const pagina = paginas[i] as HTMLElement;
+
+        const canvas = await html2canvas(pagina, {
+          scale: 2.5,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdfWidth = 210;
+        const pdfHeight = 297;
+
+        if (i > 0) {
+          pdf.addPage('a4', 'p');
+        }
+
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      }
+
+      pdf.save(`documentos-inamhi-${this.formulario.cedula || 'sin-cedula'}.pdf`);
       this.exportando = false;
+    } catch (error) {
       console.error('Error exportando PDF:', error);
+      this.exportando = false;
       Swal.fire('Error', 'No se pudo exportar el PDF', 'error');
     }
   }

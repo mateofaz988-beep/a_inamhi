@@ -244,29 +244,117 @@ export class TablaEmpleadosComponent implements OnInit {
   }
 
   // =========================
-  // 📄 EXPORTAR PDF
-  // =========================
-  exportarPDF() {
+// 📄 EXPORTAR PDF COMPLETO
+// =========================
+exportarPDF() {
+  const doc = new jsPDF('landscape', 'mm', 'a3');
 
-    const doc = new jsPDF('landscape');
+  const data = this.personalFiltrado.map((e, index) => [
+    e.id ?? '',
+    e.nro ?? '',
+    e.cedula ?? '',
+    e.nombres ?? '',
+    e.modalidad ?? '',
+    e.cargo ?? '',
+    e.rmu ?? '',
+    e.unidad ?? '',
+    e.fecha_ingreso ?? '',
+    e.fecha_nacimiento ?? '',
+    e.direccion ?? '',
+    e.email_inst ?? '',
+    e.telefono ?? '',
+    e.genero ?? '',
+    e.instruccion ?? '',
+    e.profesion ?? '',
+    e.vulnerable ?? '',
+    e.tipo_discapacidad ?? '',
+    e.porcentaje_disc ?? '',
+    e.etnia ?? '',
+    e.rol ?? '',
+    e.observaciones ?? ''
+  ]);
 
-    const data = this.personalFiltrado.map(e => [
-      e.id,
-      e.nro,
-      e.cedula,
-      e.nombres,
-      e.cargo,
-      e.unidad,
-      e.telefono
-    ]);
+  autoTable(doc, {
+    head: [[
+      'ID',
+      'Nro',
+      'Cédula',
+      'Nombres',
+      'Modalidad',
+      'Cargo',
+      'RMU',
+      'Unidad',
+      'F. Ingreso',
+      'F. Nacimiento',
+      'Dirección',
+      'Correo Institucional',
+      'Teléfono',
+      'Género',
+      'Instrucción',
+      'Profesión',
+      'Vulnerable',
+      'Discapacidad',
+      '% Disc.',
+      'Etnia',
+      'Rol',
+      'Observaciones'
+    ]],
+    body: data,
+    startY: 18,
+    styles: {
+      fontSize: 6,
+      cellPadding: 2,
+      overflow: 'linebreak',
+      valign: 'middle',
+      halign: 'center'
+    },
+    headStyles: {
+      fillColor: [13, 110, 253],
+      textColor: 255,
+      fontSize: 6,
+      halign: 'center',
+      valign: 'middle'
+    },
+    bodyStyles: {
+      textColor: 30
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252]
+    },
+    columnStyles: {
+      0: { cellWidth: 10 },  // ID
+      1: { cellWidth: 12 },  // Nro
+      2: { cellWidth: 20 },  // Cédula
+      3: { cellWidth: 38 },  // Nombres
+      4: { cellWidth: 28 },  // Modalidad
+      5: { cellWidth: 34 },  // Cargo
+      6: { cellWidth: 16 },  // RMU
+      7: { cellWidth: 38 },  // Unidad
+      8: { cellWidth: 20 },  // F. Ingreso
+      9: { cellWidth: 20 },  // F. Nacimiento
+      10: { cellWidth: 34 }, // Dirección
+      11: { cellWidth: 38 }, // Correo
+      12: { cellWidth: 20 }, // Teléfono
+      13: { cellWidth: 18 }, // Género
+      14: { cellWidth: 26 }, // Instrucción
+      15: { cellWidth: 28 }, // Profesión
+      16: { cellWidth: 20 }, // Vulnerable
+      17: { cellWidth: 24 }, // Discapacidad
+      18: { cellWidth: 16 }, // % Disc.
+      19: { cellWidth: 20 }, // Etnia
+      20: { cellWidth: 20 }, // Rol
+      21: { cellWidth: 42 }  // Observaciones
+    },
+    margin: { top: 15, right: 8, bottom: 10, left: 8 },
+    didDrawPage: () => {
+      doc.setFontSize(12);
+      doc.text('Matriz Integral de Personal - INAMHI', 14, 10);
 
-    autoTable(doc, {
-      head: [['ID', 'Nro', 'Cédula', 'Nombre', 'Cargo', 'Unidad', 'Teléfono']],
-      body: data,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [13, 110, 253] }
-    });
+      doc.setFontSize(8);
+      doc.text(`Total de registros: ${this.personalFiltrado.length}`, 14, 15);
+    }
+  });
 
-    doc.save('personal.pdf');
-  }
+  doc.save('personal_completo.pdf');
+}
 }

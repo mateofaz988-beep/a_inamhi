@@ -24,7 +24,6 @@
     </div>
   </div>
 
-  <!-- SELECTOR DOCUMENTOS -->
   <div class="page-selector-card no-print">
     <div class="page-selector-header">
       <div>
@@ -76,7 +75,6 @@
     </ng-template>
   </div>
 
-  <!-- FORMULARIO -->
   <div class="control-panel no-print">
     <div class="panel-title">
       <i class="bi bi-ui-checks-grid me-2"></i>
@@ -211,389 +209,394 @@
     </div>
   </div>
 
-  <!-- DOCUMENTOS -->
-  <div class="pdf-wrapper">
+  <div class="pdf-preview-wrapper">
     <div class="pdf-content" #pdfContent>
 
       <!-- DOCUMENTO 1 - PÁGINA 1 -->
-      <section class="pdf-page" *ngIf="mostrarDocumento1">
-        <table class="doc-header-table">
-          <tr>
-            <td class="logo-cell">
-              <div class="logo-box">
-                <img src="assets/logo.png" alt="Logo INAMHI" class="logo-img">
-              </div>
-            </td>
-            <td class="title-cell">
-              <div class="doc-title">ACCIÓN DE PERSONAL</div>
-            </td>
-            <td class="code-cell">
-              <div class="code-row"><strong>AP:</strong> {{ formulario.numero_accion || '__________' }}</div>
-              <div class="code-row"><strong>Fecha de elaboración</strong></div>
-              <div class="code-row">{{ formatearFechaVisual(formulario.fecha_elaboracion) }}</div>
-            </td>
-          </tr>
-        </table>
-
-        <table class="doc-table compact-table">
-          <tr>
-            <td class="label-cell center-text">APELLIDOS</td>
-            <td class="label-cell center-text">NOMBRES</td>
-            <td class="label-cell center-text">RIGE:</td>
-            <td class="value-cell center-text" colspan="2">{{ formulario.nombres }}</td>
-          </tr>
-          <tr>
-            <td class="value-cell center-text">{{ formulario.apellidos }}</td>
-            <td class="value-cell center-text">{{ formulario.nombres }}</td>
-            <td class="label-cell center-text">DESDE (dd-mm-aaaa)</td>
-            <td class="label-cell center-text">HASTA (dd-mm-aaaa)</td>
-          </tr>
-          <tr>
-            <td class="label-cell center-text">DOCUMENTO DE IDENTIFICACIÓN</td>
-            <td class="label-cell center-text">NRO. DE IDENTIFICACIÓN</td>
-            <td class="value-cell center-text">{{ formatearFechaVisual(formulario.desde) }}</td>
-            <td class="value-cell center-text">{{ formatearFechaVisual(formulario.hasta) }}</td>
-          </tr>
-          <tr>
-            <td class="value-cell center-text">CÉDULA</td>
-            <td class="value-cell center-text">{{ formulario.cedula }}</td>
-            <td colspan="2"></td>
-          </tr>
-        </table>
-
-        <table class="doc-table compact-table">
-          <tr>
-            <td colspan="4" class="mini-top-note">Escoja una opción:</td>
-          </tr>
-          <tr>
-            <td colspan="4" class="checkbox-grid-cell">
-              <div class="checkbox-grid page1-grid">
-                <div class="checkbox-item" *ngFor="let accion of tiposAccionPersonal">
-                  <span class="check-box">{{ formulario.accion_personal === accion ? 'X' : '' }}</span>
-                  <span>{{ accion }}</span>
+      <section class="pdf-page-a4" *ngIf="mostrarDocumento1">
+        <div class="page-inner">
+          <table class="doc-header-table">
+            <tr>
+              <td class="logo-cell">
+                <div class="logo-box">
+                  <img src="assets/logo.png" alt="Logo INAMHI" class="logo-img">
                 </div>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td colspan="4" class="small-line-text">
-              * PRESENTÓ LA DECLARACIÓN JURADA (número 2 del art. 3 RLOSEP)
-            </td>
-          </tr>
-        </table>
+              </td>
+              <td class="title-cell">
+                <div class="doc-title">ACCIÓN DE PERSONAL</div>
+              </td>
+              <td class="code-cell">
+                <div class="code-row"><strong>AP:</strong> {{ formulario.numero_accion || '__________' }}</div>
+                <div class="code-row"><strong>Fecha de elaboración</strong></div>
+                <div class="code-row">{{ formatearFechaVisual(formulario.fecha_elaboracion) }}</div>
+              </td>
+            </tr>
+          </table>
 
-        <table class="doc-table">
-          <tr>
-            <td class="label-cell full-header">MOTIVACIÓN:</td>
-          </tr>
-          <tr>
-            <td class="multiline-cell page1-legal-cell">{{ formulario.motivo_legal }}</td>
-          </tr>
-          <tr>
-            <td class="reference-line">
-              REFERENCIA: 1) {{ formulario.referencia_1 || 'Solicitud aprobada por el jefe inmediato' }}
-              &nbsp;&nbsp;&nbsp; 2) {{ formulario.referencia_2 || 'Documento de respaldo institucional' }}
-            </td>
-          </tr>
-        </table>
+          <table class="doc-table compact-table">
+            <tr>
+              <td class="label-cell center-text">APELLIDOS</td>
+              <td class="label-cell center-text">NOMBRES</td>
+              <td class="label-cell center-text">RIGE:</td>
+              <td class="value-cell center-text" colspan="2">{{ formulario.nombres }}</td>
+            </tr>
+            <tr>
+              <td class="value-cell center-text">{{ formulario.apellidos }}</td>
+              <td class="value-cell center-text">{{ formulario.nombres }}</td>
+              <td class="label-cell center-text">DESDE (dd-mm-aaaa)</td>
+              <td class="label-cell center-text">HASTA (dd-mm-aaaa)</td>
+            </tr>
+            <tr>
+              <td class="label-cell center-text">DOCUMENTO DE IDENTIFICACIÓN</td>
+              <td class="label-cell center-text">NRO. DE IDENTIFICACIÓN</td>
+              <td class="value-cell center-text">{{ formatearFechaVisual(formulario.desde) }}</td>
+              <td class="value-cell center-text">{{ formatearFechaVisual(formulario.hasta) }}</td>
+            </tr>
+            <tr>
+              <td class="value-cell center-text">CÉDULA</td>
+              <td class="value-cell center-text">{{ formulario.cedula }}</td>
+              <td colspan="2"></td>
+            </tr>
+          </table>
 
-        <table class="doc-table compact-table">
-          <tr>
-            <th colspan="2" class="section-header">SITUACIÓN ACTUAL</th>
-            <th colspan="2" class="section-header">SITUACIÓN PROPUESTA</th>
-          </tr>
-          <tr>
-            <td class="label-cell narrow-label">PROCESO INSTITUCIONAL:</td>
-            <td class="value-cell">{{ formulario.proceso_institucional_actual }}</td>
-            <td class="label-cell narrow-label">PROCESO INSTITUCIONAL:</td>
-            <td class="value-cell">{{ formulario.proceso_institucional_propuesta }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell narrow-label">NIVEL DE GESTIÓN:</td>
-            <td class="value-cell">{{ formulario.nivel_gestion_actual }}</td>
-            <td class="label-cell narrow-label">NIVEL DE GESTIÓN:</td>
-            <td class="value-cell">{{ formulario.nivel_gestion_propuesta }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell narrow-label">UNIDAD ADMINISTRATIVA:</td>
-            <td class="value-cell">{{ formulario.unidad_actual }}</td>
-            <td class="label-cell narrow-label">UNIDAD ADMINISTRATIVA:</td>
-            <td class="value-cell">{{ formulario.unidad_propuesta }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell narrow-label">LUGAR DE TRABAJO:</td>
-            <td class="value-cell">{{ formulario.lugar_trabajo_actual }}</td>
-            <td class="label-cell narrow-label">LUGAR DE TRABAJO:</td>
-            <td class="value-cell">{{ formulario.lugar_trabajo_propuesta }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell narrow-label">DENOMINACIÓN DEL PUESTO:</td>
-            <td class="value-cell">{{ formulario.denominacion_actual }}</td>
-            <td class="label-cell narrow-label">DENOMINACIÓN DEL PUESTO:</td>
-            <td class="value-cell">{{ formulario.denominacion_propuesta }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell narrow-label">GRUPO OCUPACIONAL:</td>
-            <td class="value-cell">{{ formulario.grupo_actual }}</td>
-            <td class="label-cell narrow-label">GRUPO OCUPACIONAL:</td>
-            <td class="value-cell">{{ formulario.grupo_propuesta }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell narrow-label">GRADO:</td>
-            <td class="value-cell">{{ formulario.grado_actual }}</td>
-            <td class="label-cell narrow-label">GRADO:</td>
-            <td class="value-cell">{{ formulario.grado_propuesta }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell narrow-label">REMUNERACIÓN MENSUAL:</td>
-            <td class="value-cell">{{ formulario.remuneracion_actual }}</td>
-            <td class="label-cell narrow-label">REMUNERACIÓN MENSUAL:</td>
-            <td class="value-cell">{{ formulario.remuneracion_propuesta }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell narrow-label">PARTIDA INDIVIDUAL:</td>
-            <td class="value-cell">{{ formulario.partida_actual }}</td>
-            <td class="label-cell narrow-label">PARTIDA INDIVIDUAL:</td>
-            <td class="value-cell">{{ formulario.partida_propuesta }}</td>
-          </tr>
-        </table>
+          <table class="doc-table compact-table">
+            <tr>
+              <td colspan="4" class="mini-top-note">Escoja una opción:</td>
+            </tr>
+            <tr>
+              <td colspan="4" class="checkbox-grid-cell">
+                <div class="checkbox-grid page1-grid">
+                  <div class="checkbox-item" *ngFor="let accion of tiposAccionPersonal">
+                    <span class="check-box">{{ formulario.accion_personal === accion ? 'X' : '' }}</span>
+                    <span>{{ accion }}</span>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="4" class="small-line-text">
+                * PRESENTÓ LA DECLARACIÓN JURADA (número 2 del art. 3 RLOSEP)
+              </td>
+            </tr>
+          </table>
 
-        <table class="doc-table compact-table">
-          <tr>
-            <th colspan="4" class="section-header left-align">POSESIÓN DEL PUESTO</th>
-          </tr>
-          <tr>
-            <td colspan="2" class="multiline-cell posecion-cell">
-              YO, ____________________________________________<br>
-              JURO LEALTAD AL ESTADO ECUATORIANO.<br><br>
-              LUGAR: {{ formulario.lugar_posesion }} &nbsp;&nbsp;&nbsp; FECHA: ______________________
-            </td>
-            <td colspan="2" class="multiline-cell posecion-cell">
-              CON NRO. DE DOCUMENTO DE IDENTIFICACIÓN {{ formulario.documento_identificacion_posesion }}
-            </td>
-          </tr>
-          <tr>
-            <td colspan="2" class="small-line-text center-text">** (EN CASO DE GANADOR DE CONCURSO DE MÉRITOS Y OPOSICIÓN)</td>
-            <td colspan="2"></td>
-          </tr>
-          <tr>
-            <td class="label-cell center-text">NRO. ACTA FINAL</td>
-            <td class="value-cell center-text">{{ formulario.nro_acta_final }}</td>
-            <td class="label-cell center-text">FECHA</td>
-            <td class="value-cell center-text">{{ formatearFechaVisual(formulario.fecha_acta_final) }}</td>
-          </tr>
-        </table>
+          <table class="doc-table">
+            <tr>
+              <td class="label-cell full-header">MOTIVACIÓN:</td>
+            </tr>
+            <tr>
+              <td class="multiline-cell page1-legal-cell">{{ formulario.motivo_legal }}</td>
+            </tr>
+            <tr>
+              <td class="reference-line">
+                REFERENCIA: 1) {{ formulario.referencia_1 || 'Solicitud aprobada por el jefe inmediato' }}
+                &nbsp;&nbsp;&nbsp; 2) {{ formulario.referencia_2 || 'Documento de respaldo institucional' }}
+              </td>
+            </tr>
+          </table>
 
-        <table class="doc-table compact-table">
-          <tr>
-            <th colspan="2" class="section-header">RESPONSABLES DE APROBACIÓN</th>
-          </tr>
-          <tr>
-            <td class="approval-box">
-              <div class="approval-title">DIRECTOR (A) O RESPONSABLE DE TALENTO HUMANO</div>
-              <div class="approval-sign-line"></div>
-              <div class="approval-field"><strong>NOMBRE:</strong> {{ formulario.nombre_director_th }}</div>
-              <div class="approval-field"><strong>PUESTO:</strong> {{ formulario.puesto_director_th }}</div>
-            </td>
-            <td class="approval-box">
-              <div class="approval-title">AUTORIDAD NOMINADORA O SU DELEGADO</div>
-              <div class="approval-sign-line"></div>
-              <div class="approval-field"><strong>NOMBRE:</strong> {{ formulario.nombre_autoridad }}</div>
-              <div class="approval-field"><strong>PUESTO:</strong> {{ formulario.puesto_autoridad }}</div>
-            </td>
-          </tr>
-        </table>
+          <table class="doc-table compact-table">
+            <tr>
+              <th colspan="2" class="section-header">SITUACIÓN ACTUAL</th>
+              <th colspan="2" class="section-header">SITUACIÓN PROPUESTA</th>
+            </tr>
+            <tr>
+              <td class="label-cell narrow-label">PROCESO INSTITUCIONAL:</td>
+              <td class="value-cell">{{ formulario.proceso_institucional_actual }}</td>
+              <td class="label-cell narrow-label">PROCESO INSTITUCIONAL:</td>
+              <td class="value-cell">{{ formulario.proceso_institucional_propuesta }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell narrow-label">NIVEL DE GESTIÓN:</td>
+              <td class="value-cell">{{ formulario.nivel_gestion_actual }}</td>
+              <td class="label-cell narrow-label">NIVEL DE GESTIÓN:</td>
+              <td class="value-cell">{{ formulario.nivel_gestion_propuesta }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell narrow-label">UNIDAD ADMINISTRATIVA:</td>
+              <td class="value-cell">{{ formulario.unidad_actual }}</td>
+              <td class="label-cell narrow-label">UNIDAD ADMINISTRATIVA:</td>
+              <td class="value-cell">{{ formulario.unidad_propuesta }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell narrow-label">LUGAR DE TRABAJO:</td>
+              <td class="value-cell">{{ formulario.lugar_trabajo_actual }}</td>
+              <td class="label-cell narrow-label">LUGAR DE TRABAJO:</td>
+              <td class="value-cell">{{ formulario.lugar_trabajo_propuesta }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell narrow-label">DENOMINACIÓN DEL PUESTO:</td>
+              <td class="value-cell">{{ formulario.denominacion_actual }}</td>
+              <td class="label-cell narrow-label">DENOMINACIÓN DEL PUESTO:</td>
+              <td class="value-cell">{{ formulario.denominacion_propuesta }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell narrow-label">GRUPO OCUPACIONAL:</td>
+              <td class="value-cell">{{ formulario.grupo_actual }}</td>
+              <td class="label-cell narrow-label">GRUPO OCUPACIONAL:</td>
+              <td class="value-cell">{{ formulario.grupo_propuesta }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell narrow-label">GRADO:</td>
+              <td class="value-cell">{{ formulario.grado_actual }}</td>
+              <td class="label-cell narrow-label">GRADO:</td>
+              <td class="value-cell">{{ formulario.grado_propuesta }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell narrow-label">REMUNERACIÓN MENSUAL:</td>
+              <td class="value-cell">{{ formulario.remuneracion_actual }}</td>
+              <td class="label-cell narrow-label">REMUNERACIÓN MENSUAL:</td>
+              <td class="value-cell">{{ formulario.remuneracion_propuesta }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell narrow-label">PARTIDA INDIVIDUAL:</td>
+              <td class="value-cell">{{ formulario.partida_actual }}</td>
+              <td class="label-cell narrow-label">PARTIDA INDIVIDUAL:</td>
+              <td class="value-cell">{{ formulario.partida_propuesta }}</td>
+            </tr>
+          </table>
 
-        <div class="page-footer-note">
-          Elaborado por el Ministerio del Trabajo &nbsp;&nbsp;|&nbsp;&nbsp; Fecha de actualización de formato: 2024-03-13 &nbsp;&nbsp;|&nbsp;&nbsp; Versión: 01.1
+          <table class="doc-table compact-table">
+            <tr>
+              <th colspan="4" class="section-header left-align">POSESIÓN DEL PUESTO</th>
+            </tr>
+            <tr>
+              <td colspan="2" class="multiline-cell posecion-cell">
+                YO, ____________________________________________<br>
+                JURO LEALTAD AL ESTADO ECUATORIANO.<br><br>
+                LUGAR: {{ formulario.lugar_posesion }} &nbsp;&nbsp;&nbsp; FECHA: ______________________
+              </td>
+              <td colspan="2" class="multiline-cell posecion-cell">
+                CON NRO. DE DOCUMENTO DE IDENTIFICACIÓN {{ formulario.documento_identificacion_posesion }}
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" class="small-line-text center-text">** (EN CASO DE GANADOR DE CONCURSO DE MÉRITOS Y OPOSICIÓN)</td>
+              <td colspan="2"></td>
+            </tr>
+            <tr>
+              <td class="label-cell center-text">NRO. ACTA FINAL</td>
+              <td class="value-cell center-text">{{ formulario.nro_acta_final }}</td>
+              <td class="label-cell center-text">FECHA</td>
+              <td class="value-cell center-text">{{ formatearFechaVisual(formulario.fecha_acta_final) }}</td>
+            </tr>
+          </table>
+
+          <table class="doc-table compact-table">
+            <tr>
+              <th colspan="2" class="section-header">RESPONSABLES DE APROBACIÓN</th>
+            </tr>
+            <tr>
+              <td class="approval-box">
+                <div class="approval-title">DIRECTOR (A) O RESPONSABLE DE TALENTO HUMANO</div>
+                <div class="approval-sign-line"></div>
+                <div class="approval-field"><strong>NOMBRE:</strong> {{ formulario.nombre_director_th }}</div>
+                <div class="approval-field"><strong>PUESTO:</strong> {{ formulario.puesto_director_th }}</div>
+              </td>
+              <td class="approval-box">
+                <div class="approval-title">AUTORIDAD NOMINADORA O SU DELEGADO</div>
+                <div class="approval-sign-line"></div>
+                <div class="approval-field"><strong>NOMBRE:</strong> {{ formulario.nombre_autoridad }}</div>
+                <div class="approval-field"><strong>PUESTO:</strong> {{ formulario.puesto_autoridad }}</div>
+              </td>
+            </tr>
+          </table>
+
+          <div class="page-footer-note">
+            Elaborado por el Ministerio del Trabajo &nbsp;&nbsp;|&nbsp;&nbsp; Fecha de actualización de formato: 2024-03-13 &nbsp;&nbsp;|&nbsp;&nbsp; Versión: 01.1
+          </div>
         </div>
       </section>
 
       <!-- DOCUMENTO 1 - PÁGINA 2 -->
-      <section class="pdf-page" *ngIf="mostrarDocumento1">
-        <table class="doc-table compact-table top-title-table">
-          <tr>
-            <th class="section-header">RESPONSABLES DE FIRMAS</th>
-          </tr>
-        </table>
+      <section class="pdf-page-a4" *ngIf="mostrarDocumento1">
+        <div class="page-inner">
+          <table class="doc-table compact-table top-title-table">
+            <tr>
+              <th class="section-header">RESPONSABLES DE FIRMAS</th>
+            </tr>
+          </table>
 
-        <table class="doc-table compact-table">
-          <tr>
-            <th class="section-header">ACEPTACIÓN Y / O RECEPCIÓN DEL SERVIDOR PÚBLICO</th>
-            <th class="section-header">EN CASO DE NEGATIVA DE LA RECEPCIÓN (TESTIGO)</th>
-          </tr>
-          <tr>
-            <td class="firma-card">
-              <div class="firma-row">FIRMA: __________________________________________</div>
-              <div class="firma-row">NOMBRE: {{ formulario.aceptacion_servidor }}</div>
-              <div class="firma-row">FECHA: {{ formatearFechaVisual(formulario.fecha_aceptacion) }}</div>
-              <div class="firma-row">HORA: {{ formulario.hora_aceptacion }}</div>
-            </td>
-            <td class="firma-card">
-              <div class="firma-row">FIRMA: __________________________________________</div>
-              <div class="firma-row">NOMBRE: {{ formulario.testigo_nombre }}</div>
-              <div class="firma-row">FECHA: {{ formatearFechaVisual(formulario.testigo_fecha) }}</div>
-              <div class="firma-row reason-row">
-                RAZÓN: {{ formulario.testigo_razon || 'En presencia del testigo se deja constancia de que la o el servidor público tiene la negativa de recibir la comunicación de registro de esta acción de personal.' }}
-              </div>
-            </td>
-          </tr>
-        </table>
+          <table class="doc-table compact-table">
+            <tr>
+              <th class="section-header">ACEPTACIÓN Y / O RECEPCIÓN DEL SERVIDOR PÚBLICO</th>
+              <th class="section-header">EN CASO DE NEGATIVA DE LA RECEPCIÓN (TESTIGO)</th>
+            </tr>
+            <tr>
+              <td class="firma-card">
+                <div class="firma-row">FIRMA: __________________________________________</div>
+                <div class="firma-row">NOMBRE: {{ formulario.aceptacion_servidor }}</div>
+                <div class="firma-row">FECHA: {{ formatearFechaVisual(formulario.fecha_aceptacion) }}</div>
+                <div class="firma-row">HORA: {{ formulario.hora_aceptacion }}</div>
+              </td>
+              <td class="firma-card">
+                <div class="firma-row">FIRMA: __________________________________________</div>
+                <div class="firma-row">NOMBRE: {{ formulario.testigo_nombre }}</div>
+                <div class="firma-row">FECHA: {{ formatearFechaVisual(formulario.testigo_fecha) }}</div>
+                <div class="firma-row reason-row">
+                  RAZÓN: {{ formulario.testigo_razon || 'En presencia del testigo se deja constancia de que la o el servidor público tiene la negativa de recibir la comunicación de registro de esta acción de personal.' }}
+                </div>
+              </td>
+            </tr>
+          </table>
 
-        <table class="doc-table compact-table">
-          <tr>
-            <th class="section-header">RESPONSABLE DE ELABORACIÓN</th>
-            <th class="section-header">RESPONSABLE DE REVISIÓN</th>
-            <th class="section-header">RESPONSABLE DE REGISTRO Y CONTROL</th>
-          </tr>
-          <tr>
-            <td class="mini-firma-card">
-              <div class="firma-line-mini"></div>
-              <div class="mini-data"><strong>NOMBRE:</strong> {{ formulario.elaborado_por }}</div>
-              <div class="mini-data"><strong>PUESTO:</strong> {{ formulario.puesto_elaborado }}</div>
-            </td>
-            <td class="mini-firma-card">
-              <div class="firma-line-mini"></div>
-              <div class="mini-data"><strong>NOMBRE:</strong> {{ formulario.revisado_por }}</div>
-              <div class="mini-data"><strong>PUESTO:</strong> {{ formulario.puesto_revisado }}</div>
-            </td>
-            <td class="mini-firma-card">
-              <div class="firma-line-mini"></div>
-              <div class="mini-data"><strong>NOMBRE:</strong> {{ formulario.registrado_por }}</div>
-              <div class="mini-data"><strong>PUESTO:</strong> {{ formulario.puesto_registrado }}</div>
-            </td>
-          </tr>
-        </table>
+          <table class="doc-table compact-table">
+            <tr>
+              <th class="section-header">RESPONSABLE DE ELABORACIÓN</th>
+              <th class="section-header">RESPONSABLE DE REVISIÓN</th>
+              <th class="section-header">RESPONSABLE DE REGISTRO Y CONTROL</th>
+            </tr>
+            <tr>
+              <td class="mini-firma-card">
+                <div class="firma-line-mini"></div>
+                <div class="mini-data"><strong>NOMBRE:</strong> {{ formulario.elaborado_por }}</div>
+                <div class="mini-data"><strong>PUESTO:</strong> {{ formulario.puesto_elaborado }}</div>
+              </td>
+              <td class="mini-firma-card">
+                <div class="firma-line-mini"></div>
+                <div class="mini-data"><strong>NOMBRE:</strong> {{ formulario.revisado_por }}</div>
+                <div class="mini-data"><strong>PUESTO:</strong> {{ formulario.puesto_revisado }}</div>
+              </td>
+              <td class="mini-firma-card">
+                <div class="firma-line-mini"></div>
+                <div class="mini-data"><strong>NOMBRE:</strong> {{ formulario.registrado_por }}</div>
+                <div class="mini-data"><strong>PUESTO:</strong> {{ formulario.puesto_registrado }}</div>
+              </td>
+            </tr>
+          </table>
 
-        <div class="talento-humano-title">
-          ** USO EXCLUSIVO PARA TALENTO HUMANO
-        </div>
+          <div class="talento-humano-title">
+            ** USO EXCLUSIVO PARA TALENTO HUMANO
+          </div>
 
-        <table class="doc-table talento-box">
-          <tr>
-            <th class="section-header left-align">
-              REGISTRO DE NOTIFICACIÓN AL SERVIDOR PÚBLICO DE LA ACCIÓN DE PERSONAL
-            </th>
-          </tr>
-          <tr>
-            <td class="multiline-cell talento-content">
-              <div class="notif-row">
-                COMUNICACIÓN ELECTRÓNICA:
-                <span class="check-box small-check">{{ formulario.comunicacion_electronica ? 'X' : '' }}</span>
-              </div>
+          <table class="doc-table talento-box">
+            <tr>
+              <th class="section-header left-align">
+                REGISTRO DE NOTIFICACIÓN AL SERVIDOR PÚBLICO DE LA ACCIÓN DE PERSONAL
+              </th>
+            </tr>
+            <tr>
+              <td class="multiline-cell talento-content">
+                <div class="notif-row">
+                  COMUNICACIÓN ELECTRÓNICA:
+                  <span class="check-box small-check">{{ formulario.comunicacion_electronica ? 'X' : '' }}</span>
+                </div>
 
-              <div class="notif-row split-row">
-                <span>FECHA: {{ formatearFechaVisual(formulario.fecha_notificacion) }}</span>
-                <span>HORA: {{ formulario.hora_notificacion }}</span>
-              </div>
+                <div class="notif-row split-row">
+                  <span>FECHA: {{ formatearFechaVisual(formulario.fecha_notificacion) }}</span>
+                  <span>HORA: {{ formulario.hora_notificacion }}</span>
+                </div>
 
-              <div class="notif-row">
-                ** MEDIO: {{ formulario.medio_notificacion }}
-              </div>
+                <div class="notif-row">
+                  ** MEDIO: {{ formulario.medio_notificacion }}
+                </div>
 
-              <div class="notif-signature">
-                <div class="notif-line"></div>
-                <div class="notif-caption">FIRMA DEL RESPONSABLE QUE NOTIFICÓ</div>
-              </div>
+                <div class="notif-signature">
+                  <div class="notif-line"></div>
+                  <div class="notif-caption">FIRMA DEL RESPONSABLE QUE NOTIFICÓ</div>
+                </div>
 
-              <div class="notif-row">NOMBRE: {{ formulario.notificado_por }}</div>
-              <div class="notif-row">PUESTO: {{ formulario.puesto_notificado }}</div>
-            </td>
-          </tr>
-        </table>
+                <div class="notif-row">NOMBRE: {{ formulario.notificado_por }}</div>
+                <div class="notif-row">PUESTO: {{ formulario.puesto_notificado }}</div>
+              </td>
+            </tr>
+          </table>
 
-        <div class="page-footer-note">
-          Elaborado por el Ministerio del Trabajo &nbsp;&nbsp;|&nbsp;&nbsp; Fecha de actualización de formato: 2024-03-13 &nbsp;&nbsp;|&nbsp;&nbsp; Versión: 01.1
+          <div class="page-footer-note">
+            Elaborado por el Ministerio del Trabajo &nbsp;&nbsp;|&nbsp;&nbsp; Fecha de actualización de formato: 2024-03-13 &nbsp;&nbsp;|&nbsp;&nbsp; Versión: 01.1
+          </div>
         </div>
       </section>
 
       <!-- DOCUMENTO 2 -->
-      <section class="pdf-page permiso-page" *ngIf="mostrarDocumento2">
-        <table class="doc-header-table doc2-header">
-          <tr>
-            <td class="doc2-left-brand">Time<br><span>Tu canal de talento</span></td>
-            <td class="doc2-center-brand">INAMHI</td>
-            <td class="doc2-right-brand">{{ formulario.numero_accion || '' }}</td>
-          </tr>
-          <tr>
-            <td colspan="3" class="doc2-title-row">SOLICITUD DE VACACIONES, LICENCIAS Y PERMISOS</td>
-          </tr>
-        </table>
+      <section class="pdf-page-a4" *ngIf="mostrarDocumento2">
+        <div class="page-inner">
+          <table class="doc-header-table doc2-header">
+            <tr>
+              <td class="doc2-left-brand">Time<br><span>Tu canal de talento</span></td>
+              <td class="doc2-center-brand">INAMHI</td>
+              <td class="doc2-right-brand">{{ formulario.numero_accion || '' }}</td>
+            </tr>
+            <tr>
+              <td colspan="3" class="doc2-title-row">SOLICITUD DE VACACIONES, LICENCIAS Y PERMISOS</td>
+            </tr>
+          </table>
 
-        <table class="doc-table compact-table doc2-table">
-          <tr>
-            <th colspan="4" class="section-header">INFORMACIÓN GENERAL</th>
-          </tr>
-          <tr>
-            <td class="label-cell">FECHA:</td>
-            <td class="value-cell">{{ formatearFechaVisual(formulario.fecha_solicitud) }}</td>
-            <td class="label-cell">CÉDULA:</td>
-            <td class="value-cell">{{ formulario.cedula }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">CIUDAD:</td>
-            <td colspan="3" class="value-cell">{{ formulario.ciudad }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">APELLIDOS:</td>
-            <td colspan="3" class="value-cell">{{ formulario.apellidos }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">NOMBRES:</td>
-            <td colspan="3" class="value-cell">{{ formulario.nombres }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">RÉGIMEN LABORAL:</td>
-            <td colspan="3" class="value-cell">{{ formulario.regimen_laboral }}</td>
-          </tr>
-        </table>
+          <table class="doc-table compact-table doc2-table">
+            <tr>
+              <th colspan="4" class="section-header">INFORMACIÓN GENERAL</th>
+            </tr>
+            <tr>
+              <td class="label-cell">FECHA:</td>
+              <td class="value-cell">{{ formatearFechaVisual(formulario.fecha_solicitud) }}</td>
+              <td class="label-cell">CÉDULA:</td>
+              <td class="value-cell">{{ formulario.cedula }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">CIUDAD:</td>
+              <td colspan="3" class="value-cell">{{ formulario.ciudad }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">APELLIDOS:</td>
+              <td colspan="3" class="value-cell">{{ formulario.apellidos }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">NOMBRES:</td>
+              <td colspan="3" class="value-cell">{{ formulario.nombres }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">RÉGIMEN LABORAL:</td>
+              <td colspan="3" class="value-cell">{{ formulario.regimen_laboral }}</td>
+            </tr>
+          </table>
 
-        <table class="doc-table compact-table doc2-table">
-          <tr>
-            <th colspan="4" class="section-header">DATOS DEL PERMISO</th>
-          </tr>
-          <tr>
-            <td class="label-cell">TIPO PERMISO:</td>
-            <td class="value-cell">{{ formulario.tipo_permiso }}</td>
-            <td class="label-cell">FECHA TERMINACIÓN:</td>
-            <td class="value-cell">{{ formatearFechaHoraVisual(formulario.fecha_terminacion) }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">FECHA INICIO:</td>
-            <td colspan="3" class="value-cell">{{ formatearFechaHoraVisual(formulario.fecha_inicio) }}</td>
-          </tr>
-          <tr>
-            <td class="label-cell">OBSERVACIÓN:</td>
-            <td colspan="3" class="value-cell">{{ formulario.observacion }}</td>
-          </tr>
-        </table>
+          <table class="doc-table compact-table doc2-table">
+            <tr>
+              <th colspan="4" class="section-header">DATOS DEL PERMISO</th>
+            </tr>
+            <tr>
+              <td class="label-cell">TIPO PERMISO:</td>
+              <td class="value-cell">{{ formulario.tipo_permiso }}</td>
+              <td class="label-cell">FECHA TERMINACIÓN:</td>
+              <td class="value-cell">{{ formatearFechaHoraVisual(formulario.fecha_terminacion) }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">FECHA INICIO:</td>
+              <td colspan="3" class="value-cell">{{ formatearFechaHoraVisual(formulario.fecha_inicio) }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">OBSERVACIÓN:</td>
+              <td colspan="3" class="value-cell">{{ formulario.observacion }}</td>
+            </tr>
+          </table>
 
-        <div class="doc2-signatures-area">
-          <div class="doc2-sign-box">
-            <div class="doc2-sign-title">Solicitado por:</div>
-            <div class="doc2-sign-line"></div>
-            <div class="doc2-sign-name">{{ formulario.solicitado_por }}</div>
-            <div class="doc2-sign-role">{{ formulario.puesto_solicitante }}</div>
+          <div class="doc2-signatures-area">
+            <div class="doc2-sign-box">
+              <div class="doc2-sign-title">Solicitado por:</div>
+              <div class="doc2-sign-line"></div>
+              <div class="doc2-sign-name">{{ formulario.solicitado_por }}</div>
+              <div class="doc2-sign-role">{{ formulario.puesto_solicitante }}</div>
+            </div>
+
+            <div class="doc2-sign-box left-box">
+              <div class="doc2-sign-title">Autorizado Por:</div>
+              <div class="doc2-sign-line"></div>
+              <div class="doc2-sign-name">{{ formulario.autorizado_por }}</div>
+              <div class="doc2-sign-role">{{ formulario.puesto_autorizado }}</div>
+            </div>
           </div>
 
-          <div class="doc2-sign-box left-box">
-            <div class="doc2-sign-title">Autorizado Por:</div>
-            <div class="doc2-sign-line"></div>
-            <div class="doc2-sign-name">{{ formulario.autorizado_por }}</div>
-            <div class="doc2-sign-role">{{ formulario.puesto_autorizado }}</div>
-          </div>
+          <table class="footer-table doc2-footer">
+            <tr>
+              <td><strong>No. Registros:</strong> {{ formulario.no_registros }}</td>
+              <td class="center-text">Pags 1</td>
+              <td class="right-text">{{ formatearFechaVisual(formulario.fecha_impresion) }}</td>
+            </tr>
+            <tr>
+              <td colspan="3"><strong>Impreso por:</strong> {{ formulario.impreso_por }}</td>
+            </tr>
+          </table>
         </div>
-
-        <table class="footer-table doc2-footer">
-          <tr>
-            <td><strong>No. Registros:</strong> {{ formulario.no_registros }}</td>
-            <td class="center-text">Pags 1</td>
-            <td class="right-text">{{ formatearFechaVisual(formulario.fecha_impresion) }}</td>
-          </tr>
-          <tr>
-            <td colspan="3"><strong>Impreso por:</strong> {{ formulario.impreso_por }}</td>
-          </tr>
-        </table>
       </section>
 
     </div>

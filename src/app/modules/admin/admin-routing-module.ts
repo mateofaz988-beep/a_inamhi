@@ -5,6 +5,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard';
 import { NuevoFuncionarioComponent } from '../../components/nuevo-funcionario/nuevo-funcionario';
 import { AuditoriaComponent } from '../../components/auditoria/auditoria';
 import { SolicitudPermisosComponent } from '../../components/solicitud-permisos/solicitud-permisos';
+import { UsuariosComponent } from '../../components/usuarios/usuarios';
 
 const routes: Routes = [
 
@@ -26,6 +27,11 @@ const routes: Routes = [
   {
     path: 'solicitud-permisos',
     component: SolicitudPermisosComponent
+  },
+
+  {
+    path: 'usuarios',
+    component: UsuariosComponent
   },
 
   {

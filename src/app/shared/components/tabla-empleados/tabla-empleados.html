@@ -94,121 +94,180 @@
             </tr>
           </thead>
 
-          <!-- BODY -->
-          <tbody>
-            <tr *ngFor="let emp of personalFiltrado; let i = index" class="row-hover">
+       <tbody>
+  <tr *ngFor="let emp of personalFiltrado; let i = index" class="row-hover">
 
-              <td class="sticky-col-id text-center">{{ emp.id }}</td>
+    <td class="sticky-col-id text-center">{{ emp.id }}</td>
 
-              <td class="sticky-col-nro text-center">
-                <span *ngIf="editIndex !== i">{{ emp.nro }}</span>
-                <input *ngIf="editIndex === i" [(ngModel)]="emp.nro" class="form-control form-control-sm">
-              </td>
+    <td class="sticky-col-nro text-center">
+      <span *ngIf="editIndex !== i">{{ emp.nro }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.nro" class="form-control form-control-sm">
+    </td>
 
-              <td class="text-center">
-                <span *ngIf="editIndex !== i">{{ emp.cedula }}</span>
-                <input *ngIf="editIndex === i" [(ngModel)]="emp.cedula" class="form-control form-control-sm">
-              </td>
+    <td class="text-center">
+      <span *ngIf="editIndex !== i">{{ emp.cedula }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.cedula" class="form-control form-control-sm">
+    </td>
 
-              <td class="sticky-col-name text-start">
-                <span *ngIf="editIndex !== i">{{ emp.nombres }}</span>
-                <input *ngIf="editIndex === i" [(ngModel)]="emp.nombres" class="form-control form-control-sm">
-              </td>
+    <td class="sticky-col-name text-start">
+      <span *ngIf="editIndex !== i">{{ emp.nombres }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.nombres" class="form-control form-control-sm">
+    </td>
 
-              <td class="text-start">
-                <span *ngIf="editIndex !== i">{{ emp.modalidad }}</span>
-                <input *ngIf="editIndex === i" [(ngModel)]="emp.modalidad" class="form-control form-control-sm">
-              </td>
+    <td class="text-start">
+      <span *ngIf="editIndex !== i">{{ emp.modalidad }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.modalidad" class="form-control form-control-sm">
+    </td>
 
-              <td class="text-start">
-                <span *ngIf="editIndex !== i">{{ emp.cargo }}</span>
-                <input *ngIf="editIndex === i" [(ngModel)]="emp.cargo" class="form-control form-control-sm">
-              </td>
+    <td class="text-start">
+      <span *ngIf="editIndex !== i">{{ emp.cargo }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.cargo" class="form-control form-control-sm">
+    </td>
 
-              <td class="text-end">{{ emp.rmu }}</td>
-              <td class="text-start">{{ emp.unidad }}</td>
-              <td class="text-center">{{ emp.fecha_ingreso }}</td>
-              <td class="text-center">{{ emp.fecha_nacimiento }}</td>
-              <td class="text-start">{{ emp.direccion }}</td>
-              <td class="text-start">{{ emp.email_inst }}</td>
-              <td class="text-center">{{ emp.telefono }}</td>
+    <td class="text-end">
+      <span *ngIf="editIndex !== i">{{ emp.rmu }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.rmu" class="form-control form-control-sm">
+    </td>
 
-              <td class="text-center">
-                <span *ngIf="editIndex !== i">{{ emp.genero }}</span>
-                <select *ngIf="editIndex === i" [(ngModel)]="emp.genero" class="form-control form-control-sm">
-                  <option value="Masculino">Masculino</option>
-                  <option value="Femenino">Femenino</option>
-                </select>
-              </td>
+    <td class="text-start">
+      <span *ngIf="editIndex !== i">{{ emp.unidad }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.unidad" class="form-control form-control-sm">
+    </td>
 
-              <td class="text-start">{{ emp.instruccion }}</td>
-              <td class="text-start">{{ emp.profesion }}</td>
-              <td class="text-center">{{ emp.vulnerable }}</td>
-              <td class="text-start">{{ emp.tipo_discapacidad }}</td>
-              <td class="text-center">{{ emp.porcentaje_disc }}</td>
-              <td class="text-start">{{ emp.etnia }}</td>
-              <td class="text-start">{{ emp.rol }}</td>
+    <td class="text-center">
+      <span *ngIf="editIndex !== i">{{ emp.fecha_ingreso }}</span>
+      <input *ngIf="editIndex === i" type="date" [(ngModel)]="emp.fecha_ingreso" class="form-control form-control-sm">
+    </td>
 
-              <td class="min-w-400 text-start">
-                <div class="text-wrap">
-                  {{ emp.observaciones || 'Sin observaciones' }}
-                </div>
-              </td>
+    <td class="text-center">
+      <span *ngIf="editIndex !== i">{{ emp.fecha_nacimiento }}</span>
+      <input *ngIf="editIndex === i" type="date" [(ngModel)]="emp.fecha_nacimiento" class="form-control form-control-sm">
+    </td>
 
-              <!-- ACCIONES -->
-              <td *ngIf="authService.isAdmin()" class="text-center">
-                <div class="d-flex justify-content-center flex-wrap gap-2">
+    <td class="text-start">
+      <span *ngIf="editIndex !== i">{{ emp.direccion }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.direccion" class="form-control form-control-sm">
+    </td>
 
-                  <button
-                    *ngIf="editIndex !== i"
-                    class="btn btn-warning btn-sm action-btn-table"
-                    (click)="habilitarEdicion(i)"
-                  >
-                    <i class="bi bi-pencil-square me-1"></i>
-                    Editar
-                  </button>
+    <td class="text-start">
+      <span *ngIf="editIndex !== i">{{ emp.email_inst }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.email_inst" class="form-control form-control-sm">
+    </td>
 
-                  <button
-                    *ngIf="editIndex === i"
-                    class="btn btn-success btn-sm action-btn-table"
-                    (click)="guardarCambios(emp)"
-                  >
-                    <i class="bi bi-check-circle-fill me-1"></i>
-                    Guardar
-                  </button>
+    <td class="text-center">
+      <span *ngIf="editIndex !== i">{{ emp.telefono }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.telefono" class="form-control form-control-sm">
+    </td>
 
-                  <button
-                    *ngIf="editIndex === i"
-                    class="btn btn-secondary btn-sm action-btn-table"
-                    (click)="cancelarEdicion()"
-                  >
-                    <i class="bi bi-x-circle-fill me-1"></i>
-                    Cancelar
-                  </button>
-                  <br>
-                  <br>
-                  <br>
+    <td class="text-center">
+      <span *ngIf="editIndex !== i">{{ emp.genero }}</span>
+      <select *ngIf="editIndex === i" [(ngModel)]="emp.genero" class="form-control form-control-sm">
+        <option value="Masculino">Masculino</option>
+        <option value="Femenino">Femenino</option>
+      </select>
+    </td>
 
-                  <button
-                    class="btn btn-danger btn-sm action-btn-table"
-                    (click)="eliminar(emp.id)"
-                  >
-                    <i class="bi bi-trash-fill me-1"></i>
-                    Eliminar
-                  </button>
+    <td class="text-start">
+      <span *ngIf="editIndex !== i">{{ emp.instruccion }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.instruccion" class="form-control form-control-sm">
+    </td>
 
-                </div>
-              </td>
+    <td class="text-start">
+      <span *ngIf="editIndex !== i">{{ emp.profesion }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.profesion" class="form-control form-control-sm">
+    </td>
 
-            </tr>
+    <td class="text-center">
+      <span *ngIf="editIndex !== i">{{ emp.vulnerable }}</span>
+      <select *ngIf="editIndex === i" [(ngModel)]="emp.vulnerable" class="form-control form-control-sm">
+        <option value="SI">SI</option>
+        <option value="NO">NO</option>
+      </select>
+    </td>
 
-            <!-- SIN RESULTADOS -->
-            <tr *ngIf="personalFiltrado.length === 0">
-              <td [attr.colspan]="authService.isAdmin() ? 23 : 22" class="text-center py-5">
-                No hay resultados
-              </td>
-            </tr>
-          </tbody>
+    <td class="text-start">
+      <span *ngIf="editIndex !== i">{{ emp.tipo_discapacidad }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.tipo_discapacidad" class="form-control form-control-sm">
+    </td>
+
+    <td class="text-center">
+      <span *ngIf="editIndex !== i">{{ emp.porcentaje_disc }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.porcentaje_disc" class="form-control form-control-sm">
+    </td>
+
+    <td class="text-start">
+      <span *ngIf="editIndex !== i">{{ emp.etnia }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.etnia" class="form-control form-control-sm">
+    </td>
+
+    <td class="text-start">
+      <span *ngIf="editIndex !== i">{{ emp.rol }}</span>
+      <input *ngIf="editIndex === i" [(ngModel)]="emp.rol" class="form-control form-control-sm">
+    </td>
+
+    <td class="min-w-400 text-start">
+      <div *ngIf="editIndex !== i" class="text-wrap">
+        {{ emp.observaciones || 'Sin observaciones' }}
+      </div>
+
+      <textarea
+        *ngIf="editIndex === i"
+        [(ngModel)]="emp.observaciones"
+        rows="3"
+        class="form-control form-control-sm"
+      ></textarea>
+    </td>
+
+    <!-- ACCIONES -->
+    <td *ngIf="authService.isAdmin()" class="text-center">
+      <div class="d-flex justify-content-center flex-wrap gap-2">
+
+        <button
+          *ngIf="editIndex !== i"
+          class="btn btn-warning btn-sm action-btn-table"
+          (click)="habilitarEdicion(i)"
+        >
+          <i class="bi bi-pencil-square me-1"></i>
+          Editar
+        </button>
+
+        <button
+          *ngIf="editIndex === i"
+          class="btn btn-success btn-sm action-btn-table"
+          (click)="guardarCambios(emp)"
+        >
+          <i class="bi bi-check-circle-fill me-1"></i>
+          Guardar
+        </button>
+
+        <button
+          *ngIf="editIndex === i"
+          class="btn btn-secondary btn-sm action-btn-table"
+          (click)="cancelarEdicion()"
+        >
+          <i class="bi bi-x-circle-fill me-1"></i>
+          Cancelar
+        </button>
+
+        <button
+          class="btn btn-danger btn-sm action-btn-table"
+          (click)="eliminar(emp.id)"
+        >
+          <i class="bi bi-trash-fill me-1"></i>
+          Eliminar
+        </button>
+
+      </div>
+    </td>
+
+  </tr>
+
+  <tr *ngIf="personalFiltrado.length === 0">
+    <td [attr.colspan]="authService.isAdmin() ? 23 : 22" class="text-center py-5">
+      No hay resultados
+    </td>
+  </tr>
+</tbody>
 
         </table>
       </div>

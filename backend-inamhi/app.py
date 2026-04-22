@@ -370,11 +370,35 @@ def actualizar_personal(id):
         cursor.execute("SELECT * FROM personal WHERE id = %s", (id,))
         antes = cursor.fetchone()
 
+        if not antes:
+            return jsonify({"error": "Registro no encontrado"}), 404
+
         genero = normalizar_genero(data.get('genero'))
 
         query = """
             UPDATE personal
-            SET nro=%s, cedula=%s, nombres=%s, modalidad=%s, cargo=%s, genero=%s
+            SET
+                nro=%s,
+                cedula=%s,
+                nombres=%s,
+                modalidad=%s,
+                cargo=%s,
+                rmu=%s,
+                unidad=%s,
+                fecha_ingreso=%s,
+                fecha_nacimiento=%s,
+                direccion=%s,
+                email_inst=%s,
+                telefono=%s,
+                genero=%s,
+                instruccion=%s,
+                profesion=%s,
+                vulnerable=%s,
+                tipo_discapacidad=%s,
+                porcentaje_disc=%s,
+                etnia=%s,
+                rol=%s,
+                observaciones=%s
             WHERE id=%s
         """
 
@@ -384,7 +408,22 @@ def actualizar_personal(id):
             data.get('nombres'),
             data.get('modalidad'),
             data.get('cargo'),
+            data.get('rmu'),
+            data.get('unidad'),
+            data.get('fecha_ingreso'),
+            data.get('fecha_nacimiento'),
+            data.get('direccion'),
+            data.get('email_inst'),
+            data.get('telefono'),
             genero,
+            data.get('instruccion'),
+            data.get('profesion'),
+            data.get('vulnerable'),
+            data.get('tipo_discapacidad'),
+            data.get('porcentaje_disc'),
+            data.get('etnia'),
+            data.get('rol'),
+            data.get('observaciones'),
             id
         ))
 
@@ -400,7 +439,7 @@ def actualizar_personal(id):
             detalle='Actualización de funcionario'
         )
 
-        return jsonify({"message": "Actualizado"}), 200
+        return jsonify({"message": "Actualizado correctamente"}), 200
 
     except Exception as e:
         print("ERROR UPDATE PERSONAL:", str(e))
@@ -502,7 +541,256 @@ def obtener_auditoria():
             cursor.close()
         if conexion:
             conexion.close()
+# =========================
+# 📋 GET USUARIOS
+# =========================
+@app.route('/api/usuarios', methods=['GET'])
+def obtener_usuarios():
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
 
+    conexion = None
+    cursor = None
+
+    try:
+        conexion = get_connection()
+        cursor = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT id, usuario, rol
+            FROM usuarios
+            ORDER BY id ASC
+        """)
+
+        resultados = cursor.fetchall()
+
+        return jsonify(resultados), 200
+
+    except Exception as e:
+        print("ERROR OBTENIENDO USUARIOS:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexion:
+            conexion.close()
+
+
+# =========================
+# 👤 CREATE USUARIO
+# =========================
+@app.route('/api/usuarios', methods=['POST'])
+def crear_usuario():
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    data = request.get_json()
+    usuario_admin = obtener_usuario()
+
+    usuario_nuevo = (data.get('usuario') or '').strip()
+    password_nueva = (data.get('password') or '').strip()
+    rol_nuevo = (data.get('rol') or '').strip().lower()
+
+    # VALIDACIONES
+    if not usuario_nuevo:
+        return jsonify({"error": "El usuario es obligatorio"}), 400
+
+    if len(usuario_nuevo) < 4:
+        return jsonify({"error": "El usuario debe tener al menos 4 caracteres"}), 400
+
+    if len(usuario_nuevo) > 30:
+        return jsonify({"error": "El usuario no debe superar los 30 caracteres"}), 400
+
+    if not password_nueva:
+        return jsonify({"error": "La contraseña es obligatoria"}), 400
+
+    if len(password_nueva) < 4:
+        return jsonify({"error": "La contraseña debe tener al menos 4 caracteres"}), 400
+
+    if rol_nuevo not in ['admin', 'visitante']:
+        return jsonify({"error": "Rol inválido"}), 400
+
+    conexion = None
+    cursor = None
+
+    try:
+        conexion = get_connection()
+        cursor = conexion.cursor(dictionary=True)
+
+        # VALIDAR DUPLICADO
+        cursor.execute(
+            "SELECT id FROM usuarios WHERE usuario = %s",
+            (usuario_nuevo,)
+        )
+        existe = cursor.fetchone()
+
+        if existe:
+            return jsonify({"error": "El usuario ya existe"}), 409
+
+        cursor.close()
+        cursor = conexion.cursor()
+
+        query = """
+            INSERT INTO usuarios (usuario, password, rol)
+            VALUES (%s, %s, %s)
+        """
+
+        cursor.execute(query, (usuario_nuevo, password_nueva, rol_nuevo))
+        conexion.commit()
+
+        nuevo_id = cursor.lastrowid
+
+        # AUDITORÍA
+        registrar_auditoria(
+            usuario=usuario_admin,
+            accion='CREATE',
+            tabla='usuarios',
+            registro_id=nuevo_id,
+            antes=None,
+            despues={
+                "usuario": usuario_nuevo,
+                "rol": rol_nuevo
+            },
+            detalle='Creación de usuario'
+        )
+
+        return jsonify({"message": "Usuario creado correctamente"}), 201
+
+    except Exception as e:
+        print("ERROR CREANDO USUARIO:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexion:
+            conexion.close()
+
+
+# =========================
+# ✏️ UPDATE ROL USUARIO
+# =========================
+@app.route('/api/usuarios/<int:id>', methods=['PUT'])
+def actualizar_usuario(id):
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    data = request.get_json()
+    usuario_admin = obtener_usuario()
+
+    nuevo_rol = (data.get('rol') or '').strip().lower()
+
+    if nuevo_rol not in ['admin', 'visitante']:
+        return jsonify({"error": "Rol inválido"}), 400
+
+    conexion = None
+    cursor = None
+
+    try:
+        conexion = get_connection()
+        cursor = conexion.cursor(dictionary=True)
+
+        # OBTENER ANTES
+        cursor.execute("SELECT * FROM usuarios WHERE id = %s", (id,))
+        antes = cursor.fetchone()
+
+        if not antes:
+            return jsonify({"error": "Usuario no encontrado"}), 404
+
+        # 🔥 NO TE PUEDES QUITAR ADMIN A TI MISMO
+        if antes['usuario'] == usuario_admin and nuevo_rol != 'admin':
+            return jsonify({"error": "No puedes quitarte el rol admin"}), 400
+
+        cursor.close()
+        cursor = conexion.cursor()
+
+        cursor.execute(
+            "UPDATE usuarios SET rol = %s WHERE id = %s",
+            (nuevo_rol, id)
+        )
+        conexion.commit()
+
+        # AUDITORÍA
+        registrar_auditoria(
+            usuario=usuario_admin,
+            accion='UPDATE',
+            tabla='usuarios',
+            registro_id=id,
+            antes=antes,
+            despues={
+                "rol": nuevo_rol
+            },
+            detalle='Actualización de rol'
+        )
+
+        return jsonify({"message": "Rol actualizado correctamente"}), 200
+
+    except Exception as e:
+        print("ERROR ACTUALIZANDO USUARIO:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexion:
+            conexion.close()
+
+
+# =========================
+# ❌ DELETE USUARIO
+# =========================
+@app.route('/api/usuarios/<int:id>', methods=['DELETE'])
+def eliminar_usuario(id):
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    usuario_admin = obtener_usuario()
+
+    conexion = None
+    cursor = None
+
+    try:
+        conexion = get_connection()
+        cursor = conexion.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM usuarios WHERE id = %s", (id,))
+        antes = cursor.fetchone()
+
+        if not antes:
+            return jsonify({"error": "Usuario no encontrado"}), 404
+
+        # 🔥 NO PUEDES ELIMINARTE A TI MISMO
+        if antes['usuario'] == usuario_admin:
+            return jsonify({"error": "No puedes eliminar tu propio usuario"}), 400
+
+        cursor.close()
+        cursor = conexion.cursor()
+
+        cursor.execute("DELETE FROM usuarios WHERE id = %s", (id,))
+        conexion.commit()
+
+        registrar_auditoria(
+            usuario=usuario_admin,
+            accion='DELETE',
+            tabla='usuarios',
+            registro_id=id,
+            antes=antes,
+            despues=None,
+            detalle='Eliminación de usuario'
+        )
+
+        return jsonify({"message": "Usuario eliminado correctamente"}), 200
+
+    except Exception as e:
+        print("ERROR ELIMINANDO USUARIO:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexion:
+            conexion.close()
 # =========================
 # 🚀 RUN
 # =========================

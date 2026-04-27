@@ -19,6 +19,32 @@
   margin-bottom: 1.5rem;
 }
 
+.btn-logout {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 16px rgba(239, 68, 68, 0.25);
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 20px rgba(239, 68, 68, 0.35);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
 /* =========================
    TITULOS
 ========================= */
@@ -243,6 +269,7 @@
   i {
     font-size: 1rem;
   }
+  
 
   &:hover {
     background: linear-gradient(135deg, #6d28d9, #4c1d95);
@@ -283,5 +310,65 @@
     transform: scale(0.97);
   }
 }
+}
+}
+.btn-desvinculados {
+  background: linear-gradient(135deg, #0f766e, #115e59);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 14px rgba(15, 118, 110, 0.25);
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, #115e59, #134e4a);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(15, 118, 110, 0.35);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+  .btn-desvinculados {
+  background: linear-gradient(135deg, #0f766e, #115e59);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 14px rgba(15, 118, 110, 0.25);
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, #115e59, #134e4a);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(15, 118, 110, 0.35);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
 }
 }

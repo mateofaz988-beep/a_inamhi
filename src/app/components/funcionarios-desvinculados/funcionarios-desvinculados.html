@@ -1,0 +1,148 @@
+<div class="pasivos-container animate__animated animate__fadeIn">
+
+  <div class="pasivos-header">
+
+    <div class="header-left">
+      <div class="icon-box">
+        <i class="bi bi-person-dash-fill"></i>
+      </div>
+
+      <div>
+        <h2>Funcionarios Desvinculados</h2>
+        <p>Historial de funcionarios que ya no constan como personal activo del INAMHI</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-refresh" (click)="obtenerFuncionariosPasivos()" [disabled]="cargando">
+        <i class="bi bi-arrow-clockwise me-2"></i>
+        Actualizar
+      </button>
+
+      <button class="btn-volver" (click)="volver()">
+        <i class="bi bi-arrow-left me-2"></i>
+        Volver
+      </button>
+    </div>
+
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon total">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div>
+        <span>Total desvinculados</span>
+        <strong>{{ funcionariosPasivos.length }}</strong>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon search">
+        <i class="bi bi-filter-circle-fill"></i>
+      </div>
+      <div>
+        <span>Resultados filtrados</span>
+        <strong>{{ funcionariosFiltrados.length }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+
+    <div class="table-toolbar">
+      <div>
+        <h3>Listado histórico</h3>
+        <p>Puede buscar por cédula, nombre, cargo, unidad o motivo de salida.</p>
+      </div>
+
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input
+          type="text"
+          placeholder="Buscar funcionario desvinculado..."
+          [(ngModel)]="searchText"
+          (input)="buscar()"
+        >
+      </div>
+    </div>
+
+    <div class="table-responsive custom-scrollbar">
+      <table class="pasivos-table">
+
+        <thead>
+          <tr>
+            <th>ID Pasivo</th>
+            <th>ID Personal</th>
+            <th>Cédula</th>
+            <th>Nombres</th>
+            <th>Modalidad</th>
+            <th>Cargo</th>
+            <th>RMU</th>
+            <th>Unidad</th>
+            <th>F. Ingreso</th>
+            <th>F. Salida</th>
+            <th>Motivo</th>
+            <th>Responsable</th>
+            <th class="text-center">Acción</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngIf="cargando">
+            <td colspan="13" class="empty-state">
+              <div class="loading-box">
+                <i class="bi bi-arrow-repeat spin"></i>
+                Cargando funcionarios desvinculados...
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngFor="let emp of funcionariosFiltrados" class="row-hover">
+            <td class="text-center">{{ emp.id }}</td>
+            <td class="text-center">{{ emp.id_personal || '-' }}</td>
+            <td class="text-center fw-bold">{{ emp.cedula || '-' }}</td>
+            <td class="name-cell">{{ emp.nombres || '-' }}</td>
+            <td>{{ emp.modalidad || '-' }}</td>
+            <td>{{ emp.cargo || '-' }}</td>
+            <td class="text-end">{{ emp.rmu || '-' }}</td>
+            <td>{{ emp.unidad || '-' }}</td>
+            <td class="text-center">{{ formatearFecha(emp.fecha_ingreso) }}</td>
+            <td class="text-center">{{ formatearFechaHora(emp.fecha_salida) }}</td>
+
+            <td>
+              <span class="motivo-badge">
+                {{ emp.motivo_salida || 'Sin motivo registrado' }}
+              </span>
+            </td>
+
+            <td>{{ emp.usuario_responsable || '-' }}</td>
+
+            <td class="text-center">
+              <button
+                class="btn-reactivar"
+                (click)="reactivarFuncionario(emp)"
+                [disabled]="reactivandoId === emp.id"
+              >
+                <i class="bi bi-person-check-fill me-1"></i>
+                {{ reactivandoId === emp.id ? 'Reactivando...' : 'Reactivar' }}
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="!cargando && funcionariosFiltrados.length === 0">
+            <td colspan="13" class="empty-state">
+              No hay funcionarios desvinculados para mostrar.
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+    </div>
+
+  </div>
+
+</div>

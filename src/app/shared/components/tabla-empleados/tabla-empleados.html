@@ -1,71 +1,74 @@
 <div class="matriz-container animate__animated animate__fadeIn">
 
-  <div class="card shadow-lg border-0 overflow-hidden">
+  <div class="card shadow-lg border-0 overflow-hidden matriz-card">
 
-    <!-- HEADER -->
-    <div class="card-header bg-dark-blue py-4 px-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div class="card-header bg-dark-blue matriz-header">
 
-      <!-- TITULO -->
-      <div class="d-flex align-items-center">
-        <div class="icon-box me-3">
+      <div class="header-title-box">
+        <div class="icon-box">
           <i class="bi bi-person-lines-fill text-white fs-4"></i>
         </div>
-        <div>
+
+        <div class="title-content">
+          <span class="header-kicker">INAMHI · Talento Humano</span>
           <h2 class="text-white mb-0 fw-bold">MATRIZ INTEGRAL DE PERSONAL</h2>
-          <small class="text-blue-200 opacity-75">INAMHI</small>
+          <small class="text-blue-200 opacity-75">
+            Gestión, control y seguimiento de funcionarios activos
+          </small>
         </div>
       </div>
 
-      <!-- BUSCADOR -->
-      <div class="search-wrapper position-relative">
-        <i class="bi bi-search search-icon"></i>
-        <input
-          type="text"
-          class="form-control search-input ps-5"
-          placeholder="Buscar empleado..."
-          [(ngModel)]="searchText"
-          (input)="buscar()"
-        >
-      </div>
-      <br>
-      
+      <div class="header-stats">
+        <div class="stat-pill">
+          <i class="bi bi-people-fill"></i>
+          <div>
+            <span>Total registros</span>
+            <strong>{{ personalFiltrado.length }}</strong>
+          </div>
+        </div>
 
-      <!-- ACCIONES -->
-      <div class="d-flex gap-2 flex-wrap align-items-center">
-        <button
-          class="btn btn-success btn-sm text-white action-btn"
-          (click)="exportarExcel()"
-        >
-          <i class="bi bi-file-earmark-excel-fill me-2"></i>
-          Exportar Excel
-        </button>
-        <br>
-        <br>
-        <br>
-
-        <button
-          class="btn btn-danger btn-sm text-white action-btn"
-          (click)="exportarPDF()"
-        >
-          <i class="bi bi-file-earmark-pdf-fill me-2"></i>
-          Exportar PDF
-        </button>
+        <div class="stat-pill admin-pill" *ngIf="authService.isAdmin()">
+          <i class="bi bi-shield-lock-fill"></i>
+          <div>
+            <span>Modo</span>
+            <strong>Editor</strong>
+          </div>
+        </div>
       </div>
+
+      <div class="header-tools">
+
+        <div class="search-wrapper position-relative">
+          <i class="bi bi-search search-icon"></i>
+          <input
+            type="text"
+            class="form-control search-input ps-5"
+            placeholder="Buscar por nombre, cédula, cargo o unidad..."
+            [(ngModel)]="searchText"
+            (input)="buscar()"
+          >
+        </div>
+
+        <div class="header-buttons">
+          <button class="btn btn-success btn-sm text-white action-btn excel-btn" (click)="exportarExcel()">
+            <i class="bi bi-file-earmark-excel-fill me-2"></i>
+            Exportar Excel
+          </button>
+
+          <button class="btn btn-danger btn-sm text-white action-btn pdf-btn" (click)="exportarPDF()">
+            <i class="bi bi-file-earmark-pdf-fill me-2"></i>
+            Exportar PDF
+          </button>
+        </div>
+
+      </div>
+
     </div>
-
-    <!-- TABLA -->
     <div class="card-body p-0">
-      <div
-        class="table-responsive custom-scrollbar"
-        style="overflow-x:auto; overflow-y:auto; max-height: 70vh;"
-      >
+      <div class="table-responsive custom-scrollbar" style="overflow-x:auto; overflow-y:auto; max-height: 70vh;">
 
-        <table
-          class="table table-hover align-middle mb-0 custom-table"
-          style="min-width: 2200px;"
-        >
+        <table class="table table-hover align-middle mb-0 custom-table" style="min-width: 2350px;">
 
-          <!-- HEAD -->
           <thead class="table-light sticky-top">
             <tr>
               <th class="sticky-col-id px-3 py-3 text-center">ID</th>
@@ -90,190 +93,197 @@
               <th class="min-w-150 px-3 py-3 text-start">Etnia</th>
               <th class="min-w-150 px-3 py-3 text-start">Rol de Usuario</th>
               <th class="min-w-400 px-3 py-3 text-start">Observaciones</th>
-              <th *ngIf="authService.isAdmin()" class="px-3 py-3 text-center">Acciones</th>
+              <th *ngIf="authService.isAdmin()" class="min-w-300 px-3 py-3 text-center">Acciones</th>
             </tr>
           </thead>
 
-       <tbody>
-  <tr *ngFor="let emp of personalFiltrado; let i = index" class="row-hover">
+          <tbody>
+            <tr *ngFor="let emp of personalFiltrado; let i = index" class="row-hover">
 
-    <td class="sticky-col-id text-center">{{ emp.id }}</td>
+              <td class="sticky-col-id text-center">{{ emp.id }}</td>
 
-    <td class="sticky-col-nro text-center">
-      <span *ngIf="editIndex !== i">{{ emp.nro }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.nro" class="form-control form-control-sm">
-    </td>
+              <td class="sticky-col-nro text-center">
+                <span *ngIf="editIndex !== i">{{ emp.nro }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.nro" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-center">
-      <span *ngIf="editIndex !== i">{{ emp.cedula }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.cedula" class="form-control form-control-sm">
-    </td>
+              <td class="text-center">
+                <span *ngIf="editIndex !== i">{{ emp.cedula }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.cedula" class="form-control form-control-sm">
+              </td>
 
-    <td class="sticky-col-name text-start">
-      <span *ngIf="editIndex !== i">{{ emp.nombres }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.nombres" class="form-control form-control-sm">
-    </td>
+              <td class="sticky-col-name text-start">
+                <span *ngIf="editIndex !== i">{{ emp.nombres }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.nombres" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-start">
-      <span *ngIf="editIndex !== i">{{ emp.modalidad }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.modalidad" class="form-control form-control-sm">
-    </td>
+              <td class="text-start">
+                <span *ngIf="editIndex !== i">{{ emp.modalidad }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.modalidad" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-start">
-      <span *ngIf="editIndex !== i">{{ emp.cargo }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.cargo" class="form-control form-control-sm">
-    </td>
+              <td class="text-start">
+                <span *ngIf="editIndex !== i">{{ emp.cargo }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.cargo" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-end">
-      <span *ngIf="editIndex !== i">{{ emp.rmu }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.rmu" class="form-control form-control-sm">
-    </td>
+              <td class="text-end">
+                <span *ngIf="editIndex !== i">{{ emp.rmu }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.rmu" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-start">
-      <span *ngIf="editIndex !== i">{{ emp.unidad }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.unidad" class="form-control form-control-sm">
-    </td>
+              <td class="text-start">
+                <span *ngIf="editIndex !== i">{{ emp.unidad }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.unidad" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-center">
-      <span *ngIf="editIndex !== i">{{ emp.fecha_ingreso }}</span>
-      <input *ngIf="editIndex === i" type="date" [(ngModel)]="emp.fecha_ingreso" class="form-control form-control-sm">
-    </td>
+              <td class="text-center">
+                <span *ngIf="editIndex !== i">{{ emp.fecha_ingreso }}</span>
+                <input *ngIf="editIndex === i" type="date" [(ngModel)]="emp.fecha_ingreso" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-center">
-      <span *ngIf="editIndex !== i">{{ emp.fecha_nacimiento }}</span>
-      <input *ngIf="editIndex === i" type="date" [(ngModel)]="emp.fecha_nacimiento" class="form-control form-control-sm">
-    </td>
+              <td class="text-center">
+                <span *ngIf="editIndex !== i">{{ emp.fecha_nacimiento }}</span>
+                <input *ngIf="editIndex === i" type="date" [(ngModel)]="emp.fecha_nacimiento" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-start">
-      <span *ngIf="editIndex !== i">{{ emp.direccion }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.direccion" class="form-control form-control-sm">
-    </td>
+              <td class="text-start">
+                <span *ngIf="editIndex !== i">{{ emp.direccion }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.direccion" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-start">
-      <span *ngIf="editIndex !== i">{{ emp.email_inst }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.email_inst" class="form-control form-control-sm">
-    </td>
+              <td class="text-start">
+                <span *ngIf="editIndex !== i">{{ emp.email_inst }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.email_inst" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-center">
-      <span *ngIf="editIndex !== i">{{ emp.telefono }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.telefono" class="form-control form-control-sm">
-    </td>
+              <td class="text-center">
+                <span *ngIf="editIndex !== i">{{ emp.telefono }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.telefono" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-center">
-      <span *ngIf="editIndex !== i">{{ emp.genero }}</span>
-      <select *ngIf="editIndex === i" [(ngModel)]="emp.genero" class="form-control form-control-sm">
-        <option value="Masculino">Masculino</option>
-        <option value="Femenino">Femenino</option>
-      </select>
-    </td>
+              <td class="text-center">
+                <span *ngIf="editIndex !== i">{{ emp.genero }}</span>
+                <select *ngIf="editIndex === i" [(ngModel)]="emp.genero" class="form-control form-control-sm">
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                </select>
+              </td>
 
-    <td class="text-start">
-      <span *ngIf="editIndex !== i">{{ emp.instruccion }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.instruccion" class="form-control form-control-sm">
-    </td>
+              <td class="text-start">
+                <span *ngIf="editIndex !== i">{{ emp.instruccion }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.instruccion" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-start">
-      <span *ngIf="editIndex !== i">{{ emp.profesion }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.profesion" class="form-control form-control-sm">
-    </td>
+              <td class="text-start">
+                <span *ngIf="editIndex !== i">{{ emp.profesion }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.profesion" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-center">
-      <span *ngIf="editIndex !== i">{{ emp.vulnerable }}</span>
-      <select *ngIf="editIndex === i" [(ngModel)]="emp.vulnerable" class="form-control form-control-sm">
-        <option value="SI">SI</option>
-        <option value="NO">NO</option>
-      </select>
-    </td>
+              <td class="text-center">
+                <span *ngIf="editIndex !== i">{{ emp.vulnerable }}</span>
+                <select *ngIf="editIndex === i" [(ngModel)]="emp.vulnerable" class="form-control form-control-sm">
+                  <option value="SI">SI</option>
+                  <option value="NO">NO</option>
+                </select>
+              </td>
 
-    <td class="text-start">
-      <span *ngIf="editIndex !== i">{{ emp.tipo_discapacidad }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.tipo_discapacidad" class="form-control form-control-sm">
-    </td>
+              <td class="text-start">
+                <span *ngIf="editIndex !== i">{{ emp.tipo_discapacidad }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.tipo_discapacidad" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-center">
-      <span *ngIf="editIndex !== i">{{ emp.porcentaje_disc }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.porcentaje_disc" class="form-control form-control-sm">
-    </td>
+              <td class="text-center">
+                <span *ngIf="editIndex !== i">{{ emp.porcentaje_disc }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.porcentaje_disc" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-start">
-      <span *ngIf="editIndex !== i">{{ emp.etnia }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.etnia" class="form-control form-control-sm">
-    </td>
+              <td class="text-start">
+                <span *ngIf="editIndex !== i">{{ emp.etnia }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.etnia" class="form-control form-control-sm">
+              </td>
 
-    <td class="text-start">
-      <span *ngIf="editIndex !== i">{{ emp.rol }}</span>
-      <input *ngIf="editIndex === i" [(ngModel)]="emp.rol" class="form-control form-control-sm">
-    </td>
+              <td class="text-start">
+                <span *ngIf="editIndex !== i">{{ emp.rol }}</span>
+                <input *ngIf="editIndex === i" [(ngModel)]="emp.rol" class="form-control form-control-sm">
+              </td>
 
-    <td class="min-w-400 text-start">
-      <div *ngIf="editIndex !== i" class="text-wrap">
-        {{ emp.observaciones || 'Sin observaciones' }}
-      </div>
+              <td class="min-w-400 text-start">
+                <div *ngIf="editIndex !== i" class="text-wrap">
+                  {{ emp.observaciones || 'Sin observaciones' }}
+                </div>
 
-      <textarea
-        *ngIf="editIndex === i"
-        [(ngModel)]="emp.observaciones"
-        rows="3"
-        class="form-control form-control-sm"
-      ></textarea>
-    </td>
+                <textarea
+                  *ngIf="editIndex === i"
+                  [(ngModel)]="emp.observaciones"
+                  rows="3"
+                  class="form-control form-control-sm"
+                ></textarea>
+              </td>
 
-    <!-- ACCIONES -->
-    <td *ngIf="authService.isAdmin()" class="text-center">
-      <div class="d-flex justify-content-center flex-wrap gap-2">
+              <td *ngIf="authService.isAdmin()" class="text-center">
+                <div class="d-flex justify-content-center flex-wrap gap-2">
 
-        <button
-          *ngIf="editIndex !== i"
-          class="btn btn-warning btn-sm action-btn-table"
-          (click)="habilitarEdicion(i)"
-        >
-          <i class="bi bi-pencil-square me-1"></i>
-          Editar
-        </button>
+                  <button
+                    *ngIf="editIndex !== i"
+                    class="btn btn-warning btn-sm action-btn-table"
+                    (click)="habilitarEdicion(i)"
+                  >
+                    <i class="bi bi-pencil-square me-1"></i>
+                    Editar
+                  </button>
 
-        <button
-          *ngIf="editIndex === i"
-          class="btn btn-success btn-sm action-btn-table"
-          (click)="guardarCambios(emp)"
-        >
-          <i class="bi bi-check-circle-fill me-1"></i>
-          Guardar
-        </button>
+                  <button
+                    *ngIf="editIndex === i"
+                    class="btn btn-success btn-sm action-btn-table"
+                    (click)="guardarCambios(emp)"
+                  >
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    Guardar
+                  </button>
 
-        <button
-          *ngIf="editIndex === i"
-          class="btn btn-secondary btn-sm action-btn-table"
-          (click)="cancelarEdicion()"
-        >
-          <i class="bi bi-x-circle-fill me-1"></i>
-          Cancelar
-        </button>
+                  <button
+                    *ngIf="editIndex === i"
+                    class="btn btn-secondary btn-sm action-btn-table"
+                    (click)="cancelarEdicion()"
+                  >
+                    <i class="bi bi-x-circle-fill me-1"></i>
+                    Cancelar
+                  </button>
 
-        <button
-          class="btn btn-danger btn-sm action-btn-table"
-          (click)="eliminar(emp.id)"
-        >
-          <i class="bi bi-trash-fill me-1"></i>
-          Eliminar
-        </button>
+                  <button
+                    *ngIf="editIndex !== i"
+                    class="btn btn-info btn-sm action-btn-table"
+                    (click)="desvincularFuncionario(emp)"
+                  >
+                    <i class="bi bi-person-dash-fill me-1"></i>
+                    Desvincular
+                  </button>
 
-      </div>
-    </td>
+                  <button
+                    class="btn btn-danger btn-sm action-btn-table"
+                    (click)="eliminar(emp.id)"
+                  >
+                    <i class="bi bi-trash-fill me-1"></i>
+                    Eliminar
+                  </button>
 
-  </tr>
+                </div>
+              </td>
 
-  <tr *ngIf="personalFiltrado.length === 0">
-    <td [attr.colspan]="authService.isAdmin() ? 23 : 22" class="text-center py-5">
-      No hay resultados
-    </td>
-  </tr>
-</tbody>
+            </tr>
+
+            <tr *ngIf="personalFiltrado.length === 0">
+              <td [attr.colspan]="authService.isAdmin() ? 23 : 22" class="text-center py-5">
+                No hay resultados
+              </td>
+            </tr>
+          </tbody>
 
         </table>
       </div>
     </div>
 
-    <!-- FOOTER -->
     <div class="card-footer bg-light py-3 px-4">
       Mostrando {{ personalFiltrado.length }} registros
     </div>

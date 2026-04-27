@@ -1,17 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth';
+import { SharedModule } from '../../../../shared/shared-module';
 
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
+  imports: [
+    RouterModule,
+    SharedModule
+  ],
   templateUrl: './dashboard.html',
-  styleUrls: ['./dashboard.scss'],
-  standalone: false
+  styleUrls: ['./dashboard.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent {
 
-  adminName: string = 'Adrian';
+  constructor(public authService: AuthService) {}
 
-  constructor() {}
-
-  ngOnInit(): void {}
-
+  logout() {
+    this.authService.logout();
+  }
 }

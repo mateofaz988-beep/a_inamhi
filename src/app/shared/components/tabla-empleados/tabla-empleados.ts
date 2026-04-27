@@ -1,10 +1,10 @@
+
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
 import Swal from 'sweetalert2';
 
-// EXPORTACIONES
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -35,18 +35,12 @@ export class TablaEmpleadosComponent implements OnInit {
     this.obtenerDatos();
   }
 
-  // =========================
-  // HEADERS
-  // =========================
   getHeaders() {
     return new HttpHeaders({
       Authorization: this.authService.getToken()
     });
   }
 
-  // =========================
-  // ALERTA
-  // =========================
   alerta(icon: any, titulo: string, texto: string = '') {
     Swal.fire({
       icon,
@@ -57,11 +51,7 @@ export class TablaEmpleadosComponent implements OnInit {
     });
   }
 
-  // =========================
-  // VALIDACIÓN
-  // =========================
   validarEmpleado(emp: any): boolean {
-
     if (!emp.nombres || emp.nombres.trim().length < 3) {
       Swal.fire('Error', 'Nombre inválido', 'error');
       return false;
@@ -85,35 +75,28 @@ export class TablaEmpleadosComponent implements OnInit {
     return true;
   }
 
-  // =========================
-  // GET
-  // =========================
   obtenerDatos() {
     this.http.get<any[]>(this.API_URL).subscribe({
       next: (data) => {
-        this.personal = data;
-        this.personalFiltrado = [...data];
+        this.personal = data || [];
+        this.personalFiltrado = [...this.personal];
         this.cdr.detectChanges();
       },
       error: () => this.alerta('error', 'Error', 'No se pudieron cargar los datos')
     });
   }
 
-  // =========================
-  // EDITAR
-  // =========================
   habilitarEdicion(index: number) {
     if (!this.authService.isAdmin()) {
       Swal.fire('Acceso denegado', '', 'warning');
       return;
     }
+
     this.editIndex = index;
   }
 
   guardarCambios(emp: any) {
-
     if (!this.authService.isAdmin()) return;
-
     if (!this.validarEmpleado(emp)) return;
 
     this.http.put(`${this.API_URL}/${emp.id}`, emp, {
@@ -133,19 +116,18 @@ export class TablaEmpleadosComponent implements OnInit {
     this.obtenerDatos();
   }
 
-  // =========================
-  // DELETE
-  // =========================
   eliminar(id: number) {
-
     if (!this.authService.isAdmin()) return;
 
     Swal.fire({
       title: '¿Eliminar?',
+      text: 'Esta acción eliminará el registro directamente.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b'
     }).then(res => {
       if (res.isConfirmed) {
         this.http.delete(`${this.API_URL}/${id}`, {
@@ -161,9 +143,76 @@ export class TablaEmpleadosComponent implements OnInit {
     });
   }
 
-  // =========================
-  // BUSCAR
-  // =========================
+  desvincularFuncionario(emp: any) {
+    if (!this.authService.isAdmin()) {
+      Swal.fire('Acceso denegado', 'Solo el administrador puede desvincular funcionarios', 'warning');
+      return;
+    }
+
+    if (!emp?.id) {
+      Swal.fire('Error', 'No se encontró el ID del funcionario', 'error');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Desvincular funcionario',
+      html: `
+        <div style="text-align:left">
+          <strong>Funcionario:</strong> ${emp.nombres || 'Sin nombre'}<br>
+          <strong>Cédula:</strong> ${emp.cedula || 'Sin cédula'}<br><br>
+          <span>Ingrese el motivo de desvinculación:</span>
+        </div>
+      `,
+      input: 'textarea',
+      inputPlaceholder: 'Ej: Terminación de contrato, renuncia, jubilación, cambio institucional...',
+      inputAttributes: {
+        maxlength: '250'
+      },
+      inputValidator: (value) => {
+        if (!value || value.trim().length < 5) {
+          return 'Ingrese un motivo válido de al menos 5 caracteres';
+        }
+        return null;
+      },
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, desvincular',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0f766e',
+      cancelButtonColor: '#64748b'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      const motivo = String(result.value || '').trim();
+
+      this.http.post<any>(`${this.API_URL}/${emp.id}/desvincular`, {
+        motivo_salida: motivo
+      }, {
+        headers: this.getHeaders()
+      }).subscribe({
+        next: (res) => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Funcionario desvinculado',
+            text: res?.message || 'El funcionario fue enviado a la lista de desvinculados',
+            timer: 1900,
+            showConfirmButton: false
+          });
+
+          this.obtenerDatos();
+        },
+        error: (err) => {
+          console.error('ERROR DESVINCULANDO FUNCIONARIO:', err);
+          Swal.fire(
+            'Error',
+            err?.error?.error || 'No se pudo desvincular el funcionario',
+            'error'
+          );
+        }
+      });
+    });
+  }
+
   buscar() {
     const texto = this.searchText?.toString().toLowerCase().trim() || '';
 
@@ -176,19 +225,19 @@ export class TablaEmpleadosComponent implements OnInit {
       const nro = emp?.nro?.toString().toLowerCase().trim() || '';
       const cedula = emp?.cedula?.toString().toLowerCase().trim() || '';
       const nombres = emp?.nombres?.toString().toLowerCase().trim() || '';
+      const cargo = emp?.cargo?.toString().toLowerCase().trim() || '';
+      const unidad = emp?.unidad?.toString().toLowerCase().trim() || '';
 
       return (
         nro.includes(texto) ||
         cedula.includes(texto) ||
-        nombres.includes(texto)
+        nombres.includes(texto) ||
+        cargo.includes(texto) ||
+        unidad.includes(texto)
       );
     });
   }
 
-  // =========================
-  // NUEVA VENTANA:
-  // /admin/nuevo-funcionario
-  // =========================
   abrirModal() {
     if (!this.authService.isAdmin()) {
       Swal.fire('Acceso denegado', 'Solo el administrador puede registrar funcionarios', 'warning');
@@ -198,18 +247,10 @@ export class TablaEmpleadosComponent implements OnInit {
     this.router.navigate(['/admin/nuevo-funcionario']);
   }
 
-  // =========================
-  // OPCIONAL:
-  // si luego cambias el HTML a
-  // (click)="irANuevoFuncionario()"
-  // =========================
   irANuevoFuncionario() {
     this.abrirModal();
   }
 
-  // =========================
-  // 📊 EXPORTAR EXCEL
-  // =========================
   exportarExcel() {
     const data = this.personalFiltrado.map(emp => ({
       ID: emp.id,
@@ -243,118 +284,115 @@ export class TablaEmpleadosComponent implements OnInit {
     XLSX.writeFile(wb, 'personal.xlsx');
   }
 
-  // =========================
-// 📄 EXPORTAR PDF COMPLETO
-// =========================
-exportarPDF() {
-  const doc = new jsPDF('landscape', 'mm', 'a3');
+  exportarPDF() {
+    const doc = new jsPDF('landscape', 'mm', 'a3');
 
-  const data = this.personalFiltrado.map((e, index) => [
-    e.id ?? '',
-    e.nro ?? '',
-    e.cedula ?? '',
-    e.nombres ?? '',
-    e.modalidad ?? '',
-    e.cargo ?? '',
-    e.rmu ?? '',
-    e.unidad ?? '',
-    e.fecha_ingreso ?? '',
-    e.fecha_nacimiento ?? '',
-    e.direccion ?? '',
-    e.email_inst ?? '',
-    e.telefono ?? '',
-    e.genero ?? '',
-    e.instruccion ?? '',
-    e.profesion ?? '',
-    e.vulnerable ?? '',
-    e.tipo_discapacidad ?? '',
-    e.porcentaje_disc ?? '',
-    e.etnia ?? '',
-    e.rol ?? '',
-    e.observaciones ?? ''
-  ]);
+    const data = this.personalFiltrado.map((e) => [
+      e.id ?? '',
+      e.nro ?? '',
+      e.cedula ?? '',
+      e.nombres ?? '',
+      e.modalidad ?? '',
+      e.cargo ?? '',
+      e.rmu ?? '',
+      e.unidad ?? '',
+      e.fecha_ingreso ?? '',
+      e.fecha_nacimiento ?? '',
+      e.direccion ?? '',
+      e.email_inst ?? '',
+      e.telefono ?? '',
+      e.genero ?? '',
+      e.instruccion ?? '',
+      e.profesion ?? '',
+      e.vulnerable ?? '',
+      e.tipo_discapacidad ?? '',
+      e.porcentaje_disc ?? '',
+      e.etnia ?? '',
+      e.rol ?? '',
+      e.observaciones ?? ''
+    ]);
 
-  autoTable(doc, {
-    head: [[
-      'ID',
-      'Nro',
-      'Cédula',
-      'Nombres',
-      'Modalidad',
-      'Cargo',
-      'RMU',
-      'Unidad',
-      'F. Ingreso',
-      'F. Nacimiento',
-      'Dirección',
-      'Correo Institucional',
-      'Teléfono',
-      'Género',
-      'Instrucción',
-      'Profesión',
-      'Vulnerable',
-      'Discapacidad',
-      '% Disc.',
-      'Etnia',
-      'Rol',
-      'Observaciones'
-    ]],
-    body: data,
-    startY: 18,
-    styles: {
-      fontSize: 6,
-      cellPadding: 2,
-      overflow: 'linebreak',
-      valign: 'middle',
-      halign: 'center'
-    },
-    headStyles: {
-      fillColor: [13, 110, 253],
-      textColor: 255,
-      fontSize: 6,
-      halign: 'center',
-      valign: 'middle'
-    },
-    bodyStyles: {
-      textColor: 30
-    },
-    alternateRowStyles: {
-      fillColor: [248, 250, 252]
-    },
-    columnStyles: {
-      0: { cellWidth: 10 },  // ID
-      1: { cellWidth: 12 },  // Nro
-      2: { cellWidth: 20 },  // Cédula
-      3: { cellWidth: 38 },  // Nombres
-      4: { cellWidth: 28 },  // Modalidad
-      5: { cellWidth: 34 },  // Cargo
-      6: { cellWidth: 16 },  // RMU
-      7: { cellWidth: 38 },  // Unidad
-      8: { cellWidth: 20 },  // F. Ingreso
-      9: { cellWidth: 20 },  // F. Nacimiento
-      10: { cellWidth: 34 }, // Dirección
-      11: { cellWidth: 38 }, // Correo
-      12: { cellWidth: 20 }, // Teléfono
-      13: { cellWidth: 18 }, // Género
-      14: { cellWidth: 26 }, // Instrucción
-      15: { cellWidth: 28 }, // Profesión
-      16: { cellWidth: 20 }, // Vulnerable
-      17: { cellWidth: 24 }, // Discapacidad
-      18: { cellWidth: 16 }, // % Disc.
-      19: { cellWidth: 20 }, // Etnia
-      20: { cellWidth: 20 }, // Rol
-      21: { cellWidth: 42 }  // Observaciones
-    },
-    margin: { top: 15, right: 8, bottom: 10, left: 8 },
-    didDrawPage: () => {
-      doc.setFontSize(12);
-      doc.text('Matriz Integral de Personal - INAMHI', 14, 10);
+    autoTable(doc, {
+      head: [[
+        'ID',
+        'Nro',
+        'Cédula',
+        'Nombres',
+        'Modalidad',
+        'Cargo',
+        'RMU',
+        'Unidad',
+        'F. Ingreso',
+        'F. Nacimiento',
+        'Dirección',
+        'Correo Institucional',
+        'Teléfono',
+        'Género',
+        'Instrucción',
+        'Profesión',
+        'Vulnerable',
+        'Discapacidad',
+        '% Disc.',
+        'Etnia',
+        'Rol',
+        'Observaciones'
+      ]],
+      body: data,
+      startY: 18,
+      styles: {
+        fontSize: 6,
+        cellPadding: 2,
+        overflow: 'linebreak',
+        valign: 'middle',
+        halign: 'center'
+      },
+      headStyles: {
+        fillColor: [13, 110, 253],
+        textColor: 255,
+        fontSize: 6,
+        halign: 'center',
+        valign: 'middle'
+      },
+      bodyStyles: {
+        textColor: 30
+      },
+      alternateRowStyles: {
+        fillColor: [248, 250, 252]
+      },
+      columnStyles: {
+        0: { cellWidth: 10 },
+        1: { cellWidth: 12 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 38 },
+        4: { cellWidth: 28 },
+        5: { cellWidth: 34 },
+        6: { cellWidth: 16 },
+        7: { cellWidth: 38 },
+        8: { cellWidth: 20 },
+        9: { cellWidth: 20 },
+        10: { cellWidth: 34 },
+        11: { cellWidth: 38 },
+        12: { cellWidth: 20 },
+        13: { cellWidth: 18 },
+        14: { cellWidth: 26 },
+        15: { cellWidth: 28 },
+        16: { cellWidth: 20 },
+        17: { cellWidth: 24 },
+        18: { cellWidth: 16 },
+        19: { cellWidth: 20 },
+        20: { cellWidth: 20 },
+        21: { cellWidth: 42 }
+      },
+      margin: { top: 15, right: 8, bottom: 10, left: 8 },
+      didDrawPage: () => {
+        doc.setFontSize(12);
+        doc.text('Matriz Integral de Personal - INAMHI', 14, 10);
 
-      doc.setFontSize(8);
-      doc.text(`Total de registros: ${this.personalFiltrado.length}`, 14, 15);
-    }
-  });
+        doc.setFontSize(8);
+        doc.text(`Total de registros: ${this.personalFiltrado.length}`, 14, 15);
+      }
+    });
 
-  doc.save('personal_completo.pdf');
-}
+    doc.save('personal_completo.pdf');
+  }
 }

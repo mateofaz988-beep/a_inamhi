@@ -791,6 +791,265 @@ def eliminar_usuario(id):
             cursor.close()
         if conexion:
             conexion.close()
+            # =========================
+# 🚪 DESVINCULAR PERSONAL
+# =========================
+@app.route('/api/personal/<int:id>/desvincular', methods=['POST'])
+def desvincular_personal(id):
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    data = request.get_json() or {}
+    motivo_salida = (data.get('motivo_salida') or '').strip()
+    usuario = obtener_usuario()
+
+    if not motivo_salida or len(motivo_salida) < 5:
+        return jsonify({"error": "Debe ingresar un motivo de salida válido"}), 400
+
+    conexion = None
+    cursor = None
+
+    try:
+        conexion = get_connection()
+        cursor = conexion.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM personal WHERE id = %s", (id,))
+        emp = cursor.fetchone()
+
+        if not emp:
+            return jsonify({"error": "Funcionario no encontrado"}), 404
+
+        cursor.execute("SELECT id FROM personal_pasivo WHERE cedula = %s", (emp.get('cedula'),))
+        existente = cursor.fetchone()
+
+        if existente:
+            return jsonify({"error": "Este funcionario ya consta como desvinculado"}), 409
+
+        query_insert = """
+            INSERT INTO personal_pasivo (
+                id_personal, nro, cedula, nombres, modalidad, cargo, rmu, unidad,
+                fecha_ingreso, fecha_nacimiento, direccion, email_inst, telefono,
+                genero, instruccion, profesion, vulnerable, tipo_discapacidad,
+                porcentaje_disc, etnia, rol, observaciones,
+                fecha_salida, motivo_salida, usuario_responsable
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+        cursor.execute(query_insert, (
+            emp.get('id'),
+            emp.get('nro'),
+            emp.get('cedula'),
+            emp.get('nombres'),
+            emp.get('modalidad'),
+            emp.get('cargo'),
+            emp.get('rmu'),
+            emp.get('unidad'),
+            emp.get('fecha_ingreso'),
+            emp.get('fecha_nacimiento'),
+            emp.get('direccion'),
+            emp.get('email_inst'),
+            emp.get('telefono'),
+            emp.get('genero'),
+            emp.get('instruccion'),
+            emp.get('profesion'),
+            emp.get('vulnerable'),
+            emp.get('tipo_discapacidad'),
+            emp.get('porcentaje_disc'),
+            emp.get('etnia'),
+            emp.get('rol'),
+            emp.get('observaciones'),
+            fecha_ecuador(),
+            motivo_salida,
+            usuario
+        ))
+
+        cursor.execute("DELETE FROM personal WHERE id = %s", (id,))
+        conexion.commit()
+
+        registrar_auditoria(
+            usuario=usuario,
+            accion='DELETE',
+            tabla='personal',
+            registro_id=id,
+            antes=emp,
+            despues={
+                "estado": "DESVINCULADO",
+                "motivo_salida": motivo_salida
+            },
+            detalle='Funcionario desvinculado y movido a personal_pasivo'
+        )
+
+        return jsonify({"message": "Funcionario desvinculado correctamente"}), 200
+
+    except Exception as e:
+        if conexion:
+            conexion.rollback()
+        print("ERROR DESVINCULANDO PERSONAL:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexion:
+            conexion.close()
+# =========================
+# 🔄 REACTIVAR PERSONAL PASIVO
+# =========================
+@app.route('/api/personal/pasivo/<int:id>/reactivar', methods=['POST'])
+def reactivar_personal_pasivo(id):
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    usuario = obtener_usuario()
+    conexion = None
+    cursor = None
+
+    try:
+        conexion = get_connection()
+        cursor = conexion.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM personal_pasivo WHERE id = %s", (id,))
+        emp = cursor.fetchone()
+
+        if not emp:
+            return jsonify({"error": "Funcionario pasivo no encontrado"}), 404
+
+        cursor.execute("SELECT id FROM personal WHERE cedula = %s", (emp.get('cedula'),))
+        activo = cursor.fetchone()
+
+        if activo:
+            return jsonify({"error": "Ya existe un funcionario activo con esa cédula"}), 409
+
+        query_insert = """
+            INSERT INTO personal (
+                nro, cedula, nombres, modalidad, cargo, rmu, unidad,
+                fecha_ingreso, fecha_nacimiento, direccion, email_inst,
+                telefono, genero, instruccion, profesion, vulnerable,
+                tipo_discapacidad, porcentaje_disc, etnia, rol, observaciones
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+
+        cursor.execute(query_insert, (
+            emp.get('nro'),
+            emp.get('cedula'),
+            emp.get('nombres'),
+            emp.get('modalidad'),
+            emp.get('cargo'),
+            emp.get('rmu'),
+            emp.get('unidad'),
+            emp.get('fecha_ingreso'),
+            emp.get('fecha_nacimiento'),
+            emp.get('direccion'),
+            emp.get('email_inst'),
+            emp.get('telefono'),
+            emp.get('genero'),
+            emp.get('instruccion'),
+            emp.get('profesion'),
+            emp.get('vulnerable'),
+            emp.get('tipo_discapacidad'),
+            emp.get('porcentaje_disc'),
+            emp.get('etnia'),
+            emp.get('rol'),
+            emp.get('observaciones')
+        ))
+
+        nuevo_id = cursor.lastrowid
+
+        cursor.execute("DELETE FROM personal_pasivo WHERE id = %s", (id,))
+        conexion.commit()
+
+        registrar_auditoria(
+            usuario=usuario,
+            accion='CREATE',
+            tabla='personal',
+            registro_id=nuevo_id,
+            antes={
+                "estado": "PASIVO",
+                "datos": emp
+            },
+            despues={
+                "estado": "REACTIVADO",
+                "nuevo_id": nuevo_id
+            },
+            detalle='Funcionario reactivado desde personal_pasivo'
+        )
+
+        return jsonify({"message": "Funcionario reactivado correctamente"}), 200
+
+    except Exception as e:
+        if conexion:
+            conexion.rollback()
+        print("ERROR REACTIVANDO PERSONAL:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexion:
+            conexion.close()
+# =========================
+# 📋 GET PERSONAL PASIVO
+# =========================
+@app.route('/api/personal/pasivo', methods=['GET'])
+def obtener_personal_pasivo():
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    conexion = None
+    cursor = None
+
+    try:
+        conexion = get_connection()
+        cursor = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                id,
+                id_personal,
+                nro,
+                cedula,
+                nombres,
+                modalidad,
+                cargo,
+                rmu,
+                unidad,
+                fecha_ingreso,
+                fecha_nacimiento,
+                direccion,
+                email_inst,
+                telefono,
+                genero,
+                instruccion,
+                profesion,
+                vulnerable,
+                tipo_discapacidad,
+                porcentaje_disc,
+                etnia,
+                rol,
+                observaciones,
+                DATE_FORMAT(fecha_salida, '%Y-%m-%d %H:%i:%s') AS fecha_salida,
+                motivo_salida,
+                usuario_responsable,
+                DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+            FROM personal_pasivo
+            ORDER BY fecha_salida DESC, id DESC
+        """)
+
+        resultados = cursor.fetchall()
+
+        return jsonify(resultados), 200
+
+    except Exception as e:
+        print("ERROR OBTENIENDO PERSONAL PASIVO:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexion:
+            conexion.close()
 # =========================
 # 🚀 RUN
 # =========================

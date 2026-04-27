@@ -51,6 +51,81 @@ export class SolicitudPermisosComponent {
     'Otro'
   ];
 
+  unidadesInstitucionales = [
+    {
+      nombre: 'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA ESMERALDAS - MIRA',
+      baseLegal: 'De conformidad con el Estatuto Orgánico de Gestión Organizacional por Procesos del INAMHI, se establece su competencia para la ejecución técnica y operativa de la red de observación en la zona norte del país.'
+    },
+    {
+      nombre: 'DIRECCIÓN DE ADMINISTRACIÓN DE RECURSOS HUMANOS',
+      baseLegal: 'De conformidad con la Ley Orgánica de Servicio Público (LOSEP) y su Reglamento, se dispone la administración integral del talento humano, procesos de selección, capacitación y regímenes remunerativos.'
+    },
+    {
+      nombre: 'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA MORONA SANTIAGO',
+      baseLegal: 'De conformidad con el Estatuto Orgánico de Gestión Organizacional por Procesos del INAMHI, se faculta el monitoreo hidrometeorológico de la región amazónica sur para la prevención de eventos adversos.'
+    },
+    {
+      nombre: 'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA NAPO',
+      baseLegal: 'De conformidad con el Estatuto Orgánico de Gestión Organizacional por Procesos del INAMHI, se asigna la gestión operativa y técnica de las estaciones meteorológicas en la zona centro-norte de la Amazonía.'
+    },
+    {
+      nombre: 'DIRECCIÓN DE PRONÓSTICOS Y ALERTAS HIDROMETEOROLÓGICAS',
+      baseLegal: 'De conformidad con la Ley de Meteorología e Hidrología y su Reglamento, se establece la responsabilidad de vigilancia atmosférica, generación de alertas tempranas y seguridad meteorológica aérea.'
+    },
+    {
+      nombre: 'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA JUBONES - PUYANGO',
+      baseLegal: 'De conformidad con el Estatuto Orgánico de Gestión Organizacional por Procesos del INAMHI, se dictamina el control técnico de la red hidrometeorológica en las cuencas del sur occidente del territorio ecuatoriano.'
+    },
+    {
+      nombre: 'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA PASTAZA',
+      baseLegal: 'De conformidad con el Estatuto Orgánico de Gestión Organizacional por Procesos del INAMHI, se establece la supervisión y mantenimiento preventivo de la red de estaciones en la zona central amazónica.'
+    },
+    {
+      nombre: 'DIRECCIÓN DE ESTUDIOS, INVESTIGACIÓN Y DESARROLLO HIDROMETEOROLÓGICO',
+      baseLegal: 'De conformidad con el Código Orgánico de la Economía Social de los Conocimientos, Creatividad e Innovación, se dispone la generación de modelos científicos y estudios de adaptación al cambio climático.'
+    },
+    {
+      nombre: 'DIRECCIÓN DE LABORATORIO DE AGUAS Y SEDIMENTOS',
+      baseLegal: 'De conformidad con las normas técnicas de calidad ISO/IEC 17025, se autoriza la ejecución de ensayos físicos y químicos para la determinación de la calidad del recurso hídrico y sedimentos.'
+    },
+    {
+      nombre: 'DIRECCIÓN DE ASESORÍA JURÍDICA',
+      baseLegal: 'De conformidad con el Código Orgánico Administrativo (COA), se establece la función de patrocinio legal, control de legalidad de los actos administrativos y suscripción de convenios institucionales.'
+    },
+    {
+      nombre: 'DIRECCIÓN DE LA RED NACIONAL DE OBSERVACIÓN HIDROMETEOROLÓGICA',
+      baseLegal: 'De conformidad con el Plan Nacional de Gestión de Riesgos, se faculta la planificación, instalación y operatividad de la infraestructura de estaciones automáticas y convencionales a nivel nacional.'
+    },
+    {
+      nombre: 'DIRECCIÓN ADMINISTRATIVA FINANCIERA',
+      baseLegal: 'De conformidad con el Código Orgánico de Planificación y Finanzas Públicas, se dispone la gestión presupuestaria, contable y los procesos de contratación pública bajo la normativa del SERCOP.'
+    },
+    {
+      nombre: 'DIRECCIÓN DE INFORMACIÓN HIDROMETEOROLÓGICA',
+      baseLegal: 'De conformidad con la Ley Orgánica de Transparencia y Acceso a la Información Pública (LOTAIP), se asigna la administración del Banco Nacional de Datos y la validación de información histórica.'
+    },
+    {
+      nombre: 'DIRECCIÓN DE PLANIFICACIÓN',
+      baseLegal: 'De conformidad con la normativa de optimización y eficiencia del Estado, se establece la elaboración del Plan Estratégico Institucional (PEI) y el seguimiento de indicadores de gestión y resultados.'
+    },
+    {
+      nombre: 'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA GUAYAS - GALÁPAGOS',
+      baseLegal: 'De conformidad con el Estatuto Orgánico de Gestión Organizacional por Procesos del INAMHI, se determina el monitoreo climático marino-costero y de la región insular para el seguimiento de eventos oceánicos.'
+    },
+    {
+      nombre: 'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA MANABÍ',
+      baseLegal: 'De conformidad con el Estatuto Orgánico de Gestión Organizacional por Procesos del INAMHI, se faculta asegurar la operatividad técnica y recolección de datos climáticos en la zona costera central.'
+    },
+    {
+      nombre: 'DIRECCIÓN DE COMUNICACIÓN SOCIAL',
+      baseLegal: 'De conformidad con la Ley Orgánica de Comunicación, se dispone el manejo de la imagen institucional y la difusión oficial de avisos meteorológicos y alertas a la ciudadanía.'
+    },
+    {
+      nombre: 'DIRECCIÓN EJECUTIVA',
+      baseLegal: 'De conformidad con el Decreto Ejecutivo de creación del INAMHI, se establece la dirección superior, representación legal y la articulación estratégica con organismos nacionales e internacionales.'
+    }
+  ];
+
   formulario: any = {
     cedula: '',
     apellidos: '',
@@ -162,15 +237,27 @@ export class SolicitudPermisosComponent {
 
   formatearFechaVisual(fecha: string): string {
     if (!fecha) return '';
-    const partes = fecha.split('-');
-    if (partes.length !== 3) return fecha;
+    const texto = String(fecha).trim();
+
+    if (texto.includes('T')) {
+      return texto.split('T')[0].split('-').reverse().join('/');
+    }
+
+    if (texto.includes(' ') && texto.includes('-')) {
+      const fechaParte = texto.split(' ')[0];
+      return fechaParte.split('-').reverse().join('/');
+    }
+
+    const partes = texto.split('-');
+    if (partes.length !== 3) return texto;
+
     const [year, month, day] = partes;
     return `${day}/${month}/${year}`;
   }
 
   formatearFechaHoraVisual(fecha: string): string {
     if (!fecha) return '';
-    if (fecha.includes(' ')) return fecha;
+    if (String(fecha).includes(' ')) return String(fecha);
     return this.formatearFechaVisual(fecha);
   }
 
@@ -208,6 +295,50 @@ export class SolicitudPermisosComponent {
       apellidos: partes[0],
       nombres: ''
     };
+  }
+
+  normalizarTexto(valor: string): string {
+    return (valor || '')
+      .toString()
+      .trim()
+      .toUpperCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ');
+  }
+
+  buscarUnidadInstitucional(nombreUnidad: string) {
+    const unidadNormalizada = this.normalizarTexto(nombreUnidad);
+
+    return this.unidadesInstitucionales.find(u =>
+      this.normalizarTexto(u.nombre) === unidadNormalizada
+    );
+  }
+
+  onUnidadChange() {
+    const unidad = this.buscarUnidadInstitucional(this.formulario.unidad);
+
+    if (unidad) {
+      this.formulario.unidad = unidad.nombre;
+      this.formulario.unidad_actual = unidad.nombre;
+      this.formulario.unidad_propuesta = unidad.nombre;
+      this.formulario.motivo_legal = unidad.baseLegal;
+    }
+  }
+
+  aplicarBaseLegalPorUnidad(unidadNombre: string) {
+    const unidad = this.buscarUnidadInstitucional(unidadNombre);
+
+    if (unidad) {
+      this.formulario.unidad = unidad.nombre;
+      this.formulario.unidad_actual = unidad.nombre;
+      this.formulario.unidad_propuesta = unidad.nombre;
+      this.formulario.motivo_legal = unidad.baseLegal;
+    } else {
+      this.formulario.unidad = unidadNombre || '';
+      this.formulario.unidad_actual = unidadNombre || '';
+      this.formulario.unidad_propuesta = unidadNombre || '';
+    }
   }
 
   seleccionarTodosDocumentos() {
@@ -260,15 +391,14 @@ export class SolicitudPermisosComponent {
         this.formulario.nombres_completos = data.nombres || '';
         this.formulario.regimen_laboral = data.modalidad || '';
         this.formulario.cargo = data.cargo || '';
-        this.formulario.unidad = data.unidad || '';
         this.formulario.rmu = data.rmu || '';
 
-        this.formulario.unidad_actual = data.unidad || '';
+        this.aplicarBaseLegalPorUnidad(data.unidad || '');
+
         this.formulario.lugar_trabajo_actual = this.formulario.ciudad || 'Quito';
         this.formulario.denominacion_actual = data.cargo || '';
         this.formulario.remuneracion_actual = data.rmu || '';
 
-        this.formulario.unidad_propuesta = data.unidad || '';
         this.formulario.lugar_trabajo_propuesta = this.formulario.ciudad || 'Quito';
         this.formulario.denominacion_propuesta = data.cargo || '';
         this.formulario.remuneracion_propuesta = data.rmu || '';

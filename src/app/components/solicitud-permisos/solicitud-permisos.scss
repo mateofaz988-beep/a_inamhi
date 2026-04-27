@@ -1,9 +1,12 @@
+/* =========================
+   CONTENEDOR GENERAL
+========================= */
 .solicitud-container {
   padding: 1.5rem;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.07), transparent 25%),
-    radial-gradient(circle at top right, rgba(14, 165, 233, 0.07), transparent 20%),
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 24%),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 22%),
     linear-gradient(135deg, #f4f7fb, #eef3f9);
   color: #0f172a;
   box-sizing: border-box;
@@ -13,6 +16,9 @@
   box-sizing: border-box;
 }
 
+/* =========================
+   HEADER
+========================= */
 .solicitud-header {
   display: flex;
   justify-content: space-between;
@@ -27,8 +33,8 @@
     margin: 0;
     font-size: 1.9rem;
     font-weight: 900;
-    letter-spacing: -0.4px;
     color: #0f172a;
+    letter-spacing: -0.4px;
   }
 
   p {
@@ -45,13 +51,16 @@
   flex-wrap: wrap;
 }
 
+/* =========================
+   BOTONES GENERALES
+========================= */
 .btn-volver,
 .btn-clear,
 .btn-pdf,
 .btn-consultar,
 .btn-selector {
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.22s ease;
@@ -64,7 +73,7 @@
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.65;
     cursor: not-allowed;
     transform: none;
   }
@@ -98,8 +107,8 @@
 }
 
 .btn-consultar {
-  min-height: 42px;
-  padding: 0.55rem 0.95rem;
+  min-height: 44px;
+  padding: 0.6rem 1rem;
   font-size: 0.86rem;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #fff;
@@ -117,11 +126,14 @@
   color: #0f172a;
 }
 
+/* =========================
+   SELECTOR DE DOCUMENTOS
+========================= */
 .page-selector-card,
 .control-panel {
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid #e2e8f0;
-  border-radius: 22px;
+  border-radius: 24px;
   padding: 1.2rem;
   margin-bottom: 1.2rem;
   box-shadow:
@@ -139,8 +151,9 @@
 
   h3 {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1.08rem;
     font-weight: 900;
+    color: #0f172a;
   }
 
   p {
@@ -177,60 +190,73 @@
 .page-option-box {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.28rem;
   padding: 1rem;
   border: 2px solid #dbe4ee;
-  border-radius: 16px;
+  border-radius: 18px;
   background: #fff;
   transition: all 0.22s ease;
+  min-height: 105px;
+
+  &:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.08);
+  }
 }
 
 .page-option input:checked + .page-option-box,
 .page-option input:checked ~ .page-option-box {
   border-color: #2563eb;
-  background: rgba(37, 99, 235, 0.05);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.07), rgba(14, 165, 233, 0.04));
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
 .page-option-title {
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   font-weight: 900;
+  color: #0f172a;
 }
 
 .page-option-text {
   font-size: 0.86rem;
   color: #64748b;
-  line-height: 1.35;
+  line-height: 1.38;
 }
 
 .page-option-pages {
-  margin-top: 0.2rem;
+  margin-top: 0.25rem;
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 900;
   color: #2563eb;
 }
 
 .page-selector-summary {
   margin-top: 1rem;
   padding: 0.85rem 1rem;
-  border-radius: 14px;
+  border-radius: 16px;
   background: rgba(22, 163, 74, 0.08);
   color: #166534;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 800;
+  border: 1px solid rgba(22, 163, 74, 0.16);
 }
 
 .page-selector-summary.warning {
   background: rgba(239, 68, 68, 0.08);
   color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.16);
 }
 
+/* =========================
+   PANEL FORMULARIO
+========================= */
 .panel-title {
   display: flex;
   align-items: center;
   margin-bottom: 1rem;
-  font-size: 0.95rem;
+  font-size: 0.96rem;
   font-weight: 900;
+  color: #0f172a;
 }
 
 .control-grid {
@@ -242,11 +268,11 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.38rem;
+  gap: 0.4rem;
 
   label {
     font-size: 0.76rem;
-    font-weight: 800;
+    font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.35px;
     color: #475569;
@@ -256,30 +282,40 @@
   select,
   textarea {
     width: 100%;
-    padding: 0.65rem 0.8rem;
-    border-radius: 12px;
+    padding: 0.68rem 0.85rem;
+    border-radius: 14px;
     border: 1px solid #dbe4ee;
-    background: #fff;
+    background: #ffffff;
     color: #0f172a;
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 600;
     transition: all 0.22s ease;
     resize: vertical;
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+
+    &:hover {
+      border-color: #93c5fd;
+    }
 
     &:focus {
       outline: none;
       border-color: #2563eb;
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.13);
+      background: #fff;
     }
   }
 
   input,
   select {
-    height: 44px;
+    height: 46px;
   }
 
   textarea {
-    min-height: 96px;
+    min-height: 120px;
+    line-height: 1.5;
   }
 }
 
@@ -294,14 +330,60 @@
 .cedula-box {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0.55rem;
+  gap: 0.6rem;
 }
 
-/* PREVIEW PDF */
+/* =========================
+   UX PRO: SELECT DE UNIDAD
+========================= */
+.field select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #2563eb 50%),
+    linear-gradient(135deg, #2563eb 50%, transparent 50%),
+    linear-gradient(to right, #dbe4ee, #dbe4ee);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px),
+    calc(100% - 42px) 50%;
+  background-size:
+    6px 6px,
+    6px 6px,
+    1px 24px;
+  background-repeat: no-repeat;
+  padding-right: 3.2rem;
+  cursor: pointer;
+}
+
+.field select:focus {
+  background-image:
+    linear-gradient(45deg, #2563eb 50%, transparent 50%),
+    linear-gradient(135deg, transparent 50%, #2563eb 50%),
+    linear-gradient(to right, #93c5fd, #93c5fd);
+}
+
+.field.field-span-2 select {
+  min-height: 48px;
+  border: 1px solid #bfdbfe;
+  background-color: #f8fbff;
+}
+
+/* ayuda visual para la base legal */
+.field.field-span-2 textarea {
+  border-color: #bfdbfe;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+/* =========================
+   PREVIEW PDF
+========================= */
 .pdf-preview-wrapper {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   padding-bottom: 2rem;
+  overflow-x: auto;
 }
 
 .pdf-content {
@@ -310,7 +392,9 @@
   gap: 28px;
 }
 
-/* CADA HOJA A4 */
+/* =========================
+   HOJA A4
+========================= */
 .pdf-page-a4 {
   width: 210mm;
   min-height: 297mm;
@@ -331,9 +415,11 @@
   font-family: Arial, Helvetica, sans-serif;
   font-size: 10.8px;
   line-height: 1.28;
-  box-sizing: border-box;
 }
 
+/* =========================
+   TABLAS PDF
+========================= */
 .doc-header-table,
 .doc-table,
 .footer-table,
@@ -359,10 +445,10 @@
 }
 
 .logo-box {
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
 }
 
 .logo-img {
@@ -555,7 +641,9 @@
   line-height: 1.3;
 }
 
-/* DOC 1 PAG 2 */
+/* =========================
+   DOCUMENTO 1 - PÁGINA 2
+========================= */
 .top-title-table {
   margin-bottom: 10px;
 }
@@ -636,11 +724,11 @@
   font-weight: 700;
 }
 
-/* DOC 2 */
-.permiso-page {
-  .doc2-header td {
-    padding: 8px;
-  }
+/* =========================
+   DOCUMENTO 2
+========================= */
+.doc2-header td {
+  padding: 8px;
 }
 
 .doc2-left-brand {
@@ -726,6 +814,9 @@
   padding: 6px 8px !important;
 }
 
+/* =========================
+   PRINT / PDF
+========================= */
 @media print {
   body {
     background: #fff !important;
@@ -742,6 +833,7 @@
 
   .pdf-preview-wrapper {
     padding: 0 !important;
+    overflow: visible !important;
   }
 
   .pdf-content {
@@ -760,6 +852,9 @@
   }
 }
 
+/* =========================
+   RESPONSIVE
+========================= */
 @media (max-width: 1200px) {
   .control-grid {
     grid-template-columns: repeat(3, minmax(180px, 1fr));
@@ -821,4 +916,22 @@
   .pdf-preview-wrapper {
     overflow-x: auto;
   }
+  .logo-box {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-img {
+  max-width: 100%;
+  max-height: 48px;
+  object-fit: contain;
+}
+
+.doc2-left-brand.logo-cell {
+  width: 20%;
+  text-align: center;
+  vertical-align: middle;
+}
 }

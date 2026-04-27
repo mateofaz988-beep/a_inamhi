@@ -1,23 +1,22 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
-// Importación del sistema de rutas del módulo
 import { AdminRoutingModule } from './admin-routing-module';
-
-// Importación de componentes de página
 import { DashboardComponent } from './pages/dashboard/dashboard';
+import { FuncionariosDesvinculadosComponent } from '../../components/funcionarios-desvinculados/funcionarios-desvinculados';
 import { SharedModule } from '../../shared/shared-module';
-
-// Importación del módulo compartido (Contiene la tabla y FormsModule)
 
 @NgModule({
   declarations: [
-    DashboardComponent
+    FuncionariosDesvinculadosComponent
   ],
   imports: [
     CommonModule,
-    AdminRoutingModule,
-    SharedModule // Esto permite usar <app-tabla-empleados> en el dashboard
+    FormsModule,
+    SharedModule,
+    DashboardComponent,
+    AdminRoutingModule
   ]
 })
 export class AdminModule { }

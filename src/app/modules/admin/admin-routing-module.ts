@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+// 🔐 GUARD ADMIN
+
 // PAGES
 import { DashboardComponent } from './pages/dashboard/dashboard';
 
@@ -10,66 +12,52 @@ import { AuditoriaComponent } from '../../components/auditoria/auditoria';
 import { SolicitudPermisosComponent } from '../../components/solicitud-permisos/solicitud-permisos';
 import { UsuariosComponent } from '../../components/usuarios/usuarios';
 import { FuncionariosDesvinculadosComponent } from '../../components/funcionarios-desvinculados/funcionarios-desvinculados';
+import { AdminGuard } from '../../core/guards/admin-guard';
 
 const routes: Routes = [
 
-  // =========================
-  // DASHBOARD
-  // =========================
   {
     path: 'dashboard',
-    component: DashboardComponent
+    component: DashboardComponent,
+    canActivate: [AdminGuard]
   },
 
-  // =========================
-  // FUNCIONARIOS
-  // =========================
   {
     path: 'nuevo-funcionario',
-    component: NuevoFuncionarioComponent
+    component: NuevoFuncionarioComponent,
+    canActivate: [AdminGuard]
   },
 
   {
     path: 'funcionarios-desvinculados',
-    component: FuncionariosDesvinculadosComponent
+    component: FuncionariosDesvinculadosComponent,
+    canActivate: [AdminGuard]
   },
 
-  // =========================
-  // AUDITORIA
-  // =========================
   {
     path: 'auditoria',
-    component: AuditoriaComponent
+    component: AuditoriaComponent,
+    canActivate: [AdminGuard]
   },
 
-  // =========================
-  // DOCUMENTOS
-  // =========================
   {
     path: 'solicitud-permisos',
-    component: SolicitudPermisosComponent
+    component: SolicitudPermisosComponent,
+    canActivate: [AdminGuard]
   },
 
-  // =========================
-  // USUARIOS
-  // =========================
   {
     path: 'usuarios',
-    component: UsuariosComponent
+    component: UsuariosComponent,
+    canActivate: [AdminGuard]
   },
 
-  // =========================
-  // DEFAULT
-  // =========================
   {
     path: '',
     redirectTo: 'dashboard',
     pathMatch: 'full'
   },
 
-  // =========================
-  // FALLBACK (MUY IMPORTANTE)
-  // =========================
   {
     path: '**',
     redirectTo: 'dashboard'

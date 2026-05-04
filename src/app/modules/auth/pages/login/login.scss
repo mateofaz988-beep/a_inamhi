@@ -1,0 +1,332 @@
+:host {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* =========================
+   PÁGINA LOGIN
+========================= */
+.login-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #020617;
+}
+
+/* =========================
+   IMAGEN FONDO
+========================= */
+.login-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  filter: brightness(0.75) saturate(1.15) contrast(1.05);
+  transform: scale(1.05);
+}
+
+/* =========================
+   CAPA OSCURA
+========================= */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.35), transparent 32%),
+    radial-gradient(circle at 80% 80%, rgba(14, 165, 233, 0.25), transparent 35%),
+    linear-gradient(135deg, rgba(47, 73, 134, 0.85), rgba(2, 34, 179, 0.72));
+}
+
+/* =========================
+   CONTENEDOR
+========================= */
+.login-shell {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  max-width: 440px;
+  animation: loginFade 0.7s ease both;
+}
+
+/* =========================
+   TARJETA
+========================= */
+.login-card {
+  position: relative;
+  overflow: hidden;
+  padding: 42px 38px;
+  border-radius: 34px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(24px);
+  box-shadow:
+    0 35px 80px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  top: -110px;
+  right: -110px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.18);
+  pointer-events: none;
+}
+
+.top-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 6px;
+  width: 100%;
+  background: linear-gradient(90deg, #38bdf8, #2563eb, #1e3a8a);
+}
+
+/* =========================
+   MARCA
+========================= */
+.brand {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-bottom: 34px;
+}
+
+.brand-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #2563eb, #0ea5e9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.38);
+}
+
+.brand-icon i {
+  font-size: 32px;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 50px;
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -2px;
+  color: white;
+  text-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.brand p {
+  margin: 12px 0 0;
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.brand-line {
+  display: block;
+  width: 56px;
+  height: 5px;
+  margin: 18px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #38bdf8, #2563eb);
+  box-shadow: 0 0 22px rgba(56, 189, 248, 0.75);
+}
+
+/* =========================
+   FORMULARIO
+========================= */
+.login-form {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group label {
+  display: block;
+  margin: 0 0 8px 10px;
+  color: #bfdbfe;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.input-box {
+  position: relative;
+}
+
+.input-box > i {
+  position: absolute;
+  top: 50%;
+  left: 18px;
+  transform: translateY(-50%);
+  color: #bfdbfe;
+  font-size: 16px;
+  z-index: 2;
+}
+
+.input-box input {
+  width: 100%;
+  height: 58px;
+  padding: 0 18px 0 50px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.11);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.input-box input::placeholder {
+  color: rgba(191, 219, 254, 0.55);
+}
+
+.input-box input:hover {
+  border-color: rgba(147, 197, 253, 0.6);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.input-box input:focus {
+  border-color: #38bdf8;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
+}
+
+/* =========================
+   BOTÓN LOGIN
+========================= */
+.btn-login {
+  width: 100%;
+  height: 58px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  font-size: 14px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.36);
+  transition: all 0.25s ease;
+}
+
+.btn-login:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  box-shadow: 0 24px 42px rgba(37, 99, 235, 0.45);
+}
+
+.btn-login:active {
+  transform: scale(0.97);
+}
+
+/* =========================
+   NOTA SEGURA
+========================= */
+.secure-note {
+  position: relative;
+  z-index: 2;
+  margin-top: 24px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(37, 99, 235, 0.16);
+  border: 1px solid rgba(147, 197, 253, 0.18);
+  color: #dbeafe;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.footer-text {
+  position: relative;
+  z-index: 2;
+  margin: 26px 0 0;
+  text-align: center;
+  color: rgba(191, 219, 254, 0.62);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2.6px;
+  line-height: 1.6;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 520px) {
+  .login-page {
+    padding: 16px;
+  }
+
+  .login-card {
+    padding: 34px 24px;
+    border-radius: 28px;
+  }
+
+  .brand h1 {
+    font-size: 40px;
+  }
+
+  .brand p {
+    font-size: 10px;
+    letter-spacing: 2.4px;
+  }
+
+  .brand-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 20px;
+  }
+
+  .input-box input,
+  .btn-login {
+    height: 54px;
+  }
+}
+
+/* =========================
+   ANIMACIÓN
+========================= */
+@keyframes loginFade {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

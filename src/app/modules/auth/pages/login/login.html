@@ -1,60 +1,93 @@
-<div class="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
-  
-  <img 
-    src="assets/paisaje2.jpg" 
-    alt="Fondo INAMHI"
-    class="absolute z-0 min-w-full min-h-full object-cover">
+<div class="login-page">
 
-  <div class="absolute z-10 w-full h-full bg-gradient-to-br from-blue-900/70 to-black/50"></div>
+  <img
+    src="assets/paisaje2.jpg"
+    alt="Fondo institucional INAMHI"
+    class="login-bg"
+  >
 
-  <div class="relative z-20 w-full max-w-md p-6 mx-4">
-    <div class="bg-white/10 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] border border-white/20 overflow-hidden">
-      
-      <div class="h-1.5 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-900"></div>
+  <div class="login-overlay"></div>
 
-      <div class="p-10">
-        <div class="text-center mb-10">
-          <div class="inline-block mb-3">
-            <h1 class="text-5xl font-black text-white tracking-tighter drop-shadow-md">INAMHI</h1>
-          </div>
-          <p class="text-blue-100 text-xs font-bold uppercase tracking-[0.3em] opacity-80">Gestión de Talento Humano</p>
-          <div class="w-10 h-1 bg-blue-400 mx-auto mt-4 rounded-full shadow-sm"></div>
+  <div class="login-shell">
+
+    <section class="login-card">
+
+      <div class="top-line"></div>
+
+      <div class="brand">
+
+        <!-- LOGO / IMAGEN SUPERIOR -->
+        <div class="brand-image-box">
+          <img
+            src="assets/logo2-.png"
+            alt="Logo INAMHI"
+            class="brand-image"
+          >
         </div>
 
-        <form (ngSubmit)="onLogin()" class="space-y-6">
-          <div class="space-y-2">
-            <label class="text-[10px] font-black text-blue-200 uppercase ml-2 tracking-widest">Usuario</label>
-            <input 
-              type="text" 
-              [(ngModel)]="username" 
-              name="username" 
-              placeholder="Ingrese su usuario"
-              class="w-full px-6 py-4 bg-white/10 border border-white/10 rounded-2xl focus:bg-white/20 focus:border-blue-400 focus:ring-0 outline-none transition-all duration-300 text-white placeholder:text-blue-200/40 font-medium">
-          </div>
-
-          <div class="space-y-2">
-            <label class="text-[10px] font-black text-blue-200 uppercase ml-2 tracking-widest">Contraseña</label>
-            <input 
-              type="password" 
-              [(ngModel)]="password" 
-              name="password" 
-              placeholder="••••••••"
-              class="w-full px-6 py-4 bg-white/10 border border-white/10 rounded-2xl focus:bg-white/20 focus:border-blue-400 focus:ring-0 outline-none transition-all duration-300 text-white placeholder:text-blue-200/40 font-medium">
-          </div>
-
-          <div class="pt-4">
-            <button 
-              type="submit" 
-              class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-900/40 transform transition-all duration-300 active:scale-[0.97] uppercase tracking-wider">
-              Acceder al Sistema
-            </button>
-          </div>
-        </form>
-
-        <p class="text-center text-blue-200/40 text-[9px] mt-10 uppercase font-bold tracking-[0.2em]">
-          Instituto Nacional de Meteorología e Hidrología
-        </p>
+      
+        <p>Gestión de Talento Humano</p>
+        <span class="brand-line"></span>
       </div>
-    </div>
+
+      <form
+        class="login-form"
+        (ngSubmit)="onLogin()"
+        autocomplete="off"
+      >
+
+        <div class="form-group">
+          <label for="username">Usuario</label>
+
+          <div class="input-box">
+            <i class="bi bi-person-fill"></i>
+
+            <input
+              id="username"
+              type="text"
+              name="username"
+              [(ngModel)]="username"
+              placeholder="Ingrese su usuario"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+
+          <div class="input-box">
+            <i class="bi bi-lock-fill"></i>
+
+            <input
+              id="password"
+              type="password"
+              name="password"
+              [(ngModel)]="password"
+              placeholder="••••••••"
+              required
+            >
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login">
+          <i class="bi bi-box-arrow-in-right"></i>
+          Acceder al Sistema
+        </button>
+
+      </form>
+
+      <div class="secure-note">
+        <i class="bi bi-shield-lock-fill"></i>
+        <span>Acceso seguro institucional</span>
+      </div>
+
+      <p class="footer-text">
+        Instituto Nacional de Meteorología e Hidrología
+      </p>
+
+    </section>
+
   </div>
+
 </div>

@@ -83,6 +83,24 @@ export class AuthService {
   getToken(): string {
     return localStorage.getItem('auth_token') || '';
   }
+  // =========================
+// 👤 OBTENER USUARIO
+// =========================
+getUser(): string {
+  const user = localStorage.getItem('auth_user');
+
+  if (user) {
+    return user;
+  }
+
+  const token = this.getToken();
+
+  if (token && token.startsWith('tk_')) {
+    return token.replace('tk_', '');
+  }
+
+  return '';
+}
 
   // =========================
   // 🚪 LOGOUT

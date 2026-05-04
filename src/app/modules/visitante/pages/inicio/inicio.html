@@ -1,88 +1,92 @@
-<div class="min-h-screen bg-slate-50 font-sans">
-  
-  <nav class="bg-[#1e3a8a] shadow-lg sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-20 items-center">
-        
-        <div class="flex items-center gap-6">
-          <div >
-            <img src="assets/logo2-.png" 
-                 alt="Logo INAMHI" 
-                 class="h-12 md:h-20 w-auto object-contain block"> 
-          </div>
-          
-          <div class="hidden md:flex items-center border-l border-blue-700/50 pl-6 h-10">
-            <span class="text-white text-base font-black tracking-tight uppercase opacity-90">
-              Portal de Transparencia
-            </span>
-          </div>
-        </div>
+<div class="portal-container">
 
-        <div class="flex items-center space-x-4">
-          <div class="hidden sm:flex flex-col items-end">
-            <span class="text-blue-200 text-[10px] font-black uppercase tracking-widest">Estado del Sistema</span>
-            <span class="text-emerald-400 text-[9px] font-bold uppercase">● En Línea</span>
-          </div>
-          <div class="h-11 w-11 rounded-2xl bg-blue-800 border border-blue-700 flex items-center justify-center text-white text-sm font-black shadow-inner">
-            V
-          </div>
+  <!-- NAVBAR -->
+  <nav class="portal-navbar">
+    <div class="navbar-inner">
+
+      <div class="brand">
+        <img src="assets/logo2-.png" alt="Logo INAMHI">
+        <div class="brand-text">
+         
+          <span>Portal de Transparencia</span>
         </div>
       </div>
+
+      <div class="nav-actions">
+
+        <div class="status">
+          <small>Estado del Sistema</small>
+          <span class="online">
+            <i></i> En Línea
+          </span>
+        </div>
+        <br>
+        <br>
+
+        <div class="avatar">visitante </div>
+
+      </div>
+
     </div>
   </nav>
 
-  <header class="bg-white border-b border-slate-200 pt-16 pb-12">
-    <div class="max-w-5xl mx-auto px-6 text-center">
-      <h1 class="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter mb-6">
-        Directorio de <span class="text-blue-700">Servidores Públicos</span>
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-content">
+
+      <h1>
+        Directorio de <span>Servidores Públicos</span>
       </h1>
-      <p class="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium">
-        Consulta la nómina actualizada del personal, sus cargos y RMU conforme a lo establecido en la ley orgánica de transparencia.
+
+      <p>
+        Consulta la nómina actualizada del personal, sus cargos y RMU conforme a la normativa de transparencia institucional.
       </p>
-      
-      <div class="mt-8 inline-flex items-center px-5 py-2 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-black uppercase tracking-widest shadow-sm">
-        <span class="flex h-2.5 w-2.5 rounded-full bg-emerald-500 mr-3 animate-pulse"></span>
+
+      <div class="badge">
         Actualizado: Abril 2026
       </div>
+
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    
-    <div class="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-300/40 border border-slate-100 overflow-hidden">
-      
-      <div class="p-8 md:p-10 border-b border-slate-50 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 bg-slate-50/50">
+  <!-- MAIN -->
+  <main class="portal-main">
+
+    <div class="card">
+
+      <div class="card-header">
+
         <div>
-          <h2 class="text-3xl font-black text-slate-800 tracking-tight">Listado Institucional</h2>
-          <p class="text-slate-400 mt-2 font-semibold">Base de datos centralizada de talento humano - INAMHI</p>
+          <h2>Listado Institucional</h2>
+          <p>Base de datos centralizada - INAMHI</p>
         </div>
-        
-        <div class="flex flex-wrap gap-3">
-          <button class="inline-flex items-center justify-center px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all hover:shadow-xl hover:shadow-blue-200 active:scale-95">
-            <span class="mr-2 text-base">📥</span> Exportar PDF
-          </button>
-        </div>
+
+        <button class="btn-primary">
+          <i class="bi bi-file-earmark-pdf"></i>
+          Exportar PDF
+        </button>
+
       </div>
 
-      <div class="p-1 md:p-4 bg-white">
+      <div class="card-body">
         <app-tabla-empleados></app-tabla-empleados>
       </div>
 
     </div>
 
-    <footer class="mt-20 pb-16 text-center">
-      <div class="flex justify-center mb-8">
-        <div class="h-1 w-12 bg-blue-600 rounded-full"></div>
-      </div>
-      <p class="text-slate-500 text-sm font-bold tracking-tight">
-        © 2026 Instituto Nacional de Meteorología e Hidrología
-      </p>
-      <div class="mt-6 flex flex-wrap justify-center gap-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-        <a href="#" class="hover:text-blue-600 transition-all transform hover:-translate-y-0.5">Soporte Técnico</a>
-        <a href="#" class="hover:text-blue-600 transition-all transform hover:-translate-y-0.5">Contacto</a>
-        <a href="#" class="hover:text-blue-600 transition-all transform hover:-translate-y-0.5">Normativa</a>
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="line"></div>
+
+      <p>© 2026 Instituto Nacional de Meteorología e Hidrología</p>
+
+      <div class="links">
+        <a href="#">Soporte</a>
+        <a href="#">Contacto</a>
+        <a href="#">Normativa</a>
       </div>
     </footer>
 
   </main>
+
 </div>

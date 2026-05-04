@@ -1,87 +1,181 @@
-<div class="dashboard-container">
+<div class="dashboard-layout">
 
-  <!-- HEADER -->
-  <header class="dashboard-header">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
 
-    <!-- IZQUIERDA -->
-    <div class="header-left">
-      <h1 class="title">Panel de Control</h1>
-      <p class="subtitle">Bienvenido al sistema INAMHI</p>
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+      <i class="bi bi-bar-chart-line-fill"></i>
+      </div>
+
+      <div>
+        <h2>INAMHI</h2>
+        <span>Talento Humano</span>
+      </div>
     </div>
 
-    <!-- DERECHA -->
-    <div class="header-actions">
+    <nav class="sidebar-nav">
 
-      <!-- NUEVO FUNCIONARIO -->
-      <button
-        class="btn-nuevo"
-        routerLink="/admin/nuevo-funcionario">
-        <i class="bi bi-person-plus-fill me-2"></i>
-        Nuevo Funcionario
+      <button class="nav-item active" routerLink="/admin/dashboard">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Dashboard</span>
       </button>
 
-      <!-- AUDITORIA -->
-      <button
-        class="btn-auditoria"
-        routerLink="/admin/auditoria">
-        <i class="bi bi-clock-history me-2"></i>
-        Auditoría
+      <button class="nav-item" routerLink="/admin/nuevo-funcionario">
+        <i class="bi bi-person-plus-fill"></i>
+        <span>Nuevo Funcionario</span>
       </button>
 
-      <!-- SOLICITUDES -->
-      <button
-        class="btn-solicitud"
-        routerLink="/admin/solicitud-permisos">
+      <button class="nav-item" routerLink="/admin/solicitud-permisos">
         <i class="bi bi-file-earmark-text-fill"></i>
         <span>Solicitudes</span>
       </button>
 
-      <!-- USUARIOS -->
-      <button
-        class="btn-usuarios"
-        routerLink="/admin/usuarios">
-        <i class="bi bi-people-fill me-2"></i>
-        Usuarios
+      <button class="nav-item" routerLink="/admin/auditoria">
+        <i class="bi bi-clock-history"></i>
+        <span>Auditoría</span>
       </button>
 
-      <!-- DESVINCULADOS -->
-      <button
-        class="btn-desvinculados"
-        routerLink="/admin/funcionarios-desvinculados">
-        <i class="bi bi-person-dash-fill me-2"></i>
-        Desvinculados
+      <button class="nav-item" routerLink="/admin/usuarios">
+        <i class="bi bi-people-fill"></i>
+        <span>Usuarios</span>
       </button>
 
-      <!-- LOGOUT -->
-      <button
-        class="btn-logout"
-        (click)="authService.logout()">
-      
-        <i class="bi bi-box-arrow-right me-2"></i>
-        cerrar sesiòn
+      <button class="nav-item" routerLink="/admin/funcionarios-desvinculados">
+        <i class="bi bi-person-dash-fill"></i>
+        <span>Desvinculados</span>
       </button>
 
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">
+          <i class="bi bi-person-circle"></i>
+        </div>
+
+        <div>
+          <strong>{{ authService.getUser() || 'Usuario' }}</strong>
+          <span>{{ authService.getRole() || 'Sin rol' }}</span>
+        </div>
+      </div>
+
+      <button class="logout-btn" (click)="logout()">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Cerrar sesión</span>
+      </button>
     </div>
 
-  </header>
+  </aside>
 
-  <!-- CARD PRINCIPAL -->
-  <div class="main-card">
+  <!-- MAIN -->
+  <main class="dashboard-main">
 
-    <div class="card-header-custom">
-      <h2 class="card-title">
-        MATRIZ INTEGRAL DE PERSONAL
-      </h2>
+    <!-- TOPBAR -->
+    <header class="topbar">
 
-      <span class="badge-mode" *ngIf="authService.isAdmin()">
-        Modo Administrador
-      </span>
-    </div>
+      <div>
+        <span class="eyebrow">Sistema INAMHI</span>
+        <h1>Panel de Control</h1>
+        <p>Gestión integral de funcionarios, documentos, usuarios y auditoría.</p>
+      </div>
 
-    <div class="card-body-custom">
-      <app-tabla-empleados></app-tabla-empleados>
-    </div>
+      <div class="topbar-actions">
+        <button class="quick-btn primary" routerLink="/admin/nuevo-funcionario">
+          <i class="bi bi-person-plus-fill"></i>
+          Nuevo funcionario
+        </button>
 
-  </div>
+        <button class="quick-btn danger" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i>
+          Salir
+        </button>
+      </div>
+
+    </header>
+
+   
+
+    <!-- ACCESOS RÁPIDOS -->
+    <section class="quick-actions-panel">
+
+      <div class="section-heading">
+        <div>
+          <h2>Accesos rápidos</h2>
+          <p>Operaciones frecuentes del sistema.</p>
+        </div>
+      </div>
+
+      <div class="quick-actions-grid">
+
+        <button class="quick-action-card" routerLink="/admin/nuevo-funcionario">
+          <div class="quick-action-icon blue">
+            <i class="bi bi-person-plus-fill"></i>
+          </div>
+          <div>
+            <strong>Registrar funcionario</strong>
+            <span>Crear un nuevo registro activo</span>
+          </div>
+        </button>
+
+        <button class="quick-action-card" routerLink="/admin/solicitud-permisos">
+          <div class="quick-action-icon green">
+            <i class="bi bi-file-earmark-text-fill"></i>
+          </div>
+          <div>
+            <strong>Generar documentos</strong>
+            <span>Solicitudes y acciones institucionales</span>
+          </div>
+        </button>
+
+        <button class="quick-action-card" routerLink="/admin/auditoria">
+          <div class="quick-action-icon orange">
+            <i class="bi bi-clock-history"></i>
+          </div>
+          <div>
+            <strong>Auditoría</strong>
+            <span>Revisar movimientos del sistema</span>
+          </div>
+        </button>
+
+        <button class="quick-action-card" routerLink="/admin/funcionarios-desvinculados">
+          <div class="quick-action-icon red">
+            <i class="bi bi-person-dash-fill"></i>
+          </div>
+          <div>
+            <strong>Funcionarios desvinculados</strong>
+            <span>Histórico y reactivación</span>
+          </div>
+        </button>
+
+      </div>
+
+    </section>
+
+ 
+
+    <!-- TABLA PRINCIPAL -->
+    <section class="main-card">
+
+      <div class="card-header-custom">
+        <div>
+          <span class="eyebrow">Matriz institucional</span>
+          <h2 class="card-title">MATRIZ INTEGRAL DE PERSONAL</h2>
+          <p>Consulta, edición, exportación y desvinculación de funcionarios activos.</p>
+        </div>
+
+        <span class="badge-mode" *ngIf="authService.isAdmin()">
+          <i class="bi bi-shield-lock-fill"></i>
+          Modo Administrador
+        </span>
+      </div>
+
+      <div class="card-body-custom">
+        <app-tabla-empleados></app-tabla-empleados>
+      </div>
+
+    </section>
+
+  </main>
 
 </div>

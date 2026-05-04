@@ -587,6 +587,7 @@ export class SolicitudPermisosComponent {
 
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       }
+      
 
       pdf.save(`documentos-inamhi-${this.formulario.cedula || 'sin-cedula'}.pdf`);
       this.exportando = false;

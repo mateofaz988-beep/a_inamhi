@@ -1,9 +1,18 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import mysql.connector
 import json
+import os
+import glob
+from io import BytesIO
 from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
+
+try:
+    import openpyxl
+    OPENPYXL_DISPONIBLE = True
+except ImportError:
+    OPENPYXL_DISPONIBLE = False
 
 app = Flask(__name__)
 CORS(app)
@@ -1050,6 +1059,746 @@ def obtener_personal_pasivo():
             cursor.close()
         if conexion:
             conexion.close()
+# =========================
+# 🏛️ AUTORIDADES (CRUD)
+# =========================
+@app.route('/api/autoridades', methods=['GET'])
+def obtener_autoridades():
+    token = request.headers.get('Authorization', '')
+    if not token.startswith('tk_'):
+        return jsonify({"error": "No autorizado"}), 403
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT id, nombres, provincia, canton, denominacion_puesto, unidad_organica
+            FROM autoridades
+            WHERE nombres IS NOT NULL AND nombres != ''
+            ORDER BY nombres ASC
+        """)
+        resultados = cursor.fetchall()
+        return jsonify(resultados), 200
+
+    except Exception as e:
+        print("ERROR OBTENIENDO AUTORIDADES:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+@app.route('/api/autoridades', methods=['POST'])
+def crear_autoridad():
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    data = request.get_json()
+    nombres            = (data.get('nombres') or '').strip().upper()
+    denominacion_puesto = (data.get('denominacion_puesto') or '').strip().upper()
+    unidad_organica    = (data.get('unidad_organica') or '').strip().upper()
+    provincia          = (data.get('provincia') or 'PICHINCHA').strip().upper()
+    canton             = (data.get('canton') or 'QUITO').strip().upper()
+
+    if not nombres or not denominacion_puesto:
+        return jsonify({"error": "Nombre y puesto son obligatorios"}), 400
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            INSERT INTO autoridades (nombres, provincia, canton, denominacion_puesto, unidad_organica)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (nombres, provincia, canton, denominacion_puesto, unidad_organica))
+
+        conexion.commit()
+        nuevo_id = cursor.lastrowid
+        return jsonify({"message": "Autoridad creada", "id": nuevo_id}), 201
+
+    except Exception as e:
+        print("ERROR CREANDO AUTORIDAD:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+@app.route('/api/autoridades/<int:id>', methods=['PUT'])
+def actualizar_autoridad(id):
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    data = request.get_json()
+    nombres            = (data.get('nombres') or '').strip().upper()
+    denominacion_puesto = (data.get('denominacion_puesto') or '').strip().upper()
+    unidad_organica    = (data.get('unidad_organica') or '').strip().upper()
+    provincia          = (data.get('provincia') or 'PICHINCHA').strip().upper()
+    canton             = (data.get('canton') or 'QUITO').strip().upper()
+
+    if not nombres or not denominacion_puesto:
+        return jsonify({"error": "Nombre y puesto son obligatorios"}), 400
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            UPDATE autoridades
+            SET nombres = %s, provincia = %s, canton = %s,
+                denominacion_puesto = %s, unidad_organica = %s
+            WHERE id = %s
+        """, (nombres, provincia, canton, denominacion_puesto, unidad_organica, id))
+
+        conexion.commit()
+        return jsonify({"message": "Autoridad actualizada"}), 200
+
+    except Exception as e:
+        print("ERROR ACTUALIZANDO AUTORIDAD:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+@app.route('/api/autoridades/<int:id>', methods=['DELETE'])
+def eliminar_autoridad(id):
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("DELETE FROM autoridades WHERE id = %s", (id,))
+        conexion.commit()
+        return jsonify({"message": "Autoridad eliminada"}), 200
+
+    except Exception as e:
+        print("ERROR ELIMINANDO AUTORIDAD:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+# =========================
+# 👥 ESTRUCTURA DE PERSONAL (CRUD)
+# =========================
+@app.route('/api/personal-estructura', methods=['GET'])
+def obtener_personal_estructura():
+    token = request.headers.get('Authorization', '')
+    if not token.startswith('tk_'):
+        return jsonify({"error": "No autorizado"}), 403
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT id, nombres, provincia, canton, denominacion_puesto, unidad_organica
+            FROM personal_estructura
+            WHERE nombres IS NOT NULL AND nombres != ''
+            ORDER BY nombres ASC
+        """)
+        resultados = cursor.fetchall()
+        return jsonify(resultados), 200
+
+    except Exception as e:
+        print("ERROR OBTENIENDO PERSONAL ESTRUCTURA:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+@app.route('/api/personal-estructura', methods=['POST'])
+def crear_personal_estructura():
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    data = request.get_json()
+    nombres             = (data.get('nombres')             or '').strip().upper()
+    denominacion_puesto = (data.get('denominacion_puesto') or '').strip().upper()
+    unidad_organica     = (data.get('unidad_organica')     or '').strip().upper()
+    provincia           = (data.get('provincia')           or 'PICHINCHA').strip().upper()
+    canton              = (data.get('canton')              or 'QUITO').strip().upper()
+
+    if not nombres or not denominacion_puesto:
+        return jsonify({"error": "Nombre y puesto son obligatorios"}), 400
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            INSERT INTO personal_estructura (nombres, provincia, canton, denominacion_puesto, unidad_organica)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (nombres, provincia, canton, denominacion_puesto, unidad_organica))
+
+        conexion.commit()
+        return jsonify({"message": "Registro creado", "id": cursor.lastrowid}), 201
+
+    except Exception as e:
+        print("ERROR CREANDO PERSONAL ESTRUCTURA:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+@app.route('/api/personal-estructura/<int:id>', methods=['PUT'])
+def actualizar_personal_estructura(id):
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    data = request.get_json()
+    nombres             = (data.get('nombres')             or '').strip().upper()
+    denominacion_puesto = (data.get('denominacion_puesto') or '').strip().upper()
+    unidad_organica     = (data.get('unidad_organica')     or '').strip().upper()
+    provincia           = (data.get('provincia')           or 'PICHINCHA').strip().upper()
+    canton              = (data.get('canton')              or 'QUITO').strip().upper()
+
+    if not nombres or not denominacion_puesto:
+        return jsonify({"error": "Nombre y puesto son obligatorios"}), 400
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            UPDATE personal_estructura
+            SET nombres = %s, provincia = %s, canton = %s,
+                denominacion_puesto = %s, unidad_organica = %s
+            WHERE id = %s
+        """, (nombres, provincia, canton, denominacion_puesto, unidad_organica, id))
+
+        conexion.commit()
+        return jsonify({"message": "Registro actualizado"}), 200
+
+    except Exception as e:
+        print("ERROR ACTUALIZANDO PERSONAL ESTRUCTURA:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+@app.route('/api/personal-estructura/<int:id>', methods=['DELETE'])
+def eliminar_personal_estructura(id):
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("DELETE FROM personal_estructura WHERE id = %s", (id,))
+        conexion.commit()
+        return jsonify({"message": "Registro eliminado"}), 200
+
+    except Exception as e:
+        print("ERROR ELIMINANDO PERSONAL ESTRUCTURA:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+# =========================
+# 📄 GENERAR ACCIÓN DE PERSONAL (EXCEL)
+# =========================
+@app.route('/api/generar-accion', methods=['POST'])
+def generar_accion():
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    if not OPENPYXL_DISPONIBLE:
+        return jsonify({"error": "Librería openpyxl no instalada. Ejecute: pip install openpyxl"}), 503
+
+    datos = request.get_json()
+    if not datos:
+        return jsonify({"error": "Datos requeridos"}), 400
+
+    print(">>> generar-accion recibido:", {
+        "apellidos":        datos.get("apellidos"),
+        "cedula":           datos.get("cedula"),
+        "fecha_rige_desde": datos.get("fecha_rige_desde"),
+        "fecha_rige_hasta": datos.get("fecha_rige_hasta"),
+        "tipo_accion":      datos.get("tipo_accion"),
+    })
+
+    carpeta = os.path.join(os.path.dirname(__file__), 'plantillas')
+    archivos = glob.glob(os.path.join(carpeta, '*.xlsx'))
+
+    if not archivos:
+        return jsonify({"error": "No se encontró ningún archivo .xlsx en la carpeta 'plantillas/'. Coloque su plantilla allí."}), 404
+
+    ruta_plantilla = archivos[0]
+
+    try:
+        from openpyxl.utils import coordinate_to_tuple
+        from datetime import datetime as dt
+
+        def escribir_celda(ws, addr, valor):
+            """Escribe en la celda ancla del rango fusionado que contiene addr."""
+            row, col = coordinate_to_tuple(addr)
+            for rango in ws.merged_cells.ranges:
+                if rango.min_row <= row <= rango.max_row and rango.min_col <= col <= rango.max_col:
+                    ws.cell(row=rango.min_row, column=rango.min_col, value=valor)
+                    return
+            ws.cell(row=row, column=col, value=valor)
+
+        def parse_fecha(s, como_texto=False):
+            """Convierte string YYYY-MM-DD a datetime o texto DD/MM/YYYY."""
+            if not s:
+                return ''
+            for fmt in ('%Y-%m-%d', '%d-%m-%Y', '%d/%m/%Y'):
+                try:
+                    d = dt.strptime(s, fmt)
+                    return d.strftime('%d/%m/%Y') if como_texto else d
+                except ValueError:
+                    pass
+            return s
+
+        wb = openpyxl.load_workbook(ruta_plantilla)
+        hoja = wb['ap'] if 'ap' in wb.sheetnames else wb.active
+
+        # ── ENCABEZADO ──────────────────────────────────────────────────────
+        # M3 = número de AP  |  K5 = fecha de elaboración (ya tiene formato de fecha en plantilla)
+        escribir_celda(hoja, 'M3', datos.get('numero_accion', ''))
+        escribir_celda(hoja, 'K5', parse_fecha(datos.get('fecha_elaboracion', '')))
+
+        # ── APELLIDOS / NOMBRES (A6:H7 y I6:P7) ─────────────────────────────
+        # A8 e I8 son los LABELS; los datos van en A6 e I6
+        escribir_celda(hoja, 'A6', datos.get('apellidos', ''))
+        escribir_celda(hoja, 'I6', datos.get('nombres', ''))
+
+        # ── CÉDULA Y FECHAS DE VIGENCIA ──────────────────────────────────────
+        # A11:D11 = label CÉDULA  →  E11:H11 = valor cédula
+        # I11:L11 = fecha rige desde  |  M11:P11 = fecha rige hasta
+        # Las fechas se escriben como texto DD/MM/YYYY para evitar números seriales
+        escribir_celda(hoja, 'E11', datos.get('cedula', ''))
+        escribir_celda(hoja, 'I11', parse_fecha(datos.get('fecha_rige_desde', ''), como_texto=True))
+        escribir_celda(hoja, 'M11', parse_fecha(datos.get('fecha_rige_hasta', ''), como_texto=True))
+
+        # ── TIPO DE ACCIÓN (casillas X) ───────────────────────────────────────
+        tipo = (datos.get('tipo_accion') or '').upper()
+        marcas_accion = {
+            'INGRESO':               'A14',
+            'REINGRESO':             'A15',
+            'RESTITUCIÓN':           'A16',
+            'RESTITUCION':           'A16',
+            'REINTEGRO':             'A17',
+            'ASCENSO':               'A18',
+            'TRASLADO':              'A19',
+            'TRASPASO':              'D14',
+            'CAMBIO ADMINISTRATIVO': 'D15',
+            'INTERCAMBIO VOLUNTARIO':'D16',
+            'LICENCIA':              'D17',
+            'COMISIÓN DE SERVICIOS': 'D18',
+            'COMISION DE SERVICIOS': 'D18',
+            'SANCIONES':             'D19',
+            'INCREMENTO RMU':        'I14',
+            'SUBROGACIÓN':           'I15',
+            'SUBROGACION':           'I15',
+            'ENCARGO':               'I16',
+            'CESACIÓN DE FUNCIONES': 'I17',
+            'CESACION DE FUNCIONES': 'I17',
+            'DESTITUCIÓN':           'I18',
+            'DESTITUCION':           'I18',
+            'VACACIONES':            'I19',
+            'REVISIÓN CLAS. PUESTO': 'L14',
+            'REVISION CLAS. PUESTO': 'L14',
+            'OTRO':                  'L15',
+        }
+        celda_marca = marcas_accion.get(tipo)
+        if celda_marca:
+            escribir_celda(hoja, celda_marca, 'X')
+
+        # ── MOTIVACIÓN / BASE LEGAL ───────────────────────────────────────────
+        # A24:O24 = celda grande de motivación
+        escribir_celda(hoja, 'A24', datos.get('motivo_legal', ''))
+
+        # ── SITUACIÓN ACTUAL ──────────────────────────────────────────────────
+        proc_actual  = datos.get('proceso_institucional_actual', '')
+        unidad_act   = datos.get('unidad_administrativa', '')
+        lugar_act    = datos.get('lugar_trabajo_actual', '') or datos.get('ciudad', '')
+        denom_act    = datos.get('denominacion_actual', '')  or datos.get('cargo', '')
+        grupo        = datos.get('grupo_ocupacional', '')
+        partida_act  = datos.get('partida_actual', '')
+
+        nivel_gest_act  = datos.get('nivel_gestion_actual', '')
+        nivel_gest_prop = datos.get('nivel_gestion_propuesta', '') or nivel_gest_act
+
+        escribir_celda(hoja, 'B28', proc_actual)
+        escribir_celda(hoja, 'B30', nivel_gest_act)
+        escribir_celda(hoja, 'B32', unidad_act)
+        escribir_celda(hoja, 'B34', lugar_act)
+        escribir_celda(hoja, 'B36', denom_act)
+        escribir_celda(hoja, 'B38', grupo)
+        # B40 y B42 son fórmulas VLOOKUP sobre B38 — se recalculan solas al abrir Excel
+        escribir_celda(hoja, 'B44', partida_act)
+
+        # ── SITUACIÓN PROPUESTA (hereda actual si no se especifica) ───────────
+        proc_prop   = datos.get('proceso_institucional_propuesta', '') or proc_actual
+        unidad_prop = datos.get('unidad_administrativa_propuesta', '') or unidad_act
+        lugar_prop  = datos.get('lugar_trabajo_propuesta', '')  or lugar_act
+        denom_prop  = datos.get('denominacion_propuesta', '')   or denom_act
+        partida_prop = datos.get('partida_propuesta', '')       or partida_act
+
+        escribir_celda(hoja, 'J28', proc_prop)
+        escribir_celda(hoja, 'J30', nivel_gest_prop)
+        escribir_celda(hoja, 'J32', unidad_prop)
+        escribir_celda(hoja, 'J34', lugar_prop)
+        escribir_celda(hoja, 'J36', denom_prop)
+        escribir_celda(hoja, 'J38', grupo)
+        # J40 y J42 son fórmulas VLOOKUP sobre J38 — se recalculan solas al abrir Excel
+        escribir_celda(hoja, 'J44', partida_prop)
+
+        # ── POSESIÓN DEL PUESTO ───────────────────────────────────────────────
+        # C48 = "YO, [nombre del servidor]" en la sección de posesión del cargo
+        nombre_posesion = f"{datos.get('apellidos', '')} {datos.get('nombres', '')}".strip()
+        if nombre_posesion:
+            escribir_celda(hoja, 'C48', nombre_posesion)
+        # N48 = número de documento de identificación (cédula)
+        if datos.get('cedula'):
+            escribir_celda(hoja, 'N48', datos.get('cedula'))
+        escribir_celda(hoja, 'C50', datos.get('ciudad', ''))
+
+        # ── RESPONSABLES DE APROBACIÓN ────────────────────────────────────────
+        # Director TH: nombre en C61:G61, puesto en C62:G62
+        escribir_celda(hoja, 'C61', datos.get('nombre_director_th', ''))
+        escribir_celda(hoja, 'C62', datos.get('puesto_director_th', ''))
+        # Autoridad nominadora: nombre en K61:O61, puesto en K62:O62
+        escribir_celda(hoja, 'K61', datos.get('nombre_autoridad', ''))
+        escribir_celda(hoja, 'K62', datos.get('puesto_autoridad', ''))
+
+        # ── ACEPTACIÓN DEL SERVIDOR ───────────────────────────────────────────
+        # C74 normalmente tiene fórmula =A6&" "&I6 — sobreescribimos con nombre completo
+        escribir_celda(hoja, 'C74', datos.get('aceptacion_servidor', ''))
+        # C75 normalmente tiene fórmula =+K5 — sobreescribimos con la fecha de aceptación
+        fecha_acep = parse_fecha(
+            datos.get('fecha_aceptacion', '') or datos.get('fecha_elaboracion', ''),
+            como_texto=True
+        )
+        if fecha_acep:
+            escribir_celda(hoja, 'C75', fecha_acep)
+
+        # ── RESPONSABLES ELABORACIÓN / REVISIÓN / REGISTRO ───────────────────
+        # Elaboración: C87:E87 (nombre) y C88:E88 (puesto)
+        escribir_celda(hoja, 'C87', datos.get('elaborado_por', ''))
+        escribir_celda(hoja, 'C88', datos.get('puesto_elaborado', ''))
+        # Revisión: G87:K87 (nombre) y G88:K88 (puesto)
+        escribir_celda(hoja, 'G87', datos.get('revisado_por', ''))
+        escribir_celda(hoja, 'G88', datos.get('puesto_revisado', ''))
+        # Registro: M87:O87 (nombre) y M88:O88 (puesto)
+        escribir_celda(hoja, 'M87', datos.get('registrado_por', ''))
+        escribir_celda(hoja, 'M88', datos.get('puesto_registrado', ''))
+
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        apellidos = datos.get('apellidos', 'Generada').replace(' ', '_')
+        nombre_archivo = f"Accion_Personal_{apellidos}.xlsx"
+
+        registrar_auditoria(
+            usuario=obtener_usuario(),
+            accion='EXPORT',
+            tabla='accion_personal',
+            registro_id=None,
+            antes=None,
+            despues={
+                "cedula":    datos.get('cedula', ''),
+                "apellidos": datos.get('apellidos', ''),
+                "tipo":      datos.get('tipo_accion', ''),
+                "desde":     datos.get('fecha_rige_desde', ''),
+                "hasta":     datos.get('fecha_rige_hasta', ''),
+            },
+            detalle=f"Generación de Acción de Personal — {datos.get('apellidos', '')} {datos.get('cedula', '')}"
+        )
+
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=nombre_archivo
+        )
+
+    except Exception as e:
+        print("ERROR GENERANDO ACCION EXCEL:", str(e))
+        return jsonify({"error": f"Error al procesar la plantilla: {str(e)}"}), 500
+
+
+# =========================
+# 📁 HISTORIAL DE ACCIONES DE PERSONAL
+# =========================
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads', 'acciones')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+EXTENSIONES_PERMITIDAS = {'pdf', 'xlsx', 'xls', 'docx', 'doc'}
+
+def extension_permitida(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in EXTENSIONES_PERMITIDAS
+
+def nombre_seguro(filename):
+    import re
+    filename = os.path.basename(filename)
+    filename = re.sub(r'[^A-Za-z0-9._\-]', '_', filename)
+    return filename or 'archivo'
+
+
+@app.route('/api/historial-acciones/buscar', methods=['GET'])
+def buscar_historial_acciones():
+    token = request.headers.get('Authorization', '')
+    if not token.startswith('tk_'):
+        return jsonify({"error": "No autorizado"}), 403
+
+    q = (request.args.get('q') or '').strip()
+    if not q:
+        return jsonify({"error": "Parámetro de búsqueda requerido"}), 400
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        # Buscar persona en tabla personal (por cédula, nombre o nro)
+        cursor.execute("""
+            SELECT id, nro, cedula, nombres, cargo, unidad, modalidad, rmu
+            FROM personal
+            WHERE cedula = %s
+               OR UPPER(nombres) LIKE UPPER(%s)
+               OR nro = %s
+            LIMIT 1
+        """, (q, f'%{q}%', q))
+        persona = cursor.fetchone()
+
+        # Determinar cédula para buscar acciones
+        cedula_busqueda = None
+        if persona:
+            cedula_busqueda = persona['cedula']
+        else:
+            # Si no está en personal activo, buscar en historial directamente
+            cursor.execute("""
+                SELECT cedula, nombres FROM historial_acciones
+                WHERE cedula = %s OR UPPER(nombres) LIKE UPPER(%s)
+                LIMIT 1
+            """, (q, f'%{q}%'))
+            hist_ref = cursor.fetchone()
+            if hist_ref:
+                cedula_busqueda = hist_ref['cedula']
+                persona = { 'cedula': hist_ref['cedula'], 'nombres': hist_ref['nombres'],
+                            'cargo': None, 'unidad': None, 'encontrado_en_personal': False }
+
+        if not cedula_busqueda and not persona:
+            return jsonify({"persona": None, "acciones": []}), 200
+
+        if persona and 'encontrado_en_personal' not in persona:
+            persona['encontrado_en_personal'] = True
+
+        # Buscar acciones de esa cédula
+        cursor.execute("""
+            SELECT id, cedula, nombres, numero_accion, tipo_accion,
+                   fecha_accion, fecha_registro, archivo_nombre, registrado_por
+            FROM historial_acciones
+            WHERE cedula = %s
+            ORDER BY fecha_registro DESC
+        """, (cedula_busqueda,))
+        acciones = cursor.fetchall()
+
+        # Serializar fechas
+        for a in acciones:
+            if isinstance(a.get('fecha_accion'), date):
+                a['fecha_accion'] = a['fecha_accion'].isoformat()
+            if isinstance(a.get('fecha_registro'), datetime):
+                a['fecha_registro'] = a['fecha_registro'].strftime('%Y-%m-%d %H:%M:%S')
+
+        return jsonify({"persona": persona, "acciones": acciones}), 200
+
+    except Exception as e:
+        print("ERROR BUSCANDO HISTORIAL:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+@app.route('/api/historial-acciones/subir', methods=['POST'])
+def subir_accion():
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    cedula      = (request.form.get('cedula')       or '').strip()
+    nombres     = (request.form.get('nombres')      or '').strip().upper()
+    num_accion  = (request.form.get('numero_accion') or '').strip()
+    tipo_accion = (request.form.get('tipo_accion')  or '').strip()
+    fecha_accion = request.form.get('fecha_accion') or None
+    registrado_por = obtener_usuario()
+
+    if not cedula or not nombres:
+        return jsonify({"error": "Cédula y nombres son obligatorios"}), 400
+
+    archivo = request.files.get('archivo')
+    archivo_nombre = None
+    archivo_path   = None
+
+    if archivo and archivo.filename:
+        if not extension_permitida(archivo.filename):
+            return jsonify({"error": "Extensión no permitida. Use PDF, Excel o Word"}), 400
+
+        import time
+        ts = int(time.time())
+        ext = archivo.filename.rsplit('.', 1)[1].lower()
+        archivo_nombre = f"{cedula}_{ts}.{ext}"
+        archivo_path   = os.path.join(UPLOAD_FOLDER, nombre_seguro(archivo_nombre))
+        archivo.save(archivo_path)
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("""
+            INSERT INTO historial_acciones
+                (cedula, nombres, numero_accion, tipo_accion, fecha_accion, archivo_nombre, archivo_path, registrado_por)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (cedula, nombres, num_accion, tipo_accion, fecha_accion or None,
+              archivo_nombre, archivo_path, registrado_por))
+
+        conexion.commit()
+        return jsonify({"message": "Acción registrada", "id": cursor.lastrowid}), 201
+
+    except Exception as e:
+        # Borrar archivo si falla el INSERT
+        if archivo_path and os.path.exists(archivo_path):
+            os.remove(archivo_path)
+        print("ERROR SUBIENDO ACCION:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+@app.route('/api/historial-acciones/<int:id>/descargar', methods=['GET'])
+def descargar_accion(id):
+    token = request.headers.get('Authorization', '')
+    if not token.startswith('tk_'):
+        return jsonify({"error": "No autorizado"}), 403
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("SELECT archivo_path, archivo_nombre FROM historial_acciones WHERE id = %s", (id,))
+        row = cursor.fetchone()
+
+        if not row or not row['archivo_path']:
+            return jsonify({"error": "Archivo no encontrado"}), 404
+
+        if not os.path.exists(row['archivo_path']):
+            return jsonify({"error": "El archivo ya no existe en el servidor"}), 404
+
+        ext = row['archivo_nombre'].rsplit('.', 1)[-1].lower() if row['archivo_nombre'] else 'bin'
+        mime_map = {
+            'pdf':  'application/pdf',
+            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'xls':  'application/vnd.ms-excel',
+            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'doc':  'application/msword'
+        }
+        mimetype = mime_map.get(ext, 'application/octet-stream')
+
+        return send_file(
+            row['archivo_path'],
+            as_attachment=True,
+            download_name=row['archivo_nombre'] or f'accion_{id}.{ext}',
+            mimetype=mimetype
+        )
+
+    except Exception as e:
+        print("ERROR DESCARGANDO ACCION:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
+@app.route('/api/historial-acciones/<int:id>', methods=['DELETE'])
+def eliminar_accion_historial(id):
+    if not es_admin():
+        return jsonify({"error": "No autorizado"}), 403
+
+    conexion = None
+    cursor   = None
+
+    try:
+        conexion = get_connection()
+        cursor   = conexion.cursor(dictionary=True)
+
+        cursor.execute("SELECT archivo_path FROM historial_acciones WHERE id = %s", (id,))
+        row = cursor.fetchone()
+
+        if row and row['archivo_path'] and os.path.exists(row['archivo_path']):
+            os.remove(row['archivo_path'])
+
+        cursor.execute("DELETE FROM historial_acciones WHERE id = %s", (id,))
+        conexion.commit()
+        return jsonify({"message": "Acción eliminada"}), 200
+
+    except Exception as e:
+        print("ERROR ELIMINANDO ACCION:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if cursor:  cursor.close()
+        if conexion: conexion.close()
+
+
 # =========================
 # 🚀 RUN
 # =========================

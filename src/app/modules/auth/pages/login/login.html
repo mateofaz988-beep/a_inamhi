@@ -9,14 +9,11 @@
   <div class="login-overlay"></div>
 
   <div class="login-shell">
-
     <section class="login-card">
 
       <div class="top-line"></div>
 
       <div class="brand">
-
-        <!-- LOGO / IMAGEN SUPERIOR -->
         <div class="brand-image-box">
           <img
             src="assets/logo2-.png"
@@ -25,7 +22,6 @@
           >
         </div>
 
-      
         <p>Gestión de Talento Humano</p>
         <span class="brand-line"></span>
       </div>
@@ -36,6 +32,7 @@
         autocomplete="off"
       >
 
+        <!-- USUARIO -->
         <div class="form-group">
           <label for="username">Usuario</label>
 
@@ -49,10 +46,18 @@
               [(ngModel)]="username"
               placeholder="Ingrese su usuario"
               required
+              autocomplete="username"
+              [class.input-error]="usuarioError"
+              (input)="usuarioError = false"
             >
           </div>
+
+          <small class="field-error" *ngIf="usuarioError">
+            Ingrese el usuario.
+          </small>
         </div>
 
+        <!-- CONTRASEÑA -->
         <div class="form-group">
           <label for="password">Contraseña</label>
 
@@ -61,18 +66,70 @@
 
             <input
               id="password"
-              type="password"
+              [type]="mostrarPassword ? 'text' : 'password'"
               name="password"
               [(ngModel)]="password"
               placeholder="••••••••"
               required
+              autocomplete="current-password"
+              [class.input-error]="passwordError"
+              (keyup)="detectarMayusculas($event)"
+              (input)="passwordError = false"
             >
+
+            <button
+              type="button"
+              class="btn-eye"
+              (click)="mostrarPassword = !mostrarPassword"
+              [attr.aria-label]="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <i class="bi" [ngClass]="mostrarPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+            </button>
           </div>
+
+          <small class="caps-warning" *ngIf="mayusculasActivas">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            Bloq Mayús está activado.
+          </small>
+
+          <small class="field-error" *ngIf="passwordError">
+            Ingrese la contraseña.
+          </small>
         </div>
 
-        <button type="submit" class="btn-login">
-          <i class="bi bi-box-arrow-in-right"></i>
-          Acceder al Sistema
+        <!-- RECORDAR -->
+        <div class="login-options">
+          <label class="remember-check">
+            <input
+              type="checkbox"
+              name="recordarme"
+              [(ngModel)]="recordarme"
+            >
+            <span>Recordar usuario</span>
+          </label>
+        </div>
+
+        <!-- ERROR GENERAL -->
+        <div class="login-alert" *ngIf="mensajeError">
+          <i class="bi bi-x-circle-fill"></i>
+          <span>{{ mensajeError }}</span>
+        </div>
+
+        <!-- BOTÓN -->
+        <button
+          type="submit"
+          class="btn-login"
+          [disabled]="cargando"
+        >
+          <ng-container *ngIf="!cargando; else cargandoTpl">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Acceder al Sistema
+          </ng-container>
+
+          <ng-template #cargandoTpl>
+            <i class="bi bi-arrow-repeat spin"></i>
+            Validando...
+          </ng-template>
         </button>
 
       </form>
@@ -87,7 +144,5 @@
       </p>
 
     </section>
-
   </div>
-
 </div>

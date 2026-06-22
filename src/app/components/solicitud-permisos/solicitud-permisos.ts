@@ -1,11 +1,9 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { AuthService } from '../../core/services/auth';
 
 @Component({
@@ -15,18 +13,96 @@ import { AuthService } from '../../core/services/auth';
   templateUrl: './solicitud-permisos.html',
   styleUrls: ['./solicitud-permisos.scss']
 })
-export class SolicitudPermisosComponent {
-  @ViewChild('pdfContent', { static: false }) pdfContent!: ElementRef;
+export class SolicitudPermisosComponent implements OnInit {
 
-  private readonly API_URL = 'http://localhost:5000/api/personal/cedula';
+  private readonly API_URL             = 'http://localhost:5000/api/personal/cedula';
+  private readonly ESTRUCTURA_API_URL  = 'http://localhost:5000/api/personal-estructura';
+  private readonly AUTORIDADES_API_URL = 'http://localhost:5000/api/autoridades';
 
-  consultando = false;
-  exportando = false;
+  consultando    = false;
+  generandoExcel = false;
+  mostrarPrevia  = false;
 
-  mostrarDocumento1 = true;
-  mostrarDocumento2 = true;
+  estructuraPersonal: Array<{
+    id?: number;
+    nombres: string;
+    provincia?: string;
+    canton?: string;
+    denominacion_puesto: string;
+    unidad_organica?: string;
+  }> = [];
+
+  listaAutoridades: Array<{
+    nombres: string;
+    denominacion_puesto: string;
+    unidad_organica?: string;
+  }> = [];
+
+  private readonly estructuraPersonalBase = [
+    {
+      nombres: 'TUFIÑO JUNIA ALEX ISRAEL',
+      provincia: 'PICHINCHA',
+      canton: 'QUITO',
+      denominacion_puesto: 'DIRECTOR/A DE ADMINISTRACION DE TALENTO HUMANO',
+      unidad_organica: 'DIRECCION DE ADMINISTRACION DE RECURSOS HUMANOS'
+    },
+    {
+      nombres: 'OCAÑA BONILLA LEONOR KAROLINA',
+      provincia: 'PICHINCHA',
+      canton: 'QUITO',
+      denominacion_puesto: 'SECRETARIA',
+      unidad_organica: 'DIRECCION DE ADMINISTRACION DE RECURSOS HUMANOS'
+    },
+    {
+      nombres: 'DUEÑAS JARAMILLO OSCAR FACUNDO',
+      provincia: 'PICHINCHA',
+      canton: 'QUITO',
+      denominacion_puesto: 'ANALISTA DE RECURSOS HUMANOS',
+      unidad_organica: 'DIRECCION DE ADMINISTRACION DE RECURSOS HUMANOS'
+    },
+    {
+      nombres: 'CABEZAS ALMEIDA JANNETH ALEXANDRA',
+      provincia: 'PICHINCHA',
+      canton: 'QUITO',
+      denominacion_puesto: 'ANALISTA DE TALENTO HUMANO 2',
+      unidad_organica: 'DIRECCION DE ADMINISTRACION DE RECURSOS HUMANOS'
+    },
+    {
+      nombres: 'PAREDES ANDRANGO MIGUEL ANGEL',
+      provincia: 'PICHINCHA',
+      canton: 'QUITO',
+      denominacion_puesto: 'ANALISTA 3 DE TALENTO HUMANO',
+      unidad_organica: 'DIRECCION DE ADMINISTRACION DE RECURSOS HUMANOS'
+    },
+    {
+      nombres: 'CUTI AMAGUAÑA GINA ELIZABETH',
+      provincia: 'PICHINCHA',
+      canton: 'QUITO',
+      denominacion_puesto: 'ANALISTA DE TALENTO HUMANO 1',
+      unidad_organica: 'DIRECCION DE ADMINISTRACION DE RECURSOS HUMANOS'
+    },
+    {
+      nombres: 'CORNEJO HIDALGO PABLO ANDRES',
+      provincia: 'PICHINCHA',
+      canton: 'QUITO',
+      denominacion_puesto: 'DIRECTOR EJECUTIVO, ENCARGADO',
+      unidad_organica: 'DIRECCION EJECUTIVA'
+    }
+  ];
 
   tiposPermiso: string[] = ['Vacaciones', 'Licencia', 'Permiso'];
+
+  gruposOcupacionales: string[] = [
+    'SERVIDOR PÚBLICO DE APOYO 1',
+    'SERVIDOR PÚBLICO DE APOYO 2',
+    'SERVIDOR PÚBLICO DE APOYO 3',
+    'SERVIDOR PÚBLICO DE APOYO 4',
+    'SERVIDOR PÚBLICO 1',
+    'SERVIDOR PÚBLICO 2',
+    'SERVIDOR PÚBLICO 3',
+    'SERVIDOR PÚBLICO 4',
+    'NIVEL JERÁRQUICO SUPERIOR 2'
+  ];
 
   tiposAccionPersonal = [
     'Ingreso',
@@ -137,10 +213,10 @@ export class SolicitudPermisosComponent {
     unidad: '',
     rmu: '',
 
-    numero_accion: '',
+    numero_accion: `AP-RH-${new Date().getFullYear()}-`,
     fecha_elaboracion: this.obtenerFechaActual(),
-    desde: '',
-    hasta: '',
+    desde: this.obtenerFechaActual(),
+    hasta: this.obtenerFechaActual(),
     accion_personal: 'Vacaciones',
     motivo_legal:
       'De conformidad con la normativa institucional vigente y las disposiciones administrativas aplicables, se deja constancia de la acción de personal detallada en el presente documento.',
@@ -153,6 +229,7 @@ export class SolicitudPermisosComponent {
     lugar_trabajo_actual: '',
     denominacion_actual: '',
     grupo_actual: '',
+    grupo_ocupacional: '',
     grado_actual: '',
     remuneracion_actual: '',
     partida_actual: '',
@@ -208,14 +285,21 @@ export class SolicitudPermisosComponent {
     puesto_autorizado: '',
     no_registros: 1,
     impreso_por: '',
+    uso_exclusivo_th: '',
     fecha_impresion: this.obtenerFechaActual()
   };
 
   constructor(
     private http: HttpClient,
     private router: Router,
-    public authService: AuthService
+    public authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
+
+  ngOnInit() {
+    this.cargarEstructuraPersonal();
+    this.cargarAutoridades();
+  }
 
   getHeaders() {
     return new HttpHeaders({
@@ -328,38 +412,87 @@ export class SolicitudPermisosComponent {
 
   aplicarBaseLegalPorUnidad(unidadNombre: string) {
     const unidad = this.buscarUnidadInstitucional(unidadNombre);
+    const nombre = unidad ? unidad.nombre : (unidadNombre || '');
+
+    this.formulario.unidad          = nombre;
+    this.formulario.unidad_actual   = nombre;
+    this.formulario.unidad_propuesta = nombre;
 
     if (unidad) {
-      this.formulario.unidad = unidad.nombre;
-      this.formulario.unidad_actual = unidad.nombre;
-      this.formulario.unidad_propuesta = unidad.nombre;
       this.formulario.motivo_legal = unidad.baseLegal;
-    } else {
-      this.formulario.unidad = unidadNombre || '';
-      this.formulario.unidad_actual = unidadNombre || '';
-      this.formulario.unidad_propuesta = unidadNombre || '';
     }
   }
 
-  seleccionarTodosDocumentos() {
-    this.mostrarDocumento1 = true;
-    this.mostrarDocumento2 = true;
+  cargarEstructuraPersonal() {
+    this.estructuraPersonal = [...this.estructuraPersonalBase];
+
+    this.http.get<any>(this.ESTRUCTURA_API_URL, {
+      headers: this.getHeaders()
+    }).subscribe({
+      next: (resp) => {
+        const registros = Array.isArray(resp)
+          ? resp
+          : Array.isArray(resp?.data)
+            ? resp.data
+            : [];
+
+        if (!registros.length) return;
+
+        this.estructuraPersonal = registros
+          .map((item: any) => ({
+            id: item.id,
+            nombres: item.nombres || item.nombre || '',
+            provincia: item.provincia || '',
+            canton: item.canton || '',
+            denominacion_puesto: item.denominacion_puesto || item.cargo || '',
+            unidad_organica: item.unidad_organica || item.unidad || ''
+          }))
+          .filter((item: any) => item.nombres && item.denominacion_puesto)
+          .sort((a: any, b: any) => a.nombres.localeCompare(b.nombres));
+      },
+      error: (err) => {
+        console.warn('No se pudo cargar personal_estructura desde la API. Se usará lista local.', err);
+      }
+    });
   }
 
-  limpiarSeleccionDocumentos() {
-    this.mostrarDocumento1 = false;
-    this.mostrarDocumento2 = false;
+  cargarAutoridades() {
+    this.http.get<any>(this.AUTORIDADES_API_URL, {
+      headers: this.getHeaders()
+    }).subscribe({
+      next: (resp) => {
+        const registros = Array.isArray(resp) ? resp : (Array.isArray(resp?.data) ? resp.data : []);
+        this.listaAutoridades = registros
+          .filter((item: any) => item.nombres && item.denominacion_puesto)
+          .map((item: any) => ({
+            nombres: item.nombres,
+            denominacion_puesto: item.denominacion_puesto,
+            unidad_organica: item.unidad_organica || ''
+          }));
+      },
+      error: (err) => {
+        console.warn('No se pudo cargar autoridades desde la API.', err);
+      }
+    });
   }
 
-  hayDocumentosSeleccionados(): boolean {
-    return this.mostrarDocumento1 || this.mostrarDocumento2;
+  buscarPersonaEstructura(nombre: string) {
+    const nombreNormalizado = this.normalizarTexto(nombre);
+
+    return this.estructuraPersonal.find(persona =>
+      this.normalizarTexto(persona.nombres) === nombreNormalizado
+    );
   }
 
-  resumenDocumentos(): string {
-    const docs: string[] = [];
-    if (this.mostrarDocumento1) docs.push('Documento 1');
-    if (this.mostrarDocumento2) docs.push('Documento 2');
-    return docs.join(', ');
+  seleccionarResponsable(campoNombre: string, campoPuesto: string, nombre: string) {
+    const nombreN = this.normalizarTexto(nombre);
+    const persona = this.buscarPersonaEstructura(nombre)
+      ?? this.listaAutoridades.find(a => this.normalizarTexto(a.nombres) === nombreN);
+
+    this.formulario[campoNombre] = nombre || '';
+    this.formulario[campoPuesto] = persona?.denominacion_puesto || '';
+
+    this.cdr.detectChanges();
   }
 
   consultarCedula() {
@@ -384,35 +517,43 @@ export class SolicitudPermisosComponent {
         this.consultando = false;
 
         const separado = this.separarNombreCompleto(data.nombres || '');
-
-        this.formulario.cedula = data.cedula || this.formulario.cedula;
-        this.formulario.apellidos = separado.apellidos;
-        this.formulario.nombres = separado.nombres;
-        this.formulario.nombres_completos = data.nombres || '';
-        this.formulario.regimen_laboral = data.modalidad || '';
-        this.formulario.cargo = data.cargo || '';
-        this.formulario.rmu = data.rmu || '';
+        const rmu = data.rmu != null ? String(data.rmu) : '';
+        const ciudad = this.formulario.ciudad || 'Quito';
+        const grupo = data.grupo_ocupacional || '';
+        // La DB guarda rol como GOBERNANTE/SUSTANTIVO/ADJETIVO
+        const proceso = (data.rol || '').toUpperCase();
 
         this.aplicarBaseLegalPorUnidad(data.unidad || '');
 
-        this.formulario.lugar_trabajo_actual = this.formulario.ciudad || 'Quito';
-        this.formulario.denominacion_actual = data.cargo || '';
-        this.formulario.remuneracion_actual = data.rmu || '';
+        this.formulario = {
+          ...this.formulario,
+          cedula:           data.cedula || this.formulario.cedula,
+          apellidos:        separado.apellidos,
+          nombres:          separado.nombres,
+          nombres_completos: data.nombres || '',
+          regimen_laboral:  data.modalidad || '',
+          cargo:            data.cargo || '',
+          rmu,
+          grupo_ocupacional: grupo,
+          proceso_institucional_actual:   proceso,
+          proceso_institucional_propuesta: proceso,
+          lugar_trabajo_actual:    ciudad,
+          lugar_trabajo_propuesta: ciudad,
+          denominacion_actual:    data.cargo || '',
+          denominacion_propuesta: data.cargo || '',
+          remuneracion_actual:    rmu,
+          remuneracion_propuesta: rmu,
+          aceptacion_servidor: data.nombres || '',
+          elaborado_por:   this.formulario.elaborado_por || data.nombres || '',
+          solicitado_por:  data.nombres || '',
+          puesto_solicitante: data.cargo || '',
+          impreso_por:     data.nombres || '',
+          observacion: this.formulario.observacion?.trim()
+            ? this.formulario.observacion
+            : this.formulario.tipo_permiso,
+        };
 
-        this.formulario.lugar_trabajo_propuesta = this.formulario.ciudad || 'Quito';
-        this.formulario.denominacion_propuesta = data.cargo || '';
-        this.formulario.remuneracion_propuesta = data.rmu || '';
-
-        this.formulario.aceptacion_servidor = data.nombres || '';
-        this.formulario.elaborado_por = this.formulario.elaborado_por || data.nombres || '';
-
-        this.formulario.solicitado_por = data.nombres || '';
-        this.formulario.puesto_solicitante = data.cargo || '';
-        this.formulario.impreso_por = data.nombres || '';
-
-        if (!this.formulario.observacion?.trim()) {
-          this.formulario.observacion = this.formulario.tipo_permiso;
-        }
+        this.cdr.detectChanges();
 
         Swal.fire({
           icon: 'success',
@@ -447,10 +588,10 @@ export class SolicitudPermisosComponent {
       unidad: '',
       rmu: '',
 
-      numero_accion: '',
+      numero_accion: `AP-RH-${new Date().getFullYear()}-`,
       fecha_elaboracion: this.obtenerFechaActual(),
-      desde: '',
-      hasta: '',
+      desde: this.obtenerFechaActual(),
+      hasta: this.obtenerFechaActual(),
       accion_personal: 'Vacaciones',
       motivo_legal:
         'De conformidad con la normativa institucional vigente y las disposiciones administrativas aplicables, se deja constancia de la acción de personal detallada en el presente documento.',
@@ -463,6 +604,7 @@ export class SolicitudPermisosComponent {
       lugar_trabajo_actual: '',
       denominacion_actual: '',
       grupo_actual: '',
+      grupo_ocupacional: '',
       grado_actual: '',
       remuneracion_actual: '',
       partida_actual: '',
@@ -518,83 +660,120 @@ export class SolicitudPermisosComponent {
       puesto_autorizado: '',
       no_registros: 1,
       impreso_por: '',
+      uso_exclusivo_th: '',
       fecha_impresion: this.obtenerFechaActual()
     };
   }
 
-  validarAntesDeExportar(): boolean {
-    if (!this.hayDocumentosSeleccionados()) {
-      Swal.fire('Atención', 'Seleccione al menos un documento', 'warning');
-      return false;
-    }
-
-    if (!this.formulario.cedula?.trim()) {
-      Swal.fire('Atención', 'Ingrese la cédula', 'warning');
-      return false;
-    }
-
-    if (!this.formulario.apellidos?.trim()) {
-      Swal.fire('Atención', 'Complete los apellidos', 'warning');
-      return false;
-    }
-
-    if (!this.formulario.nombres?.trim()) {
-      Swal.fire('Atención', 'Complete los nombres', 'warning');
-      return false;
-    }
-
-    return true;
-  }
-
-  async exportarPDF() {
-    if (!this.validarAntesDeExportar()) return;
-    if (!this.pdfContent) {
-      Swal.fire('Error', 'No se encontró el contenido para exportar', 'error');
+  generarExcel() {
+    if (!this.formulario.cedula?.trim() || !this.formulario.apellidos?.trim()) {
+      Swal.fire('Atención', 'Consulte primero la cédula del funcionario para cargar sus datos', 'warning');
       return;
     }
-
-    this.exportando = true;
-
-    try {
-      const contenedor = this.pdfContent.nativeElement as HTMLElement;
-      const paginas = contenedor.querySelectorAll('.pdf-page-a4');
-
-      if (!paginas.length) {
-        this.exportando = false;
-        Swal.fire('Error', 'No hay páginas seleccionadas para exportar', 'error');
-        return;
-      }
-
-      const pdf = new jsPDF('p', 'mm', 'a4');
-
-      for (let i = 0; i < paginas.length; i++) {
-        const pagina = paginas[i] as HTMLElement;
-
-        const canvas = await html2canvas(pagina, {
-          scale: 2.5,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false
-        });
-
-        const imgData = canvas.toDataURL('image/png');
-        const pdfWidth = 210;
-        const pdfHeight = 297;
-
-        if (i > 0) {
-          pdf.addPage('a4', 'p');
-        }
-
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-      }
-      
-
-      pdf.save(`documentos-inamhi-${this.formulario.cedula || 'sin-cedula'}.pdf`);
-      this.exportando = false;
-    } catch (error) {
-      console.error('Error exportando PDF:', error);
-      this.exportando = false;
-      Swal.fire('Error', 'No se pudo exportar el PDF', 'error');
+    if (!this.formulario.desde?.trim()) {
+      Swal.fire('Atención', 'Ingrese la "Fecha Rige Desde" en la sección Acción Personal y Vigencia', 'warning');
+      return;
     }
+    this.mostrarPrevia = true;
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
+
+  ejecutarDescargaExcel() {
+    this.generandoExcel = true;
+
+    const f = this.formulario;
+
+    const payload = {
+      // ── ENCABEZADO (M3, K5, C50)
+      numero_accion:     f.numero_accion    || '',
+      fecha_elaboracion: f.fecha_elaboracion || '',
+      ciudad:            f.ciudad           || 'Quito',
+
+      // ── FUNCIONARIO (A6, I6, E11)
+      apellidos:         f.apellidos        || '',
+      nombres:           f.nombres          || '',
+      cedula:            f.cedula           || '',
+      regimen_laboral:   f.regimen_laboral  || '',
+      cargo:             f.cargo            || '',
+      rmu:               f.rmu              || '',
+
+      // ── ACCIÓN Y VIGENCIA (checkboxes, I11, M11)
+      tipo_accion:       (f.accion_personal || '').toUpperCase(),
+      fecha_rige_desde:  f.desde            || '',
+      fecha_rige_hasta:  f.hasta            || '',
+
+      // ── SITUACIÓN ACTUAL (B28, B30, B32, B34, B36, B38, B44)
+      proceso_institucional_actual:    f.proceso_institucional_actual || '',
+      nivel_gestion_actual:            f.nivel_gestion_actual         || '',
+      unidad_administrativa:           f.unidad                       || '',
+      lugar_trabajo_actual:            f.lugar_trabajo_actual         || f.ciudad || '',
+      denominacion_actual:             f.denominacion_actual          || f.cargo  || '',
+      grupo_ocupacional:               f.grupo_ocupacional            || '',
+      partida_actual:                  f.partida_actual               || '',
+
+      // ── SITUACIÓN PROPUESTA (J28, J30, J32, J34, J36, J38, J44)
+      proceso_institucional_propuesta: f.proceso_institucional_propuesta || f.proceso_institucional_actual || '',
+      nivel_gestion_propuesta:         f.nivel_gestion_propuesta         || f.nivel_gestion_actual         || '',
+      unidad_administrativa_propuesta: f.unidad_propuesta              || f.unidad || '',
+      lugar_trabajo_propuesta:         f.lugar_trabajo_propuesta       || f.lugar_trabajo_actual || '',
+      denominacion_propuesta:          f.denominacion_propuesta        || f.denominacion_actual  || '',
+      partida_propuesta:               f.partida_propuesta             || f.partida_actual        || '',
+
+      // ── MOTIVACIÓN / BASE LEGAL (A24)
+      motivo_legal: f.motivo_legal || '',
+
+      // ── RESPONSABLES DE APROBACIÓN (C61/C62, K61/K62)
+      nombre_director_th: f.nombre_director_th || '',
+      puesto_director_th: f.puesto_director_th  || '',
+      nombre_autoridad:   f.nombre_autoridad    || '',
+      puesto_autoridad:   f.puesto_autoridad    || '',
+
+      // ── ACEPTACIÓN SERVIDOR (C74, C75)
+      aceptacion_servidor: f.aceptacion_servidor || (f.apellidos && f.nombres ? `${f.apellidos} ${f.nombres}` : ''),
+      fecha_aceptacion:    f.fecha_aceptacion    || f.fecha_elaboracion || '',
+
+      // ── ELABORACIÓN/REVISIÓN/REGISTRO (C87/C88, G87/G88, M87/M88)
+      elaborado_por:    f.elaborado_por    || '',
+      puesto_elaborado: f.puesto_elaborado || '',
+      revisado_por:     f.revisado_por     || '',
+      puesto_revisado:  f.puesto_revisado  || '',
+      registrado_por:   f.registrado_por   || '',
+      puesto_registrado: f.puesto_registrado || '',
+    };
+
+    this.http.post('http://localhost:5000/api/generar-accion', payload, {
+      headers: this.getHeaders(),
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob: Blob) => {
+        this.generandoExcel = false;
+        this.mostrarPrevia  = false;
+        const url = window.URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = `AP_${this.formulario.apellidos || 'Documento'}_${this.formulario.cedula || ''}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        Swal.fire({ icon: 'success', title: '¡Descargado!', text: 'El Excel se generó correctamente', timer: 1800, showConfirmButton: false });
+      },
+      error: (err) => {
+        this.generandoExcel = false;
+        const errorBody = err?.error;
+        if (errorBody instanceof Blob) {
+          errorBody.text().then(text => {
+            try {
+              const parsed = JSON.parse(text);
+              Swal.fire('Error', parsed?.error || 'No se pudo generar el documento Excel', 'error');
+            } catch {
+              Swal.fire('Error', 'No se pudo generar el documento Excel', 'error');
+            }
+          });
+        } else {
+          Swal.fire('Error', errorBody?.error || err?.message || 'No se pudo generar el documento Excel', 'error');
+        }
+      }
+    });
   }
 }

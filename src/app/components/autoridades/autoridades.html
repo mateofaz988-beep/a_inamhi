@@ -1,0 +1,295 @@
+<div class="aut-container">
+
+  <!-- ── HEADER ── -->
+  <header class="aut-header">
+    <div class="header-info">
+      <span class="tag">
+        <i class="bi bi-person-badge-fill"></i>
+        Administración institucional
+      </span>
+      <h2>Gestión de Autoridades</h2>
+      <p>Registre, edite y elimine las autoridades que aparecen en los documentos institucionales</p>
+    </div>
+    <button class="btn-back" (click)="volver()">
+      <i class="bi bi-arrow-left"></i>
+      Volver
+    </button>
+  </header>
+
+  <!-- ── STATS ── -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--total">
+        <i class="bi bi-person-badge-fill"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ autoridades.length }}</span>
+        <span class="stat-label">Total autoridades</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--info">
+        <i class="bi bi-file-earmark-text-fill"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ autoridades.length }}</span>
+        <span class="stat-label">En documentos activos</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--green">
+        <i class="bi bi-building"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">
+          {{ autoridades.length > 0 ? (autoridades[0].provincia || 'PICHINCHA') : '—' }}
+        </span>
+        <span class="stat-label">Provincia registrada</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BODY GRID ── -->
+  <div class="body-grid">
+
+    <!-- FORMULARIO -->
+    <div class="card form-card">
+      <div class="card-head">
+        <div class="card-head-icon">
+          <i class="bi bi-person-plus-fill"></i>
+        </div>
+        <div>
+          <h5>Nueva Autoridad</h5>
+          <p>Agregar al listado de responsables</p>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="form-grid">
+
+          <div class="field field--full">
+            <label>Nombres completos <span class="req">*</span></label>
+            <div class="input-wrap">
+              <i class="bi bi-person-fill input-icon"></i>
+              <input type="text" [(ngModel)]="form.nombres" class="form-input"
+                     placeholder="Ej: PÉREZ MARTÍNEZ JUAN CARLOS">
+            </div>
+            <span class="hint">Ingrese el nombre en mayúsculas</span>
+          </div>
+
+          <div class="field field--full">
+            <label>Denominación del puesto <span class="req">*</span></label>
+            <div class="input-wrap">
+              <i class="bi bi-briefcase-fill input-icon"></i>
+              <input type="text" [(ngModel)]="form.denominacion_puesto" class="form-input"
+                     placeholder="Ej: DIRECTOR/A DE ADMINISTRACION DE TALENTO HUMANO">
+            </div>
+            <span class="hint">Cargo oficial institucional</span>
+          </div>
+
+          <div class="field field--full">
+            <label>Unidad orgánica</label>
+            <div class="input-wrap">
+              <i class="bi bi-diagram-3-fill input-icon"></i>
+              <input type="text" [(ngModel)]="form.unidad_organica" class="form-input"
+                     placeholder="Ej: DIRECCIÓN DE ADMINISTRACION DE RECURSOS HUMANOS">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Provincia</label>
+            <div class="input-wrap">
+              <i class="bi bi-geo-alt-fill input-icon"></i>
+              <input type="text" [(ngModel)]="form.provincia" class="form-input">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Cantón</label>
+            <div class="input-wrap">
+              <i class="bi bi-pin-map-fill input-icon"></i>
+              <input type="text" [(ngModel)]="form.canton" class="form-input">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn btn-ghost" (click)="limpiar()" [disabled]="guardando">
+          <i class="bi bi-eraser"></i> Limpiar
+        </button>
+        <button class="btn btn-primary" (click)="guardar()" [disabled]="guardando">
+          <i class="bi bi-person-plus-fill"></i>
+          {{ guardando ? 'Guardando...' : 'Registrar Autoridad' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- TIPS -->
+    <div class="card tips-card">
+      <div class="tips-head">
+        <i class="bi bi-lightbulb-fill"></i>
+        Información
+      </div>
+      <div class="tips-body">
+
+        <div class="tip">
+          <div class="tip-icon tip-icon--blue">
+            <i class="bi bi-person-badge-fill"></i>
+          </div>
+          <div>
+            <strong>¿Qué son las autoridades?</strong>
+            <p>Son los responsables que aparecen en el campo <em>Director(a) TH</em> al generar solicitudes de permisos y acciones de personal.</p>
+          </div>
+        </div>
+
+        <div class="tip">
+          <div class="tip-icon tip-icon--green">
+            <i class="bi bi-arrow-repeat"></i>
+          </div>
+          <div>
+            <strong>Actualización inmediata</strong>
+            <p>Cualquier cambio aquí se refleja automáticamente en todos los formularios del sistema.</p>
+          </div>
+        </div>
+
+        <div class="tip">
+          <div class="tip-icon tip-icon--amber">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+          <div>
+            <strong>Al eliminar</strong>
+            <p>Si elimina una autoridad, dejará de aparecer en el listado de firmantes de nuevos documentos.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── TABLA ── -->
+  <div class="card table-card">
+    <div class="table-head">
+      <div class="table-head-left">
+        <div class="table-head-icon">
+          <i class="bi bi-person-badge-fill"></i>
+        </div>
+        <div>
+          <h5>Autoridades Registradas</h5>
+          <p>{{ autoridades.length }} {{ autoridades.length === 1 ? 'registro' : 'registros' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="a-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombres</th>
+            <th>Denominación del Puesto</th>
+            <th>Unidad Orgánica</th>
+            <th>Provincia / Cantón</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          @if (cargando) {
+            <tr>
+              <td colspan="6" class="state-cell">
+                <i class="bi bi-arrow-repeat spin"></i>
+                Cargando autoridades...
+              </td>
+            </tr>
+          }
+
+          @if (!cargando) {
+            @for (a of autoridades; track a.id; let i = $index) {
+              <tr [class.row-editing]="editandoId === a.id">
+
+                <td class="td-id">{{ i + 1 }}</td>
+
+                <td class="td-name">
+                  @if (editandoId !== a.id) {
+                    <div class="name-cell">
+                      <div class="name-avatar">{{ a.nombres.charAt(0) }}</div>
+                      {{ a.nombres }}
+                    </div>
+                  } @else {
+                    <input type="text" [(ngModel)]="formEditar.nombres" class="cell-input">
+                  }
+                </td>
+
+                <td class="td-puesto">
+                  @if (editandoId !== a.id) {
+                    {{ a.denominacion_puesto }}
+                  } @else {
+                    <input type="text" [(ngModel)]="formEditar.denominacion_puesto" class="cell-input">
+                  }
+                </td>
+
+                <td class="td-unidad">
+                  @if (editandoId !== a.id) {
+                    {{ a.unidad_organica || '—' }}
+                  } @else {
+                    <input type="text" [(ngModel)]="formEditar.unidad_organica" class="cell-input">
+                  }
+                </td>
+
+                <td class="td-geo">
+                  @if (editandoId !== a.id) {
+                    <span class="geo-pill">{{ a.provincia }} · {{ a.canton }}</span>
+                  } @else {
+                    <div class="geo-inputs">
+                      <input type="text" [(ngModel)]="formEditar.provincia" class="cell-input" placeholder="Provincia">
+                      <input type="text" [(ngModel)]="formEditar.canton"    class="cell-input" placeholder="Cantón">
+                    </div>
+                  }
+                </td>
+
+                <td class="td-actions">
+                  @if (editandoId !== a.id) {
+                    <div class="row-actions">
+                      <button class="btn-row btn-row--edit" (click)="iniciarEdicion(a)">
+                        <i class="bi bi-pencil-square"></i> Editar
+                      </button>
+                      <button class="btn-row btn-row--delete" (click)="eliminar(a)"
+                              [disabled]="eliminandoId === a.id">
+                        <i class="bi bi-trash-fill"></i>
+                        {{ eliminandoId === a.id ? '...' : 'Eliminar' }}
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="row-actions">
+                      <button class="btn-row btn-row--save" (click)="guardarEdicion(a)">
+                        <i class="bi bi-check-lg"></i> Guardar
+                      </button>
+                      <button class="btn-row btn-row--cancel" (click)="cancelarEdicion()">
+                        <i class="bi bi-x-lg"></i> Cancelar
+                      </button>
+                    </div>
+                  }
+                </td>
+
+              </tr>
+            }
+
+            @if (autoridades.length === 0) {
+              <tr>
+                <td colspan="6" class="state-cell">
+                  <i class="bi bi-person-badge state-empty-icon"></i>
+                  <span>No hay autoridades registradas</span>
+                </td>
+              </tr>
+            }
+          }
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

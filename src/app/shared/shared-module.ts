@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // <--- ESTA ES LA CLAVE
-import { HttpClientModule } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { TablaEmpleadosComponent } from './components/tabla-empleados/tabla-empleados';
 
 @NgModule({
@@ -10,13 +9,12 @@ import { TablaEmpleadosComponent } from './components/tabla-empleados/tabla-empl
   ],
   imports: [
     CommonModule,
-    FormsModule,       // <--- Importarlo aquí habilita [(ngModel)]
-    HttpClientModule
+    FormsModule
   ],
   exports: [
     TablaEmpleadosComponent,
     CommonModule,
-    FormsModule        // <--- Exportarlo ayuda a otros módulos
+    FormsModule
   ]
 })
 export class SharedModule { }

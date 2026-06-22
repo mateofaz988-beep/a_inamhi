@@ -1,0 +1,341 @@
+<div class="ha-container">
+
+  <!-- ── HEADER ── -->
+  <header class="ha-header">
+    <div class="header-info">
+      <span class="tag">
+        <i class="bi bi-archive-fill"></i>
+        Repositorio institucional
+      </span>
+      <h2>Historial de Acciones de Personal</h2>
+      <p>Consulte, registre y descargue las acciones de personal por funcionario</p>
+    </div>
+    <button class="btn-back" (click)="volver()">
+      <i class="bi bi-arrow-left"></i>
+      Volver
+    </button>
+  </header>
+
+  <!-- ── BUSCADOR ── -->
+  <div class="search-card">
+    <div class="search-card-inner">
+      <div class="search-icon-wrap">
+        <i class="bi bi-search"></i>
+      </div>
+      <div class="search-fields">
+        <label>Buscar funcionario</label>
+        <div class="search-row">
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="textoBusqueda"
+            (keydown)="onEnter($event)"
+            placeholder="Ingrese cédula, nombre completo o número de nómina..."
+            [disabled]="buscando"
+          >
+          <button class="btn-search" (click)="buscar()" [disabled]="buscando || !textoBusqueda.trim()">
+            @if (buscando) {
+              <i class="bi bi-arrow-repeat spin-btn"></i> Buscando...
+            } @else {
+              <i class="bi bi-search"></i> Buscar
+            }
+          </button>
+          @if (yaSeHizoBusqueda) {
+            <button class="btn-clear" (click)="limpiarBusqueda()" title="Nueva búsqueda">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          }
+        </div>
+        <span class="search-hint">
+          <i class="bi bi-info-circle"></i>
+          Puede buscar por número de cédula, apellidos y nombres, o número de nómina
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTADOS ── -->
+  @if (yaSeHizoBusqueda) {
+
+    <!-- Persona no encontrada en ningún lado -->
+    @if (!persona) {
+      <div class="empty-card empty-card--notfound">
+        <div class="empty-icon">
+          <i class="bi bi-person-x-fill"></i>
+        </div>
+        <h3>Funcionario no encontrado</h3>
+        <p>No se encontraron resultados para <strong>"{{ textoBusqueda }}"</strong> en la base de datos ni en el historial.</p>
+        <p class="empty-hint">Verifique que la cédula o el nombre esté correctamente escrito.</p>
+      </div>
+    }
+
+    @if (persona) {
+
+      <!-- ── TARJETA PERSONA ── -->
+      <div class="persona-card" [class.persona-card--noactivo]="!persona.encontrado_en_personal">
+
+        <div class="persona-avatar">
+          {{ (persona.nombres || '?').charAt(0) }}
+        </div>
+
+        <div class="persona-info">
+          <div class="persona-name">{{ persona.nombres }}</div>
+          <div class="persona-meta">
+            <span class="meta-chip">
+              <i class="bi bi-card-text"></i>
+              {{ persona.cedula }}
+            </span>
+            @if (persona.cargo) {
+              <span class="meta-chip">
+                <i class="bi bi-briefcase-fill"></i>
+                {{ persona.cargo }}
+              </span>
+            }
+            @if (persona.unidad) {
+              <span class="meta-chip">
+                <i class="bi bi-building"></i>
+                {{ persona.unidad }}
+              </span>
+            }
+            @if (persona.modalidad) {
+              <span class="meta-chip meta-chip--mode">
+                <i class="bi bi-file-person-fill"></i>
+                {{ persona.modalidad }}
+              </span>
+            }
+            @if (!persona.encontrado_en_personal) {
+              <span class="meta-chip meta-chip--warn">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                No está en el personal activo
+              </span>
+            }
+          </div>
+        </div>
+
+        <div class="persona-actions">
+          <span class="acciones-count">
+            <strong>{{ acciones.length }}</strong>
+            {{ acciones.length === 1 ? 'acción' : 'acciones' }}
+          </span>
+          <button class="btn-upload" (click)="abrirModal()">
+            <i class="bi bi-upload"></i>
+            Subir acción
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Sin acciones -->
+      @if (acciones.length === 0) {
+        <div class="empty-card empty-card--noacciones">
+          <div class="empty-icon">
+            <i class="bi bi-folder2-open"></i>
+          </div>
+          <h3>Sin acciones de personal</h3>
+          <p><strong>{{ persona.nombres }}</strong> no tiene acciones de personal guardadas en el historial.</p>
+          <button class="btn-upload-lg" (click)="abrirModal()">
+            <i class="bi bi-cloud-upload-fill"></i>
+            Subir primera acción de personal
+          </button>
+        </div>
+      }
+
+      <!-- Tabla de acciones -->
+      @if (acciones.length > 0) {
+        <div class="acciones-card">
+
+          <div class="acciones-header">
+            <div class="acciones-header-left">
+              <i class="bi bi-clock-history"></i>
+              <span>Historial de acciones — {{ acciones.length }} {{ acciones.length === 1 ? 'registro' : 'registros' }}</span>
+            </div>
+          </div>
+
+          <div class="acciones-table-wrap">
+            <table class="acciones-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Número AP</th>
+                  <th>Tipo de Acción</th>
+                  <th>Fecha Acción</th>
+                  <th>Fecha Registro</th>
+                  <th>Archivo</th>
+                  <th>Registrado por</th>
+                  <th class="th-act">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (a of acciones; track a.id; let i = $index) {
+                  <tr>
+                    <td class="td-num">{{ i + 1 }}</td>
+
+                    <td class="td-numero">
+                      <span class="num-badge">{{ a.numero_accion || '—' }}</span>
+                    </td>
+
+                    <td>
+                      <span class="tipo-badge">{{ a.tipo_accion || '—' }}</span>
+                    </td>
+
+                    <td class="td-fecha">
+                      @if (a.fecha_accion) {
+                        <i class="bi bi-calendar3"></i>
+                        {{ a.fecha_accion | date:'dd/MM/yyyy' }}
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </td>
+
+                    <td class="td-fecha td-registro">
+                      <i class="bi bi-clock"></i>
+                      {{ a.fecha_registro | date:'dd/MM/yyyy HH:mm' }}
+                    </td>
+
+                    <td>
+                      @if (tieneArchivo(a)) {
+                        <span class="archivo-chip">
+                          <i class="bi bi-paperclip"></i>
+                          {{ a.archivo_nombre }}
+                        </span>
+                      } @else {
+                        <span class="text-muted">Sin archivo</span>
+                      }
+                    </td>
+
+                    <td class="td-user">
+                      <i class="bi bi-person-fill"></i>
+                      {{ a.registrado_por || '—' }}
+                    </td>
+
+                    <td class="td-act">
+                      <div class="row-acts">
+                        @if (tieneArchivo(a)) {
+                          <button class="btn-row btn-row--down" (click)="descargar(a)" title="Descargar archivo">
+                            <i class="bi bi-download"></i> Descargar
+                          </button>
+                        }
+                        <button class="btn-row btn-row--del" (click)="eliminar(a)" title="Eliminar">
+                          <i class="bi bi-trash-fill"></i>
+                        </button>
+                      </div>
+                    </td>
+
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      }
+
+    }
+
+  }
+
+  <!-- ── ESTADO INICIAL ── -->
+  @if (!yaSeHizoBusqueda) {
+    <div class="empty-card empty-card--initial">
+      <div class="empty-icon empty-icon--lg">
+        <i class="bi bi-person-lines-fill"></i>
+      </div>
+      <h3>Consultar historial de un funcionario</h3>
+      <p>Ingrese la cédula, nombre o número de nómina del funcionario en el buscador.</p>
+      <div class="tips-row">
+        <div class="tip-item">
+          <i class="bi bi-card-text"></i>
+          <span>Por cédula </span>
+        </div>
+        <div class="tip-item">
+          <i class="bi bi-person-fill"></i>
+          <span>Por nombre</span>
+        </div>
+        <div class="tip-item">
+          <i class="bi bi-hash"></i>
+          <span>Por nómina</span>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL SUBIR ACCIÓN
+══════════════════════════════════════════════════════ -->
+@if (mostrarModal) {
+  <div class="modal-backdrop" (click)="cerrarModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="modal-icon">
+            <i class="bi bi-cloud-upload-fill"></i>
+          </div>
+          <div>
+            <h4>Subir Acción de Personal</h4>
+            <p>{{ persona?.nombres }}</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="cerrarModal()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-grid">
+
+          <div class="m-field">
+            <label>Número AP</label>
+            <input type="text" [(ngModel)]="formSubir.numero_accion"
+                   class="m-input" placeholder="Ej: AP-RH-2026-0001">
+          </div>
+
+          <div class="m-field">
+            <label>Tipo de acción <span class="req">*</span></label>
+            <select [(ngModel)]="formSubir.tipo_accion" class="m-input m-select">
+              <option value="">Seleccione...</option>
+              @for (t of tiposAccion; track t) {
+                <option [value]="t">{{ t }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="m-field">
+            <label>Fecha de la acción</label>
+            <input type="date" [(ngModel)]="formSubir.fecha_accion" class="m-input">
+          </div>
+
+          <div class="m-field m-field--full">
+            <label>Archivo (PDF, Excel, Word)</label>
+            <div class="file-drop">
+              <i class="bi bi-file-earmark-arrow-up-fill"></i>
+              <span>{{ archivoSeleccionado ? archivoSeleccionado.name : 'Seleccione un archivo...' }}</span>
+              <input type="file"
+                     accept=".pdf,.xlsx,.xls,.docx,.doc"
+                     (change)="onArchivoSeleccionado($event)"
+                     class="file-input">
+            </div>
+            <span class="m-hint">Formatos: PDF, Excel (.xlsx/.xls), Word (.docx/.doc)</span>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="cerrarModal()" [disabled]="subiendoArchivo">
+          Cancelar
+        </button>
+        <button class="btn btn-primary" (click)="subirAccion()" [disabled]="subiendoArchivo">
+          @if (subiendoArchivo) {
+            <i class="bi bi-arrow-repeat spin-btn"></i> Guardando...
+          } @else {
+            <i class="bi bi-cloud-upload-fill"></i> Registrar acción
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

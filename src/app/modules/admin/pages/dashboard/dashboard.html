@@ -4,14 +4,15 @@
   <aside class="sidebar">
 
     <div class="sidebar-brand">
-      <div class="brand-logo">
-      <i class="bi bi-bar-chart-line-fill"></i>
-      </div>
+      <img
+    src="assets/logo2-.png"
+  
+    class="sidebar-logo">
 
-      <div>
-        <h2>INAMHI</h2>
-        <span>Talento Humano</span>
-      </div>
+  <div class="brand-text">
+    <h2></h2>
+    <span></span>
+  </div>
     </div>
 
     <nav class="sidebar-nav">
@@ -21,9 +22,24 @@
         <span>Inicio</span>
       </button>
 
+      <button class="nav-item" routerLink="/admin/autoridades">
+        <i class="bi bi-person-badge-fill"></i>
+        <span>Autoridades</span>
+      </button>
+
+      <button class="nav-item" routerLink="/admin/personal-estructura">
+        <i class="bi bi-people-fill"></i>
+        <span>Personal RRHH</span>
+      </button>
+
       <button class="nav-item" routerLink="/admin/nuevo-funcionario">
         <i class="bi bi-person-plus-fill"></i>
         <span>Nuevo Funcionario</span>
+      </button>
+
+      <button class="nav-item" routerLink="/admin/historial-acciones">
+        <i class="bi bi-archive-fill"></i>
+        <span>Historial AP</span>
       </button>
 
       <button class="nav-item" routerLink="/admin/solicitud-permisos">
@@ -164,10 +180,12 @@
           <p>Consulta, edición, exportación y desvinculación de funcionarios activos.</p>
         </div>
 
-        <span class="badge-mode" *ngIf="authService.isAdmin()">
-          <i class="bi bi-shield-lock-fill"></i>
-          Modo Administrador
-        </span>
+        @if (authService.isAdmin()) {
+          <span class="badge-mode">
+            <i class="bi bi-shield-lock-fill"></i>
+            Modo Administrador
+          </span>
+        }
       </div>
 
       <div class="card-body-custom">

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -6,122 +6,94 @@ import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../core/services/auth';
 
+interface Usuario {
+  id:      number;
+  usuario: string;
+  rol:     string;
+}
+
 @Component({
-  selector: 'app-usuarios',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './usuarios.html',
-  styleUrls: ['./usuarios.scss']
+  selector:     'app-usuarios',
+  standalone:   true,
+  imports:      [CommonModule, FormsModule],
+  templateUrl:  './usuarios.html',
+  styleUrls:    ['./usuarios.scss']
 })
 export class UsuariosComponent implements OnInit {
 
-  private readonly API_URL = 'http://localhost:5000/api/usuarios';
+  private readonly API = 'http://localhost:5000/api/usuarios';
 
-  guardando = false;
-  cargandoUsuarios = false;
-  mostrarPassword = false;
+  cargando     = false;
+  guardando    = false;
+  eliminandoId: number | null = null;
+
+  mostrarPassword        = false;
   mostrarConfirmPassword = false;
 
-  usuarios: any[] = [];
-  usuariosFiltrados: any[] = [];
-  searchText: string = '';
+  usuarios: Usuario[] = [];
 
-  editandoId: number | null = null;
-  rolEditando: string = 'visitante';
+  editandoId:  number | null = null;
+  rolEditando: string        = 'visitante';
 
-  nuevoUsuario = {
-    usuario: '',
-    password: '',
+  form = {
+    usuario:         '',
+    password:        '',
     confirmPassword: '',
-    rol: 'visitante'
+    rol:             'visitante'
   };
 
   roles = [
-    { value: 'admin', label: 'Administrador' },
-    { value: 'visitante', label: 'Visitante' }
+    { value: 'admin',     label: 'Administrador' },
+    { value: 'visitante', label: 'Visitante'      }
   ];
 
   constructor(
-    private http: HttpClient,
-    private router: Router,
-    public authService: AuthService
+    private http:        HttpClient,
+    private router:      Router,
+    public  authService: AuthService,
+    private cdr:         ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.obtenerUsuarios();
+    this.cargarUsuarios();
   }
 
-  getHeaders() {
-    return new HttpHeaders({
-      Authorization: this.authService.getToken()
-    });
+  get totalAdmin()     { return this.usuarios.filter(u => u.rol === 'admin').length;     }
+  get totalVisitante() { return this.usuarios.filter(u => u.rol === 'visitante').length; }
+
+  private headers() {
+    return new HttpHeaders({ Authorization: this.authService.getToken() });
   }
 
   volver() {
     this.router.navigate(['/admin/dashboard']);
   }
 
-  limpiarFormulario() {
-    this.nuevoUsuario = {
-      usuario: '',
-      password: '',
-      confirmPassword: '',
-      rol: 'visitante'
-    };
+  limpiar() {
+    this.form = { usuario: '', password: '', confirmPassword: '', rol: 'visitante' };
+    this.mostrarPassword        = false;
+    this.mostrarConfirmPassword = false;
   }
 
-  validarFormulario(): boolean {
-    const usuario = this.nuevoUsuario.usuario.trim();
-    const password = this.nuevoUsuario.password.trim();
-    const confirmPassword = this.nuevoUsuario.confirmPassword.trim();
-    const rol = this.nuevoUsuario.rol.trim();
+  private validar(): boolean {
+    const u = this.form.usuario.trim();
+    const p = this.form.password.trim();
+    const c = this.form.confirmPassword.trim();
 
-    if (!usuario) {
-      Swal.fire('Atención', 'Ingrese el nombre de usuario', 'warning');
-      return false;
-    }
-
-    if (usuario.length < 4) {
-      Swal.fire('Atención', 'El usuario debe tener al menos 4 caracteres', 'warning');
-      return false;
-    }
-
-    if (usuario.length > 30) {
-      Swal.fire('Atención', 'El usuario no debe superar los 30 caracteres', 'warning');
-      return false;
-    }
-
-    if (!/^[a-zA-Z0-9_]+$/.test(usuario)) {
-      Swal.fire('Atención', 'El usuario solo puede contener letras, números y guion bajo', 'warning');
-      return false;
-    }
-
-    if (!password) {
-      Swal.fire('Atención', 'Ingrese la contraseña', 'warning');
-      return false;
-    }
-
-    if (password.length < 4) {
-      Swal.fire('Atención', 'La contraseña debe tener al menos 4 caracteres', 'warning');
-      return false;
-    }
-
-    if (!confirmPassword) {
-      Swal.fire('Atención', 'Confirme la contraseña', 'warning');
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      Swal.fire('Error', 'Las contraseñas no coinciden', 'error');
-      return false;
-    }
-
-    if (!['admin', 'visitante'].includes(rol)) {
-      Swal.fire('Error', 'Rol inválido', 'error');
-      return false;
-    }
-
+    if (!u)                              return this.alerta('Ingrese el nombre de usuario');
+    if (u.length < 4)                    return this.alerta('El usuario debe tener al menos 4 caracteres');
+    if (u.length > 30)                   return this.alerta('El usuario no debe superar los 30 caracteres');
+    if (!/^[a-zA-Z0-9_]+$/.test(u))     return this.alerta('Solo letras, números y guion bajo');
+    if (!p)                              return this.alerta('Ingrese la contraseña');
+    if (p.length < 4)                    return this.alerta('La contraseña debe tener al menos 4 caracteres');
+    if (!c)                              return this.alerta('Confirme la contraseña');
+    if (p !== c)                         return this.alerta('Las contraseñas no coinciden', 'error');
     return true;
+  }
+
+  private alerta(msg: string, tipo: 'warning' | 'error' = 'warning'): false {
+    Swal.fire('Atención', msg, tipo);
+    return false;
   }
 
   guardar() {
@@ -129,157 +101,103 @@ export class UsuariosComponent implements OnInit {
       Swal.fire('Acceso denegado', 'Solo el administrador puede registrar usuarios', 'warning');
       return;
     }
-
-    if (!this.validarFormulario()) return;
+    if (!this.validar()) return;
 
     this.guardando = true;
 
-    const payload = {
-      usuario: this.nuevoUsuario.usuario.trim(),
-      password: this.nuevoUsuario.password.trim(),
-      rol: this.nuevoUsuario.rol.trim()
-    };
-
-    this.http.post<any>(this.API_URL, payload, {
-      headers: this.getHeaders()
-    }).subscribe({
+    this.http.post<any>(this.API, {
+      usuario:  this.form.usuario.trim(),
+      password: this.form.password.trim(),
+      rol:      this.form.rol
+    }, { headers: this.headers() }).subscribe({
       next: (res) => {
         this.guardando = false;
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Usuario registrado',
-          text: res?.message || 'El usuario fue creado correctamente',
-          timer: 1800,
-          showConfirmButton: false
-        });
-
-        this.limpiarFormulario();
-        this.obtenerUsuarios();
+        Swal.fire({ icon: 'success', title: 'Usuario registrado', text: res?.message || 'Creado correctamente', timer: 1800, showConfirmButton: false });
+        this.limpiar();
+        this.cargarUsuarios();
       },
       error: (err) => {
         this.guardando = false;
-        console.error('Error registrando usuario:', err);
-
-        Swal.fire(
-          'Error',
-          err?.error?.error || 'No se pudo registrar el usuario',
-          'error'
-        );
+        Swal.fire('Error', err?.error?.error || 'No se pudo registrar el usuario', 'error');
       }
     });
   }
 
-  obtenerUsuarios() {
-    this.cargandoUsuarios = true;
-
-    this.http.get<any[]>(this.API_URL, {
-      headers: this.getHeaders()
-    }).subscribe({
+  cargarUsuarios() {
+    this.cargando = true;
+    this.http.get<Usuario[]>(this.API, { headers: this.headers() }).subscribe({
       next: (data) => {
-        this.cargandoUsuarios = false;
         this.usuarios = data || [];
-        this.usuariosFiltrados = [...this.usuarios];
+        this.cargando = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.cargandoUsuarios = false;
-        console.error('Error cargando usuarios:', err);
+        this.cargando = false;
+        this.cdr.detectChanges();
         Swal.fire('Error', err?.error?.error || 'No se pudieron cargar los usuarios', 'error');
       }
     });
   }
 
-  buscar() {
-    const texto = this.searchText.toLowerCase().trim();
-
-    if (!texto) {
-      this.usuariosFiltrados = [...this.usuarios];
-      return;
-    }
-
-    this.usuariosFiltrados = this.usuarios.filter(u =>
-      (u.usuario || '').toLowerCase().includes(texto) ||
-      (u.rol || '').toLowerCase().includes(texto)
-    );
-  }
-
-  iniciarEdicion(usuario: any) {
-    this.editandoId = usuario.id;
-    this.rolEditando = usuario.rol;
+  iniciarEdicion(u: Usuario) {
+    this.editandoId  = u.id;
+    this.rolEditando = u.rol;
   }
 
   cancelarEdicion() {
-    this.editandoId = null;
+    this.editandoId  = null;
     this.rolEditando = 'visitante';
   }
 
-  guardarRol(usuario: any) {
-    if (!usuario?.id) return;
+  guardarRol(u: Usuario) {
+    if (!u?.id) return;
 
-    this.http.put<any>(`${this.API_URL}/${usuario.id}`, {
-      rol: this.rolEditando
-    }, {
-      headers: this.getHeaders()
-    }).subscribe({
-      next: (res) => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Rol actualizado',
-          text: res?.message || 'El rol fue actualizado correctamente',
-          timer: 1600,
-          showConfirmButton: false
-        });
-
+    this.http.put<any>(`${this.API}/${u.id}`, { rol: this.rolEditando }, { headers: this.headers() }).subscribe({
+      next: () => {
+        Swal.fire({ icon: 'success', title: 'Rol actualizado', timer: 1400, showConfirmButton: false });
         this.cancelarEdicion();
-        this.obtenerUsuarios();
+        this.cargarUsuarios();
       },
       error: (err) => {
-        console.error('Error actualizando rol:', err);
         Swal.fire('Error', err?.error?.error || 'No se pudo actualizar el rol', 'error');
       }
     });
   }
 
-  eliminar(usuario: any) {
-    if (!usuario?.id) return;
+  eliminar(u: Usuario) {
+    if (!u?.id) return;
 
     Swal.fire({
-      title: `¿Eliminar a ${usuario.usuario}?`,
-      text: 'Esta acción no se puede deshacer.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      title:              `¿Eliminar a "${u.usuario}"?`,
+      text:               'Esta acción no se puede deshacer.',
+      icon:               'warning',
+      showCancelButton:   true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText:  'Sí, eliminar',
+      cancelButtonText:   'Cancelar'
     }).then((result) => {
       if (!result.isConfirmed) return;
+      this.eliminandoId = u.id;
 
-      this.http.delete<any>(`${this.API_URL}/${usuario.id}`, {
-        headers: this.getHeaders()
-      }).subscribe({
-        next: (res) => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Usuario eliminado',
-            text: res?.message || 'El usuario fue eliminado correctamente',
-            timer: 1600,
-            showConfirmButton: false
-          });
-
-          this.obtenerUsuarios();
+      this.http.delete<any>(`${this.API}/${u.id}`, { headers: this.headers() }).subscribe({
+        next: () => {
+          this.eliminandoId = null;
+          Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1400, showConfirmButton: false });
+          this.cargarUsuarios();
         },
         error: (err) => {
-          console.error('Error eliminando usuario:', err);
-          Swal.fire('Error', err?.error?.error || 'No se pudo eliminar el usuario', 'error');
+          this.eliminandoId = null;
+          Swal.fire('Error', err?.error?.error || 'No se pudo eliminar', 'error');
         }
       });
     });
   }
 
-  obtenerClaseRol(rol: string): string {
+  claseRol(rol: string): string {
     return rol === 'admin' ? 'badge-admin' : 'badge-visitante';
   }
 
-  traducirRol(rol: string): string {
+  labelRol(rol: string): string {
     return rol === 'admin' ? 'Administrador' : 'Visitante';
   }
 }

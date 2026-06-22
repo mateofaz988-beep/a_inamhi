@@ -2,18 +2,18 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Funcionario } from '../models/interfaces';
+import { AuditEntry } from '../models/interfaces';
 
 @Injectable({
   providedIn: 'root'
 })
-export class EmpleadoService {
+export class AuditoriaService {
 
-  private readonly apiUrl = `${environment.apiUrl}/personal`;
+  private readonly apiUrl = `${environment.apiUrl}/auditoria`;
 
   constructor(private http: HttpClient) {}
 
-  getEmpleados(): Observable<Funcionario[]> {
-    return this.http.get<Funcionario[]>(this.apiUrl);
+  getAll(): Observable<AuditEntry[]> {
+    return this.http.get<AuditEntry[]>(this.apiUrl);
   }
 }

@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-// 🔐 GUARD ADMIN
+// GUARD FUNCIONAL
+import { adminGuard } from '../../core/guards/admin-guard';
 
 // PAGES
 import { DashboardComponent } from './pages/dashboard/dashboard';
@@ -12,44 +13,64 @@ import { AuditoriaComponent } from '../../components/auditoria/auditoria';
 import { SolicitudPermisosComponent } from '../../components/solicitud-permisos/solicitud-permisos';
 import { UsuariosComponent } from '../../components/usuarios/usuarios';
 import { FuncionariosDesvinculadosComponent } from '../../components/funcionarios-desvinculados/funcionarios-desvinculados';
-import { AdminGuard } from '../../core/guards/admin-guard';
+import { AutoridadesComponent } from '../../components/autoridades/autoridades';
+import { PersonalEstructuraComponent } from '../../components/personal-estructura/personal-estructura';
+import { HistorialAccionesComponent } from '../../components/historial-acciones/historial-acciones';
 
 const routes: Routes = [
 
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [AdminGuard]
+    canActivate: [adminGuard]
   },
 
   {
     path: 'nuevo-funcionario',
     component: NuevoFuncionarioComponent,
-    canActivate: [AdminGuard]
+    canActivate: [adminGuard]
   },
 
   {
     path: 'funcionarios-desvinculados',
     component: FuncionariosDesvinculadosComponent,
-    canActivate: [AdminGuard]
+    canActivate: [adminGuard]
   },
 
   {
     path: 'auditoria',
     component: AuditoriaComponent,
-    canActivate: [AdminGuard]
+    canActivate: [adminGuard]
   },
 
   {
     path: 'solicitud-permisos',
     component: SolicitudPermisosComponent,
-    canActivate: [AdminGuard]
+    canActivate: [adminGuard]
   },
 
   {
     path: 'usuarios',
     component: UsuariosComponent,
-    canActivate: [AdminGuard]
+    canActivate: [adminGuard]
+  },
+
+  {
+    path: 'autoridades',
+    component: AutoridadesComponent,
+    canActivate: [adminGuard]
+  },
+
+  {
+    path: 'personal-estructura',
+    component: PersonalEstructuraComponent,
+    canActivate: [adminGuard]
+  },
+
+  {
+    path: 'historial-acciones',
+    component: HistorialAccionesComponent,
+    canActivate: [adminGuard]
   },
 
   {

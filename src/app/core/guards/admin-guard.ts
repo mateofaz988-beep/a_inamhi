@@ -1,27 +1,19 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, Router } from '@angular/router';
-
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AdminGuard implements CanActivate {
+/**
+ * Guard funcional que verifica que el usuario sea administrador.
+ * Redirige a /auth si no está logueado o no es admin.
+ */
+export const adminGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  canActivate(): boolean {
-
-    // 🔐 Debe estar logueado Y ser admin
-    if (this.authService.isLoggedIn() && this.authService.isAdmin()) {
-      return true;
-    }
-
-    // ❌ Si no es admin → fuera
-    this.router.navigate(['/auth']);
-    return false;
+  if (authService.isLoggedIn() && authService.isAdmin()) {
+    return true;
   }
-}
+
+  router.navigate(['/auth']);
+  return false;
+};

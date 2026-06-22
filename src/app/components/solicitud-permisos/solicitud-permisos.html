@@ -1,711 +1,465 @@
 <div class="solicitud-container">
-
-  <div class="solicitud-header no-print">
+  <header class="solicitud-header no-print">
     <div class="header-info">
-      <h2>Documentos Institucionales</h2>
-      <p>Documento 1: Acción de Personal (2 páginas) · Documento 2: Solicitud de Permisos (1 página)</p>
+      <span class="eyebrow">Gestión de Talento Humano</span>
+      <h2>Acción de Personal</h2>
+      <p>Complete los campos, revise la vista previa y genere el archivo Excel.</p>
     </div>
 
-    <div class="header-actions">
-      <button class="btn-volver" (click)="volver()">
+    <div class="header-actions" aria-label="Acciones principales">
+      <button type="button" class="btn btn-muted" (click)="volver()">
         <i class="bi bi-arrow-left me-2"></i>
         Volver
       </button>
 
-      <button class="btn-clear" (click)="limpiarFormulario()">
+      <button type="button" class="btn btn-warning" (click)="limpiarFormulario()">
         <i class="bi bi-eraser me-2"></i>
         Limpiar
       </button>
 
-      <button class="btn-pdf" (click)="exportarPDF()" [disabled]="exportando">
-        <i class="bi bi-file-earmark-pdf-fill me-2"></i>
-        {{ exportando ? 'Exportando...' : 'Exportar PDF' }}
+      <button type="button" class="btn btn-success" (click)="generarExcel()" [disabled]="generandoExcel">
+        <i class="bi bi-eye me-2"></i>
+        {{ generandoExcel ? 'Generando...' : 'Vista previa / Generar Excel' }}
       </button>
     </div>
-  </div>
+  </header>
 
-  <div class="page-selector-card no-print">
-    <div class="page-selector-header">
-      <div>
-        <h3>Seleccionar documentos</h3>
-        <p>Elige qué documento quieres llenar y exportar.</p>
-      </div>
-
-      <div class="page-selector-actions">
-        <button type="button" class="btn-selector btn-selector-primary" (click)="seleccionarTodosDocumentos()">
-          <i class="bi bi-check2-square me-2"></i>
-          Seleccionar todos
-        </button>
-
-        <button type="button" class="btn-selector btn-selector-secondary" (click)="limpiarSeleccionDocumentos()">
-          <i class="bi bi-square me-2"></i>
-          Limpiar selección
-        </button>
-      </div>
-    </div>
-
-    <div class="page-selector-grid docs-grid">
-      <label class="page-option">
-        <input type="checkbox" [(ngModel)]="mostrarDocumento1">
-        <span class="page-option-box">
-          <span class="page-option-title">Documento 1</span>
-          <span class="page-option-text">Acción de Personal + Responsables de Firmas y Uso Exclusivo TH</span>
-          <span class="page-option-pages">2 páginas</span>
-        </span>
-      </label>
-
-      <label class="page-option">
-        <input type="checkbox" [(ngModel)]="mostrarDocumento2">
-        <span class="page-option-box">
-          <span class="page-option-title">Documento 2</span>
-          <span class="page-option-text">Solicitud de Vacaciones, Licencias y Permisos</span>
-          <span class="page-option-pages">1 página</span>
-        </span>
-      </label>
-    </div>
-
-    <div class="page-selector-summary" *ngIf="hayDocumentosSeleccionados(); else sinDocs">
-      <strong>Documentos seleccionados:</strong> {{ resumenDocumentos() }}
-    </div>
-
-    <ng-template #sinDocs>
-      <div class="page-selector-summary warning">
-        Debes seleccionar al menos un documento para continuar.
-      </div>
-    </ng-template>
-  </div>
-
-  <div class="control-panel no-print">
-    <div class="panel-title">
-      <i class="bi bi-ui-checks-grid me-2"></i>
-      Datos del documento
-    </div>
-
-    <div class="control-grid">
-
-      <div class="field cedula-field">
-        <label>Cédula</label>
-        <div class="cedula-box">
-          <input
-            type="text"
-            [(ngModel)]="formulario.cedula"
-            maxlength="10"
-            placeholder="Ingrese cédula"
-          >
-
-          <button class="btn-consultar" (click)="consultarCedula()" [disabled]="consultando">
-            <i class="bi bi-search me-1"></i>
-            {{ consultando ? 'Consultando...' : 'Consultar' }}
-          </button>
+  <main class="document-layout">
+    <section class="control-panel no-print" aria-label="Formulario de acción de personal">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">Formulario</span>
+          <h3>Datos del documento</h3>
         </div>
+        <span class="panel-note">Campos obligatorios marcados con *</span>
       </div>
 
-      <div class="field">
-        <label>Número Acción</label>
-        <input type="text" [(ngModel)]="formulario.numero_accion">
-      </div>
+      <section class="form-section">
+        <div class="section-header-line">
+          <span class="section-number">01</span>
+          <div>
+            <h4>Encabezado</h4>
+            <p>Información general de la acción de personal.</p>
+          </div>
+        </div>
 
-      <div class="field">
-        <label>Fecha Elaboración</label>
-        <input type="date" [(ngModel)]="formulario.fecha_elaboracion">
-      </div>
-
-      <div class="field">
-        <label>Ciudad</label>
-        <input type="text" [(ngModel)]="formulario.ciudad">
-      </div>
-
-      <div class="field">
-        <label>Apellidos</label>
-        <input type="text" [(ngModel)]="formulario.apellidos">
-      </div>
-
-      <div class="field">
-        <label>Nombres</label>
-        <input type="text" [(ngModel)]="formulario.nombres">
-      </div>
-
-      <div class="field">
-        <label>Régimen Laboral</label>
-        <input type="text" [(ngModel)]="formulario.regimen_laboral">
-      </div>
-
-      <div class="field">
-        <label>Cargo</label>
-        <input type="text" [(ngModel)]="formulario.cargo">
-      </div>
-
-      <!-- UNIDAD ACTUALIZADA -->
-      <div class="field field-span-2">
-        <label>Unidad</label>
-        <select
-          [(ngModel)]="formulario.unidad"
-          (change)="onUnidadChange()"
-        >
-          <option value="">Seleccione una unidad institucional</option>
-          <option
-            *ngFor="let unidad of unidadesInstitucionales"
-            [value]="unidad.nombre"
-          >
-            {{ unidad.nombre }}
-          </option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>RMU</label>
-        <input type="text" [(ngModel)]="formulario.rmu">
-      </div>
-
-      <div class="field">
-        <label>Desde</label>
-        <input type="date" [(ngModel)]="formulario.desde">
-      </div>
-
-      <div class="field">
-        <label>Hasta</label>
-        <input type="date" [(ngModel)]="formulario.hasta">
-      </div>
-
-      <div class="field">
-        <label>Acción Personal</label>
-        <select [(ngModel)]="formulario.accion_personal">
-          <option *ngFor="let accion of tiposAccionPersonal" [value]="accion">
-            {{ accion }}
-          </option>
-        </select>
-      </div>
-
-      <div class="field field-span-2">
-        <label>Motivación / Base legal</label>
-        <textarea [(ngModel)]="formulario.motivo_legal" rows="5"></textarea>
-      </div>
-
-      <div class="field">
-        <label>Tipo Permiso</label>
-        <select [(ngModel)]="formulario.tipo_permiso">
-          <option *ngFor="let tipo of tiposPermiso" [value]="tipo">
-            {{ tipo }}
-          </option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Fecha Inicio</label>
-        <input type="date" [(ngModel)]="formulario.fecha_inicio">
-      </div>
-
-      <div class="field">
-        <label>Fecha Terminación</label>
-        <input type="date" [(ngModel)]="formulario.fecha_terminacion">
-      </div>
-
-      <div class="field field-span-2">
-        <label>Observación Permiso</label>
-        <input type="text" [(ngModel)]="formulario.observacion">
-      </div>
-
-      <div class="field">
-        <label>Autorizado por</label>
-        <input type="text" [(ngModel)]="formulario.autorizado_por">
-      </div>
-
-      <div class="field">
-        <label>Puesto Autorizado</label>
-        <input type="text" [(ngModel)]="formulario.puesto_autorizado">
-      </div>
-
-      <div class="field">
-        <label>Revisado por</label>
-        <input type="text" [(ngModel)]="formulario.revisado_por">
-      </div>
-
-      <div class="field">
-        <label>Registrado por</label>
-        <input type="text" [(ngModel)]="formulario.registrado_por">
-      </div>
-
-      <div class="field field-span-2">
-        <label>Uso exclusivo Talento Humano</label>
-        <textarea [(ngModel)]="formulario.uso_exclusivo_th" rows="3"></textarea>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="pdf-preview-wrapper">
-    <div class="pdf-content" #pdfContent>
-
-      <!-- DOCUMENTO 1 - PÁGINA 1 -->
-      <section class="pdf-page-a4" *ngIf="mostrarDocumento1">
-        <div class="page-inner">
-
-          <table class="doc-header-table">
-            <tr>
-              <td class="logo-cell">
-                <div class="logo-box">
-                  <img src="assets/logo.png" alt="Logo INAMHI" class="logo-img">
-                </div>
-              </td>
-
-              <td class="title-cell">
-                <div class="doc-title">ACCIÓN DE PERSONAL</div>
-              </td>
-
-              <td class="code-cell">
-                <div class="code-row"><strong>AP:</strong> {{ formulario.numero_accion || '__________' }}</div>
-                <div class="code-row"><strong>Fecha de elaboración</strong></div>
-                <div class="code-row">{{ formatearFechaVisual(formulario.fecha_elaboracion) }}</div>
-              </td>
-            </tr>
-          </table>
-
-          <table class="doc-table compact-table">
-            <tr>
-              <td class="label-cell center-text">APELLIDOS</td>
-              <td class="label-cell center-text">NOMBRES</td>
-              <td class="label-cell center-text">RIGE:</td>
-              <td class="value-cell center-text" colspan="2">{{ formulario.nombres }}</td>
-            </tr>
-
-            <tr>
-              <td class="value-cell center-text">{{ formulario.apellidos }}</td>
-              <td class="value-cell center-text">{{ formulario.nombres }}</td>
-              <td class="label-cell center-text">DESDE (dd-mm-aaaa)</td>
-              <td class="label-cell center-text">HASTA (dd-mm-aaaa)</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell center-text">DOCUMENTO DE IDENTIFICACIÓN</td>
-              <td class="label-cell center-text">NRO. DE IDENTIFICACIÓN</td>
-              <td class="value-cell center-text">{{ formatearFechaVisual(formulario.desde) }}</td>
-              <td class="value-cell center-text">{{ formatearFechaVisual(formulario.hasta) }}</td>
-            </tr>
-
-            <tr>
-              <td class="value-cell center-text">CÉDULA</td>
-              <td class="value-cell center-text">
-  <input class="pdf-input center-text" [(ngModel)]="formulario.cedula">
-</td>
-              <td colspan="2"></td>
-            </tr>
-          </table>
-
-          <table class="doc-table compact-table">
-            <tr>
-              <td colspan="4" class="mini-top-note">Escoja una opción:</td>
-            </tr>
-
-            <tr>
-              <td colspan="4" class="checkbox-grid-cell">
-                <div class="checkbox-grid page1-grid">
-                  <div class="checkbox-item" *ngFor="let accion of tiposAccionPersonal">
-                    <span class="check-box">{{ formulario.accion_personal === accion ? 'X' : '' }}</span>
-                    <span>{{ accion }}</span>
-                  </div>
-                </div>
-              </td>
-            </tr>
-
-            <tr>
-              <td colspan="4" class="small-line-text">
-                * PRESENTÓ LA DECLARACIÓN JURADA (número 2 del art. 3 RLOSEP)
-              </td>
-            </tr>
-          </table>
-
-          <table class="doc-table">
-            <tr>
-              <td class="label-cell full-header">MOTIVACIÓN:</td>
-            </tr>
-
-            <tr>
-              <td class="multiline-cell page1-legal-cell">{{ formulario.motivo_legal }}</td>
-            </tr>
-
-            <tr>
-              <td class="reference-line">
-                REFERENCIA: 1) {{ formulario.referencia_1 || 'Solicitud aprobada por el jefe inmediato' }}
-                &nbsp;&nbsp;&nbsp; 2) {{ formulario.referencia_2 || 'Documento de respaldo institucional' }}
-              </td>
-            </tr>
-          </table>
-
-          <table class="doc-table compact-table">
-            <tr>
-              <th colspan="2" class="section-header">SITUACIÓN ACTUAL</th>
-              <th colspan="2" class="section-header">SITUACIÓN PROPUESTA</th>
-            </tr>
-
-            <tr>
-              <td class="label-cell narrow-label">PROCESO INSTITUCIONAL:</td>
-              <td class="value-cell">{{ formulario.proceso_institucional_actual }}</td>
-              <td class="label-cell narrow-label">PROCESO INSTITUCIONAL:</td>
-              <td class="value-cell">{{ formulario.proceso_institucional_propuesta }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell narrow-label">NIVEL DE GESTIÓN:</td>
-              <td class="value-cell">{{ formulario.nivel_gestion_actual }}</td>
-              <td class="label-cell narrow-label">NIVEL DE GESTIÓN:</td>
-              <td class="value-cell">{{ formulario.nivel_gestion_propuesta }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell narrow-label">UNIDAD ADMINISTRATIVA:</td>
-              <td class="value-cell">{{ formulario.unidad_actual }}</td>
-              <td class="label-cell narrow-label">UNIDAD ADMINISTRATIVA:</td>
-              <td class="value-cell">{{ formulario.unidad_propuesta }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell narrow-label">LUGAR DE TRABAJO:</td>
-              <td class="value-cell">{{ formulario.lugar_trabajo_actual }}</td>
-              <td class="label-cell narrow-label">LUGAR DE TRABAJO:</td>
-              <td class="value-cell">{{ formulario.lugar_trabajo_propuesta }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell narrow-label">DENOMINACIÓN DEL PUESTO:</td>
-              <td class="value-cell">{{ formulario.denominacion_actual }}</td>
-              <td class="label-cell narrow-label">DENOMINACIÓN DEL PUESTO:</td>
-              <td class="value-cell">{{ formulario.denominacion_propuesta }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell narrow-label">GRUPO OCUPACIONAL:</td>
-              <td class="value-cell">{{ formulario.grupo_actual }}</td>
-              <td class="label-cell narrow-label">GRUPO OCUPACIONAL:</td>
-              <td class="value-cell">{{ formulario.grupo_propuesta }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell narrow-label">GRADO:</td>
-              <td class="value-cell">{{ formulario.grado_actual }}</td>
-              <td class="label-cell narrow-label">GRADO:</td>
-              <td class="value-cell">{{ formulario.grado_propuesta }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell narrow-label">REMUNERACIÓN MENSUAL:</td>
-              <td class="value-cell">{{ formulario.remuneracion_actual }}</td>
-              <td class="label-cell narrow-label">REMUNERACIÓN MENSUAL:</td>
-              <td class="value-cell">{{ formulario.remuneracion_propuesta }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell narrow-label">PARTIDA INDIVIDUAL:</td>
-              <td class="value-cell">{{ formulario.partida_actual }}</td>
-              <td class="label-cell narrow-label">PARTIDA INDIVIDUAL:</td>
-              <td class="value-cell">{{ formulario.partida_propuesta }}</td>
-            </tr>
-          </table>
-
-          <table class="doc-table compact-table">
-            <tr>
-              <th colspan="4" class="section-header left-align">POSESIÓN DEL PUESTO</th>
-            </tr>
-
-            <tr>
-              <td colspan="2" class="multiline-cell posecion-cell">
-                YO, ____________________________________________<br>
-                JURO LEALTAD AL ESTADO ECUATORIANO.<br><br>
-                LUGAR: {{ formulario.lugar_posesion }} &nbsp;&nbsp;&nbsp; FECHA: ______________________
-              </td>
-
-              <td colspan="2" class="multiline-cell posecion-cell">
-                CON NRO. DE DOCUMENTO DE IDENTIFICACIÓN {{ formulario.documento_identificacion_posesion }}
-              </td>
-            </tr>
-
-            <tr>
-              <td colspan="2" class="small-line-text center-text">
-                ** (EN CASO DE GANADOR DE CONCURSO DE MÉRITOS Y OPOSICIÓN)
-              </td>
-              <td colspan="2"></td>
-            </tr>
-
-            <tr>
-              <td class="label-cell center-text">NRO. ACTA FINAL</td>
-              <td class="value-cell center-text">{{ formulario.nro_acta_final }}</td>
-              <td class="label-cell center-text">FECHA</td>
-              <td class="value-cell center-text">{{ formatearFechaVisual(formulario.fecha_acta_final) }}</td>
-            </tr>
-          </table>
-
-          <table class="doc-table compact-table">
-            <tr>
-              <th colspan="2" class="section-header">RESPONSABLES DE APROBACIÓN</th>
-            </tr>
-
-            <tr>
-              <td class="approval-box">
-                <div class="approval-title">DIRECTOR (A) O RESPONSABLE DE TALENTO HUMANO</div>
-                <div class="approval-sign-line"></div>
-                <div class="approval-field"><strong>NOMBRE:</strong> {{ formulario.nombre_director_th }}</div>
-                <div class="approval-field"><strong>PUESTO:</strong> {{ formulario.puesto_director_th }}</div>
-              </td>
-
-              <td class="approval-box">
-                <div class="approval-title">AUTORIDAD NOMINADORA O SU DELEGADO</div>
-                <div class="approval-sign-line"></div>
-                <div class="approval-field"><strong>NOMBRE:</strong> {{ formulario.nombre_autoridad }}</div>
-                <div class="approval-field"><strong>PUESTO:</strong> {{ formulario.puesto_autoridad }}</div>
-              </td>
-            </tr>
-          </table>
-
-          <div class="page-footer-note">
-            Elaborado por el Ministerio del Trabajo &nbsp;&nbsp;|&nbsp;&nbsp;
-            Fecha de actualización de formato: 2024-03-13 &nbsp;&nbsp;|&nbsp;&nbsp;
-            Versión: 01.1
+        <div class="control-grid">
+          <div class="field">
+            <label for="numero_accion">Número AP</label>
+            <input id="numero_accion" type="text" [(ngModel)]="formulario.numero_accion" placeholder="0001">
           </div>
 
+          <div class="field">
+            <label for="fecha_elaboracion">Fecha elaboración</label>
+            <input id="fecha_elaboracion" type="date" [(ngModel)]="formulario.fecha_elaboracion">
+          </div>
+
+          <div class="field">
+            <label for="ciudad">Ciudad</label>
+            <input id="ciudad" type="text" [(ngModel)]="formulario.ciudad" placeholder="Quito">
+          </div>
         </div>
       </section>
 
-      <!-- DOCUMENTO 1 - PÁGINA 2 -->
-      <section class="pdf-page-a4" *ngIf="mostrarDocumento1">
-        <div class="page-inner">
-
-          <table class="doc-table compact-table top-title-table">
-            <tr>
-              <th class="section-header">RESPONSABLES DE FIRMAS</th>
-            </tr>
-          </table>
-
-          <table class="doc-table compact-table">
-            <tr>
-              <th class="section-header">ACEPTACIÓN Y / O RECEPCIÓN DEL SERVIDOR PÚBLICO</th>
-              <th class="section-header">EN CASO DE NEGATIVA DE LA RECEPCIÓN (TESTIGO)</th>
-            </tr>
-
-            <tr>
-              <td class="firma-card">
-                <div class="firma-row">FIRMA: __________________________________________</div>
-                <div class="firma-row">NOMBRE: {{ formulario.aceptacion_servidor }}</div>
-                <div class="firma-row">FECHA: {{ formatearFechaVisual(formulario.fecha_aceptacion) }}</div>
-                <div class="firma-row">HORA: {{ formulario.hora_aceptacion }}</div>
-              </td>
-
-              <td class="firma-card">
-                <div class="firma-row">FIRMA: __________________________________________</div>
-                <div class="firma-row">NOMBRE: {{ formulario.testigo_nombre }}</div>
-                <div class="firma-row">FECHA: {{ formatearFechaVisual(formulario.testigo_fecha) }}</div>
-                <div class="firma-row reason-row">
-                  RAZÓN:
-                  {{ formulario.testigo_razon || 'En presencia del testigo se deja constancia de que la o el servidor público tiene la negativa de recibir la comunicación de registro de esta acción de personal.' }}
-                </div>
-              </td>
-            </tr>
-          </table>
-
-          <table class="doc-table compact-table">
-            <tr>
-              <th class="section-header">RESPONSABLE DE ELABORACIÓN</th>
-              <th class="section-header">RESPONSABLE DE REVISIÓN</th>
-              <th class="section-header">RESPONSABLE DE REGISTRO Y CONTROL</th>
-            </tr>
-
-            <tr>
-              <td class="mini-firma-card">
-                <div class="firma-line-mini"></div>
-                <div class="mini-data"><strong>NOMBRE:</strong> {{ formulario.elaborado_por }}</div>
-                <div class="mini-data"><strong>PUESTO:</strong> {{ formulario.puesto_elaborado }}</div>
-              </td>
-
-              <td class="mini-firma-card">
-                <div class="firma-line-mini"></div>
-                <div class="mini-data"><strong>NOMBRE:</strong> {{ formulario.revisado_por }}</div>
-                <div class="mini-data"><strong>PUESTO:</strong> {{ formulario.puesto_revisado }}</div>
-              </td>
-
-              <td class="mini-firma-card">
-                <div class="firma-line-mini"></div>
-                <div class="mini-data"><strong>NOMBRE:</strong> {{ formulario.registrado_por }}</div>
-                <div class="mini-data"><strong>PUESTO:</strong> {{ formulario.puesto_registrado }}</div>
-              </td>
-            </tr>
-          </table>
-
-          <div class="talento-humano-title">
-            ** USO EXCLUSIVO PARA TALENTO HUMANO
+      <section class="form-section">
+        <div class="section-header-line">
+          <span class="section-number">02</span>
+          <div>
+            <h4>Datos del funcionario</h4>
+            <p>Consulta por cédula o llena la información manualmente.</p>
           </div>
-
-          <table class="doc-table talento-box">
-            <tr>
-              <th class="section-header left-align">
-                REGISTRO DE NOTIFICACIÓN AL SERVIDOR PÚBLICO DE LA ACCIÓN DE PERSONAL
-              </th>
-            </tr>
-
-            <tr>
-              <td class="multiline-cell talento-content">
-                <div class="notif-row">
-                  COMUNICACIÓN ELECTRÓNICA:
-                  <span class="check-box small-check">{{ formulario.comunicacion_electronica ? 'X' : '' }}</span>
-                </div>
-
-                <div class="notif-row split-row">
-                  <span>FECHA: {{ formatearFechaVisual(formulario.fecha_notificacion) }}</span>
-                  <span>HORA: {{ formulario.hora_notificacion }}</span>
-                </div>
-
-                <div class="notif-row">
-                  ** MEDIO: {{ formulario.medio_notificacion }}
-                </div>
-
-                <div class="notif-signature">
-                  <div class="notif-line"></div>
-                  <div class="notif-caption">FIRMA DEL RESPONSABLE QUE NOTIFICÓ</div>
-                </div>
-
-                <div class="notif-row">NOMBRE: {{ formulario.notificado_por }}</div>
-                <div class="notif-row">PUESTO: {{ formulario.puesto_notificado }}</div>
-              </td>
-            </tr>
-          </table>
-
-          <div class="page-footer-note">
-            Elaborado por el Ministerio del Trabajo &nbsp;&nbsp;|&nbsp;&nbsp;
-            Fecha de actualización de formato: 2024-03-13 &nbsp;&nbsp;|&nbsp;&nbsp;
-            Versión: 01.1
-          </div>
-
         </div>
-      </section>
 
-      <!-- DOCUMENTO 2 -->
-      <section class="pdf-page-a4" *ngIf="mostrarDocumento2">
-        <div class="page-inner">
-
-         <table class="doc-header-table doc2-header">
-  <tr>
-    <td class="doc2-left-brand logo-cell">
-      <div class="logo-box">
-        <img src="assets/logo.png" alt="Logo INAMHI" class="logo-img">
-      </div>
-    </td>
-
-    <td class="doc2-center-brand">INAMHI</td>
-
-    <td class="doc2-right-brand">
-      {{ formulario.numero_accion || '' }}
-    </td>
-  </tr>
-
-  <tr>
-    <td colspan="3" class="doc2-title-row">
-      SOLICITUD DE VACACIONES, LICENCIAS Y PERMISOS
-    </td>
-  </tr>
-</table>
-
-          <table class="doc-table compact-table doc2-table">
-            <tr>
-              <th colspan="4" class="section-header">INFORMACIÓN GENERAL</th>
-            </tr>
-
-            <tr>
-              <td class="label-cell">FECHA:</td>
-              <td class="value-cell">{{ formatearFechaVisual(formulario.fecha_solicitud) }}</td>
-              <td class="label-cell">CÉDULA:</td>
-              <td class="value-cell">{{ formulario.cedula }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell">CIUDAD:</td>
-              <td colspan="3" class="value-cell">{{ formulario.ciudad }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell">APELLIDOS:</td>
-              <td colspan="3" class="value-cell">{{ formulario.apellidos }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell">NOMBRES:</td>
-              <td colspan="3" class="value-cell">{{ formulario.nombres }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell">RÉGIMEN LABORAL:</td>
-              <td colspan="3" class="value-cell">{{ formulario.regimen_laboral }}</td>
-            </tr>
-          </table>
-
-          <table class="doc-table compact-table doc2-table">
-            <tr>
-              <th colspan="4" class="section-header">DATOS DEL PERMISO</th>
-            </tr>
-
-            <tr>
-              <td class="label-cell">TIPO PERMISO:</td>
-              <td class="value-cell">{{ formulario.tipo_permiso }}</td>
-              <td class="label-cell">FECHA TERMINACIÓN:</td>
-              <td class="value-cell">{{ formatearFechaHoraVisual(formulario.fecha_terminacion) }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell">FECHA INICIO:</td>
-              <td colspan="3" class="value-cell">{{ formatearFechaHoraVisual(formulario.fecha_inicio) }}</td>
-            </tr>
-
-            <tr>
-              <td class="label-cell">OBSERVACIÓN:</td>
-              <td colspan="3" class="value-cell">{{ formulario.observacion }}</td>
-            </tr>
-          </table>
-
-          <div class="doc2-signatures-area">
-            <div class="doc2-sign-box">
-              <div class="doc2-sign-title">Solicitado por:</div>
-              <div class="doc2-sign-line"></div>
-              <div class="doc2-sign-name">{{ formulario.solicitado_por }}</div>
-              <div class="doc2-sign-role">{{ formulario.puesto_solicitante }}</div>
-            </div>
-
-            <div class="doc2-sign-box left-box">
-              <div class="doc2-sign-title">Autorizado Por:</div>
-              <div class="doc2-sign-line"></div>
-              <div class="doc2-sign-name">{{ formulario.autorizado_por }}</div>
-              <div class="doc2-sign-role">{{ formulario.puesto_autorizado }}</div>
+        <div class="control-grid">
+          <div class="field field-span-2">
+            <label for="cedula">Cédula *</label>
+            <div class="cedula-box">
+              <input id="cedula" type="text" [(ngModel)]="formulario.cedula" maxlength="10" inputmode="numeric" placeholder="Ingrese cédula">
+              <button type="button" class="btn btn-primary btn-consultar" (click)="consultarCedula()" [disabled]="consultando">
+                <i class="bi bi-search me-1"></i>
+                {{ consultando ? 'Consultando...' : 'Consultar' }}
+              </button>
             </div>
           </div>
-<br>
-<br>
-<br>
 
-<br>
-<br>
-<br>
-<br>
-<br>
-<br>
+          <div class="field">
+            <label for="apellidos">Apellidos</label>
+            <input id="apellidos" type="text" [(ngModel)]="formulario.apellidos">
+          </div>
 
-<br>
+          <div class="field">
+            <label for="nombres">Nombres</label>
+            <input id="nombres" type="text" [(ngModel)]="formulario.nombres">
+          </div>
 
+          <div class="field">
+            <label for="regimen_laboral">Régimen laboral</label>
+            <input id="regimen_laboral" type="text" [(ngModel)]="formulario.regimen_laboral">
+          </div>
 
-
-
-
-
-          <table class="footer-table doc2-footer">
-            <tr>
-              <td><strong>No. Registros:</strong> {{ formulario.no_registros }}</td>
-              <td class="center-text">Pags 1</td>
-              <td class="right-text">{{ formatearFechaVisual(formulario.fecha_impresion) }}</td>
-            </tr>
-
-            <tr>
-              <td colspan="3"><strong>Impreso por:</strong> {{ formulario.impreso_por }}</td>
-            </tr>
-          </table>
-
+          <div class="field">
+            <label for="grupo_ocupacional">Grupo ocupacional</label>
+            <select id="grupo_ocupacional" [(ngModel)]="formulario.grupo_ocupacional">
+              <option value="">Seleccione...</option>
+              <option *ngFor="let g of gruposOcupacionales" [value]="g">{{ g }}</option>
+            </select>
+          </div>
         </div>
       </section>
 
-    </div>
-  </div>
+      <section class="form-section">
+        <div class="section-header-line">
+          <span class="section-number">03</span>
+          <div>
+            <h4>Acción personal y vigencia</h4>
+            <p>Define el tipo de acción y el periodo de aplicación.</p>
+          </div>
+        </div>
 
+        <div class="control-grid">
+          <div class="field">
+            <label for="accion_personal">Tipo de acción</label>
+            <select id="accion_personal" [(ngModel)]="formulario.accion_personal">
+              <option *ngFor="let a of tiposAccionPersonal" [value]="a">{{ a }}</option>
+            </select>
+          </div>
+
+          <div class="field" [class.field-error]="!formulario.desde">
+            <label for="desde">Fecha rige desde *</label>
+            <input id="desde" type="date" [(ngModel)]="formulario.desde">
+            <small>Se reflejará en DESDE del Excel.</small>
+          </div>
+
+          <div class="field">
+            <label for="hasta">Fecha rige hasta</label>
+            <input id="hasta" type="date" [(ngModel)]="formulario.hasta">
+            <small>Se reflejará en HASTA del Excel.</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="section-header-line">
+          <span class="section-number">04</span>
+          <div>
+            <h4>Situación actual y propuesta</h4>
+            <p>Compare la información actual con la información propuesta.</p>
+          </div>
+        </div>
+
+        <div class="situacion-table" role="table" aria-label="Situación actual y propuesta">
+          <div class="sit-head" role="columnheader">Campo</div>
+          <div class="sit-head" role="columnheader">Actual</div>
+          <div class="sit-head" role="columnheader">Propuesta</div>
+
+          <div class="sit-label">Proceso institucional</div>
+          <select [(ngModel)]="formulario.proceso_institucional_actual">
+            <option value="">Seleccione...</option>
+            <option value="GOBERNANTE">GOBERNANTE</option>
+            <option value="SUSTANTIVO">SUSTANTIVO</option>
+            <option value="ADJETIVO">ADJETIVO</option>
+          </select>
+          <select [(ngModel)]="formulario.proceso_institucional_propuesta">
+            <option value="">Seleccione...</option>
+            <option value="GOBERNANTE">GOBERNANTE</option>
+            <option value="SUSTANTIVO">SUSTANTIVO</option>
+            <option value="ADJETIVO">ADJETIVO</option>
+          </select>
+
+          <div class="sit-label">Nivel de gestión</div>
+          <input type="text" [(ngModel)]="formulario.nivel_gestion_actual" placeholder="Ej: DIRECCIÓN EJECUTIVA">
+          <input type="text" [(ngModel)]="formulario.nivel_gestion_propuesta" placeholder="Ej: DIRECCIÓN EJECUTIVA">
+
+          <div class="sit-label">Unidad administrativa</div>
+          <select [(ngModel)]="formulario.unidad" (change)="onUnidadChange()">
+            <option value="">Seleccione...</option>
+            <option *ngFor="let u of unidadesInstitucionales" [value]="u.nombre">{{ u.nombre }}</option>
+          </select>
+          <select [(ngModel)]="formulario.unidad_propuesta">
+            <option value="">Seleccione...</option>
+            <option *ngFor="let u of unidadesInstitucionales" [value]="u.nombre">{{ u.nombre }}</option>
+          </select>
+
+          <div class="sit-label">Lugar de trabajo</div>
+          <input type="text" [(ngModel)]="formulario.lugar_trabajo_actual">
+          <input type="text" [(ngModel)]="formulario.lugar_trabajo_propuesta">
+
+          <div class="sit-label">Denominación del puesto</div>
+          <input type="text" [(ngModel)]="formulario.denominacion_actual">
+          <input type="text" [(ngModel)]="formulario.denominacion_propuesta">
+
+          <div class="sit-label">Partida individual</div>
+          <input type="text" [(ngModel)]="formulario.partida_actual" placeholder="Código partida">
+          <input type="text" [(ngModel)]="formulario.partida_propuesta" placeholder="Código partida">
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="section-header-line">
+          <span class="section-number">05</span>
+          <div>
+            <h4>Motivación / base legal</h4>
+            <p>Sustento normativo o administrativo del movimiento.</p>
+          </div>
+        </div>
+
+        <div class="control-grid">
+          <div class="field field-full">
+            <label for="motivo_legal">Motivación / base legal</label>
+            <textarea id="motivo_legal" [(ngModel)]="formulario.motivo_legal" rows="6" placeholder="Ingrese la motivación o base legal"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="section-header-line">
+          <span class="section-number">06</span>
+          <div>
+            <h4>Responsables de aprobación</h4>
+            <p>Autoridades responsables de validar el documento.</p>
+          </div>
+        </div>
+
+        <div class="control-grid">
+          <div class="field">
+            <label for="nombre_director_th">Director(a) TH — Nombre</label>
+            <select
+              id="nombre_director_th"
+              [(ngModel)]="formulario.nombre_director_th"
+              (ngModelChange)="seleccionarResponsable('nombre_director_th', 'puesto_director_th', $event)"
+            >
+              <option value="">Seleccione responsable...</option>
+              @for (autoridad of listaAutoridades; track autoridad.nombres) {
+                <option [value]="autoridad.nombres">{{ autoridad.nombres }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="puesto_director_th">Director(a) TH — Puesto</label>
+            <input
+              id="puesto_director_th"
+              type="text"
+              [(ngModel)]="formulario.puesto_director_th"
+              readonly
+              placeholder="Se carga automáticamente"
+            >
+          </div>
+
+          <div class="field">
+            <label for="nombre_autoridad">Autoridad nominadora — Nombre</label>
+            <select
+              id="nombre_autoridad"
+              [(ngModel)]="formulario.nombre_autoridad"
+              (ngModelChange)="seleccionarResponsable('nombre_autoridad', 'puesto_autoridad', $event)"
+            >
+              <option value="">Seleccione autoridad...</option>
+              <option *ngFor="let persona of estructuraPersonal" [value]="persona.nombres">
+                {{ persona.nombres }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="puesto_autoridad">Autoridad nominadora — Puesto</label>
+            <input
+              id="puesto_autoridad"
+              type="text"
+              [(ngModel)]="formulario.puesto_autoridad"
+              readonly
+              placeholder="Se carga automáticamente"
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="section-header-line">
+          <span class="section-number">07</span>
+          <div>
+            <h4>Elaboración, revisión y registro</h4>
+            <p>Datos de trazabilidad administrativa del documento.</p>
+          </div>
+        </div>
+
+        <div class="control-grid">
+          <div class="field">
+            <label for="elaborado_por">Elaborado por</label>
+            <select
+              id="elaborado_por"
+              [(ngModel)]="formulario.elaborado_por"
+              (ngModelChange)="seleccionarResponsable('elaborado_por', 'puesto_elaborado', $event)"
+            >
+              <option value="">Seleccione responsable...</option>
+              <option *ngFor="let persona of estructuraPersonal" [value]="persona.nombres">
+                {{ persona.nombres }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="puesto_elaborado">Puesto elaborado</label>
+            <input
+              id="puesto_elaborado"
+              type="text"
+              [(ngModel)]="formulario.puesto_elaborado"
+              readonly
+              placeholder="Se carga automáticamente"
+            >
+          </div>
+
+          <div class="field">
+            <label for="revisado_por">Revisado por</label>
+            <select
+              id="revisado_por"
+              [(ngModel)]="formulario.revisado_por"
+              (ngModelChange)="seleccionarResponsable('revisado_por', 'puesto_revisado', $event)"
+            >
+              <option value="">Seleccione responsable...</option>
+              <option *ngFor="let persona of estructuraPersonal" [value]="persona.nombres">
+                {{ persona.nombres }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="puesto_revisado">Puesto revisado</label>
+            <input
+              id="puesto_revisado"
+              type="text"
+              [(ngModel)]="formulario.puesto_revisado"
+              readonly
+              placeholder="Se carga automáticamente"
+            >
+          </div>
+
+          <div class="field">
+            <label for="registrado_por">Registrado por</label>
+            <select
+              id="registrado_por"
+              [(ngModel)]="formulario.registrado_por"
+              (ngModelChange)="seleccionarResponsable('registrado_por', 'puesto_registrado', $event)"
+            >
+              <option value="">Seleccione responsable...</option>
+              <option *ngFor="let persona of estructuraPersonal" [value]="persona.nombres">
+                {{ persona.nombres }}
+              </option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="puesto_registrado">Puesto registrado</label>
+            <input
+              id="puesto_registrado"
+              type="text"
+              [(ngModel)]="formulario.puesto_registrado"
+              readonly
+              placeholder="Se carga automáticamente"
+            >
+          </div>
+        </div>
+      </section>
+
+      
+    </section>
+
+    <aside class="preview-card" *ngIf="mostrarPrevia" aria-label="Vista previa de la acción de personal">
+      <div class="preview-header">
+        <div>
+          <span class="eyebrow">Vista previa</span>
+          <h3>Acción de Personal</h3>
+        </div>
+        <button type="button" class="btn-icon" (click)="mostrarPrevia = false" aria-label="Cerrar vista previa">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="preview-body">
+        <section class="preview-section">
+          <h4>Encabezado</h4>
+          <div class="preview-grid">
+            <div class="preview-item"><span>N° AP</span><strong>{{ formulario.numero_accion || '—' }}</strong></div>
+            <div class="preview-item"><span>Fecha elaboración</span><strong>{{ formatearFechaVisual(formulario.fecha_elaboracion) || '—' }}</strong></div>
+            <div class="preview-item"><span>Ciudad</span><strong>{{ formulario.ciudad || '—' }}</strong></div>
+          </div>
+        </section>
+
+        <section class="preview-section">
+          <h4>Funcionario</h4>
+          <div class="preview-grid">
+            <div class="preview-item"><span>Apellidos</span><strong>{{ formulario.apellidos || '—' }}</strong></div>
+            <div class="preview-item"><span>Nombres</span><strong>{{ formulario.nombres || '—' }}</strong></div>
+            <div class="preview-item"><span>Cédula</span><strong>{{ formulario.cedula || '—' }}</strong></div>
+            <div class="preview-item"><span>Grupo ocupacional</span><strong>{{ formulario.grupo_ocupacional || '—' }}</strong></div>
+          </div>
+        </section>
+
+        <section class="preview-section">
+          <h4>Acción y vigencia</h4>
+          <div class="preview-grid">
+            <div class="preview-item accent"><span>Tipo de acción</span><strong>{{ formulario.accion_personal || '—' }}</strong></div>
+            <div class="preview-item success"><span>Rige desde</span><strong>{{ formatearFechaVisual(formulario.desde) || '—' }}</strong></div>
+            <div class="preview-item success"><span>Rige hasta</span><strong>{{ formatearFechaVisual(formulario.hasta) || '—' }}</strong></div>
+          </div>
+        </section>
+
+        <section class="preview-section">
+          <h4>Situación</h4>
+          <div class="preview-situation">
+            <div class="preview-sit-head">Campo</div>
+            <div class="preview-sit-head">Actual</div>
+            <div class="preview-sit-head">Propuesta</div>
+
+            <div class="preview-sit-label">Proceso institucional</div>
+            <div>{{ formulario.proceso_institucional_actual || '—' }}</div>
+            <div>{{ formulario.proceso_institucional_propuesta || '—' }}</div>
+
+            <div class="preview-sit-label">Nivel de gestión</div>
+            <div>{{ formulario.nivel_gestion_actual || '—' }}</div>
+            <div>{{ formulario.nivel_gestion_propuesta || '—' }}</div>
+
+            <div class="preview-sit-label">Unidad administrativa</div>
+            <div>{{ formulario.unidad || '—' }}</div>
+            <div>{{ formulario.unidad_propuesta || formulario.unidad || '—' }}</div>
+
+            <div class="preview-sit-label">Lugar de trabajo</div>
+            <div>{{ formulario.lugar_trabajo_actual || '—' }}</div>
+            <div>{{ formulario.lugar_trabajo_propuesta || '—' }}</div>
+
+            <div class="preview-sit-label">Denominación</div>
+            <div>{{ formulario.denominacion_actual || '—' }}</div>
+            <div>{{ formulario.denominacion_propuesta || '—' }}</div>
+          </div>
+        </section>
+
+        <section class="preview-section">
+          <h4>Responsables</h4>
+          <div class="preview-grid">
+            <div class="preview-item"><span>Elaborado por</span><strong>{{ formulario.elaborado_por || '—' }}</strong></div>
+            <div class="preview-item"><span>Revisado por</span><strong>{{ formulario.revisado_por || '—' }}</strong></div>
+            <div class="preview-item"><span>Registrado por</span><strong>{{ formulario.registrado_por || '—' }}</strong></div>
+            <div class="preview-item"><span>Director(a) TH</span><strong>{{ formulario.nombre_director_th || '—' }}</strong></div>
+            <div class="preview-item"><span>Autoridad nominadora</span><strong>{{ formulario.nombre_autoridad || '—' }}</strong></div>
+          </div>
+        </section>
+
+        <section class="preview-section">
+          <h4>Motivación / base legal</h4>
+          <div class="preview-text">{{ formulario.motivo_legal || '—' }}</div>
+        </section>
+      </div>
+
+      <div class="preview-footer">
+        <button type="button" class="btn btn-light" (click)="mostrarPrevia = false">
+          <i class="bi bi-pencil me-2"></i>
+          Volver a editar
+        </button>
+
+        <button type="button" class="btn btn-success" (click)="ejecutarDescargaExcel()" [disabled]="generandoExcel">
+          <i class="bi bi-file-earmark-excel-fill me-2"></i>
+          {{ generandoExcel ? 'Generando...' : 'Confirmar y descargar Excel' }}
+        </button>
+      </div>
+    </aside>
+  </main>
 </div>

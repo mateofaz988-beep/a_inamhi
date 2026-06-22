@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../core/services/auth';
+import { PersonalService } from '../../core/services/personal';
+import { Funcionario } from '../../core/models/interfaces';
 
 @Component({
   selector: 'app-nuevo-funcionario',
@@ -14,8 +15,6 @@ import { AuthService } from '../../core/services/auth';
   styleUrls: ['./nuevo-funcionario.scss']
 })
 export class NuevoFuncionarioComponent {
-
-  private readonly API_URL = 'http://localhost:5000/api/personal';
 
   guardando = false;
 
@@ -39,14 +38,24 @@ export class NuevoFuncionarioComponent {
   ];
 
   unidades: string[] = [
-    'Dirección de Pronóstico',
-    'Departamento de Estudios Climáticos',
-    'Unidad de Talento Humano',
-    'Dirección Administrativa',
-    'Dirección Financiera',
-    'Tecnologías de la Información',
-    'Secretaría General',
-    'Planificación'
+    'DIRECCIÓN EJECUTIVA',
+    'DIRECCIÓN DE ASESORÍA JURÍDICA',
+    'DIRECCIÓN DE PLANIFICACIÓN',
+    'DIRECCIÓN DE COMUNICACIÓN SOCIAL',
+    'DIRECCIÓN DE ADMINISTRACIÓN DE RECURSOS HUMANOS',
+    'DIRECCIÓN ADMINISTRATIVA FINANCIERA',
+    'DIRECCIÓN DE LA RED NACIONAL DE OBSERVACIÓN HIDROMETEOROLÓGICA',
+    'DIRECCIÓN DE INFORMACIÓN HIDROMETEOROLÓGICA',
+    'DIRECCIÓN DE PRONÓSTICOS Y ALERTAS HIDROMETEOROLÓGICAS',
+    'DIRECCIÓN DE ESTUDIOS, INVESTIGACIÓN Y DESARROLLO HIDROMETEOROLÓGICO',
+    'DIRECCIÓN DE LABORATORIO DE AGUAS Y SEDIMENTOS',
+    'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA ESMERALDAS - MIRA',
+    'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA MORONA SANTIAGO',
+    'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA NAPO',
+    'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA JUBONES - PUYANGO',
+    'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA PASTAZA',
+    'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA GUAYAS - GALÁPAGOS',
+    'DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA MANABÍ'
   ];
 
   opcionesVulnerable: string[] = ['Sí', 'No'];
@@ -81,23 +90,23 @@ export class NuevoFuncionarioComponent {
 
   // Relación inteligente cargo -> unidad
   cargoUnidadMap: Record<string, string> = {
-    'Analista Meteorológico': 'Dirección de Pronóstico',
-    'Analista Administrativo': 'Dirección Administrativa',
-    'Asistente Administrativo': 'Dirección Administrativa',
-    'Técnico en Climatología': 'Departamento de Estudios Climáticos',
-    'Especialista en Talento Humano': 'Unidad de Talento Humano',
-    'Director': 'Planificación',
-    'Auxiliar de Servicios': 'Secretaría General',
-    'Coordinador Institucional': 'Planificación'
+    'Analista Meteorológico': 'DIRECCIÓN DE PRONÓSTICOS Y ALERTAS HIDROMETEOROLÓGICAS',
+    'Analista Administrativo': 'DIRECCIÓN ADMINISTRATIVA FINANCIERA',
+    'Asistente Administrativo': 'DIRECCIÓN ADMINISTRATIVA FINANCIERA',
+    'Técnico en Climatología': 'DIRECCIÓN DE ESTUDIOS, INVESTIGACIÓN Y DESARROLLO HIDROMETEOROLÓGICO',
+    'Especialista en Talento Humano': 'DIRECCIÓN DE ADMINISTRACIÓN DE RECURSOS HUMANOS',
+    'Director': 'DIRECCIÓN EJECUTIVA',
+    'Auxiliar de Servicios': 'DIRECCIÓN ADMINISTRATIVA FINANCIERA',
+    'Coordinador Institucional': 'DIRECCIÓN DE PLANIFICACIÓN'
   };
 
-  nuevo: any = {
+  nuevo: Partial<Funcionario> & { porcentaje_disc: number | string } = {
     nro: '',
     cedula: '',
     nombres: '',
     modalidad: '',
     cargo: '',
-    rmu: '',
+    rmu: 0,
     unidad: '',
     fecha_ingreso: '',
     fecha_nacimiento: '',
@@ -115,16 +124,10 @@ export class NuevoFuncionarioComponent {
   };
 
   constructor(
-    private http: HttpClient,
     private router: Router,
+    private personalService: PersonalService,
     public authService: AuthService
   ) {}
-
-  getHeaders() {
-    return new HttpHeaders({
-      Authorization: this.authService.getToken()
-    });
-  }
 
   volver() {
     this.router.navigate(['/admin/dashboard']);
@@ -161,7 +164,7 @@ export class NuevoFuncionarioComponent {
   // AUTOCOMPLETADO POR CARGO
   // =========================
   onCargoChange() {
-    const unidadSugerida = this.cargoUnidadMap[this.nuevo.cargo];
+    const unidadSugerida = this.cargoUnidadMap[this.nuevo.cargo || ''];
     if (unidadSugerida) {
       this.nuevo.unidad = unidadSugerida;
     }
@@ -256,13 +259,13 @@ export class NuevoFuncionarioComponent {
 
     this.guardando = true;
 
-    const payload = {
+    const payload: Partial<Funcionario> = {
       nro: this.nuevo.nro?.toString().trim(),
       cedula: this.nuevo.cedula?.toString().trim(),
       nombres: this.nuevo.nombres?.toString().trim(),
       modalidad: this.nuevo.modalidad?.toString().trim(),
       cargo: this.nuevo.cargo?.toString().trim(),
-      rmu: this.nuevo.rmu !== '' ? Number(this.nuevo.rmu) : 0,
+      rmu: this.nuevo.rmu !== undefined && this.nuevo.rmu !== '' ? Number(this.nuevo.rmu) : 0,
       unidad: this.nuevo.unidad?.toString().trim(),
       fecha_ingreso: this.nuevo.fecha_ingreso || null,
       fecha_nacimiento: this.nuevo.fecha_nacimiento || null,
@@ -280,11 +283,7 @@ export class NuevoFuncionarioComponent {
       observaciones: this.nuevo.observaciones?.toString().trim() || ''
     };
 
-    console.log('Payload enviado:', payload);
-
-    this.http.post(this.API_URL, payload, {
-      headers: this.getHeaders()
-    }).subscribe({
+    this.personalService.create(payload).subscribe({
       next: () => {
         this.guardando = false;
         Swal.fire({
@@ -301,9 +300,6 @@ export class NuevoFuncionarioComponent {
       },
       error: (err) => {
         this.guardando = false;
-        console.error('Error al guardar funcionario:', err);
-        console.error('Detalle backend:', err?.error);
-
         Swal.fire(
           'Error',
           err?.error?.error || 'No se pudo guardar el funcionario',
@@ -320,7 +316,7 @@ export class NuevoFuncionarioComponent {
       nombres: '',
       modalidad: '',
       cargo: '',
-      rmu: '',
+      rmu: 0,
       unidad: '',
       fecha_ingreso: '',
       fecha_nacimiento: '',

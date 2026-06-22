@@ -1,0 +1,293 @@
+<div class="pe-container">
+
+  <!-- ── HEADER ── -->
+  <header class="pe-header">
+    <div class="header-info">
+      <span class="tag">
+        <i class="bi bi-people-fill"></i>
+        Estructura organizacional
+      </span>
+      <h2>Estructura de Personal</h2>
+      <p>Gestión del personal que aparece como responsable en los documentos institucionales</p>
+    </div>
+    <button class="btn-back" (click)="volver()">
+      <i class="bi bi-arrow-left"></i>
+      Volver
+    </button>
+  </header>
+
+  <!-- ── STATS ── -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--blue">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ registros.length }}</span>
+        <span class="stat-label">Total registros</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--purple">
+        <i class="bi bi-diagram-3-fill"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ unidadesDistintas }}</span>
+        <span class="stat-label">Unidades distintas</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon stat-icon--teal">
+        <i class="bi bi-file-earmark-person-fill"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ registros.length }}</span>
+        <span class="stat-label">En documentos activos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BODY GRID ── -->
+  <div class="body-grid">
+
+    <!-- FORMULARIO -->
+    <div class="card form-card">
+      <div class="card-head">
+        <div class="card-head-icon">
+          <i class="bi bi-person-plus-fill"></i>
+        </div>
+        <div>
+          <h5>Nuevo Registro</h5>
+          <p>Agregar persona a la estructura</p>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="form-grid">
+
+          <div class="field field--full">
+            <label>Nombres completos <span class="req">*</span></label>
+            <div class="input-wrap">
+              <i class="bi bi-person-fill input-icon"></i>
+              <input type="text" [(ngModel)]="form.nombres" class="form-input"
+                     placeholder="Ej: PÉREZ MARTÍNEZ JUAN CARLOS">
+            </div>
+            <span class="hint">Apellidos y nombres en orden</span>
+          </div>
+
+          <div class="field field--full">
+            <label>Denominación del puesto <span class="req">*</span></label>
+            <div class="input-wrap">
+              <i class="bi bi-briefcase-fill input-icon"></i>
+              <input type="text" [(ngModel)]="form.denominacion_puesto" class="form-input"
+                     placeholder="Ej: ANALISTA DE TALENTO HUMANO 1">
+            </div>
+            <span class="hint">Cargo oficial según la estructura</span>
+          </div>
+
+          <div class="field field--full">
+            <label>Unidad orgánica</label>
+            <div class="input-wrap">
+              <i class="bi bi-diagram-3-fill input-icon"></i>
+              <input type="text" [(ngModel)]="form.unidad_organica" class="form-input"
+                     placeholder="Ej: DIRECCIÓN DE ADMINISTRACION DE RECURSOS HUMANOS">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Provincia</label>
+            <div class="input-wrap">
+              <i class="bi bi-geo-alt-fill input-icon"></i>
+              <input type="text" [(ngModel)]="form.provincia" class="form-input">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Cantón</label>
+            <div class="input-wrap">
+              <i class="bi bi-pin-map-fill input-icon"></i>
+              <input type="text" [(ngModel)]="form.canton" class="form-input">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn btn-ghost" (click)="limpiar()" [disabled]="guardando">
+          <i class="bi bi-eraser"></i> Limpiar
+        </button>
+        <button class="btn btn-primary" (click)="guardar()" [disabled]="guardando">
+          <i class="bi bi-person-plus-fill"></i>
+          {{ guardando ? 'Guardando...' : 'Agregar Registro' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- TIPS -->
+    <div class="card tips-card">
+      <div class="tips-head">
+        <i class="bi bi-lightbulb-fill"></i>
+        Información
+      </div>
+      <div class="tips-body">
+
+        <div class="tip">
+          <div class="tip-icon tip-icon--blue">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <div>
+            <strong>¿Qué es la estructura de personal?</strong>
+            <p>Es el listado de personas que pueden aparecer como responsables en los campos de elaborado por, revisado por y registrado por en los documentos.</p>
+          </div>
+        </div>
+
+        <div class="tip">
+          <div class="tip-icon tip-icon--green">
+            <i class="bi bi-arrow-repeat"></i>
+          </div>
+          <div>
+            <strong>Dinámica</strong>
+            <p>Cuando ingresa o sale personal de la unidad, actualice este listado para que los documentos reflejen la estructura vigente.</p>
+          </div>
+        </div>
+
+        <div class="tip">
+          <div class="tip-icon tip-icon--amber">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+          <div>
+            <strong>Al eliminar</strong>
+            <p>La persona dejará de aparecer en los selectores de responsables en nuevos documentos.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── TABLA ── -->
+  <div class="card table-card">
+    <div class="table-head">
+      <div class="table-head-left">
+        <div class="table-head-icon">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div>
+          <h5>Personal Registrado</h5>
+          <p>{{ registros.length }} {{ registros.length === 1 ? 'persona' : 'personas' }} en la estructura</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="pe-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombres</th>
+            <th>Denominación del Puesto</th>
+            <th>Unidad Orgánica</th>
+            <th>Provincia / Cantón</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          @if (cargando) {
+            <tr>
+              <td colspan="6" class="state-cell">
+                <i class="bi bi-arrow-repeat spin"></i>
+                Cargando estructura de personal...
+              </td>
+            </tr>
+          }
+
+          @if (!cargando) {
+            @for (r of registros; track r.id; let i = $index) {
+              <tr [class.row-editing]="editandoId === r.id">
+
+                <td class="td-id">{{ i + 1 }}</td>
+
+                <td class="td-name">
+                  @if (editandoId !== r.id) {
+                    <div class="name-cell">
+                      <div class="name-avatar">{{ r.nombres.charAt(0) }}</div>
+                      {{ r.nombres }}
+                    </div>
+                  } @else {
+                    <input type="text" [(ngModel)]="formEditar.nombres" class="cell-input">
+                  }
+                </td>
+
+                <td class="td-puesto">
+                  @if (editandoId !== r.id) {
+                    {{ r.denominacion_puesto }}
+                  } @else {
+                    <input type="text" [(ngModel)]="formEditar.denominacion_puesto" class="cell-input">
+                  }
+                </td>
+
+                <td class="td-unidad">
+                  @if (editandoId !== r.id) {
+                    {{ r.unidad_organica || '—' }}
+                  } @else {
+                    <input type="text" [(ngModel)]="formEditar.unidad_organica" class="cell-input">
+                  }
+                </td>
+
+                <td class="td-geo">
+                  @if (editandoId !== r.id) {
+                    <span class="geo-pill">{{ r.provincia }} · {{ r.canton }}</span>
+                  } @else {
+                    <div class="geo-inputs">
+                      <input type="text" [(ngModel)]="formEditar.provincia" class="cell-input" placeholder="Provincia">
+                      <input type="text" [(ngModel)]="formEditar.canton"    class="cell-input" placeholder="Cantón">
+                    </div>
+                  }
+                </td>
+
+                <td class="td-actions">
+                  @if (editandoId !== r.id) {
+                    <div class="row-actions">
+                      <button class="btn-row btn-row--edit" (click)="iniciarEdicion(r)">
+                        <i class="bi bi-pencil-square"></i> Editar
+                      </button>
+                      <button class="btn-row btn-row--delete" (click)="eliminar(r)"
+                              [disabled]="eliminandoId === r.id">
+                        <i class="bi bi-trash-fill"></i>
+                        {{ eliminandoId === r.id ? '...' : 'Eliminar' }}
+                      </button>
+                    </div>
+                  } @else {
+                    <div class="row-actions">
+                      <button class="btn-row btn-row--save" (click)="guardarEdicion(r)">
+                        <i class="bi bi-check-lg"></i> Guardar
+                      </button>
+                      <button class="btn-row btn-row--cancel" (click)="cancelarEdicion()">
+                        <i class="bi bi-x-lg"></i> Cancelar
+                      </button>
+                    </div>
+                  }
+                </td>
+
+              </tr>
+            }
+
+            @if (registros.length === 0) {
+              <tr>
+                <td colspan="6" class="state-cell">
+                  <i class="bi bi-people state-empty-icon"></i>
+                  <span>No hay registros en la estructura de personal</span>
+                </td>
+              </tr>
+            }
+          }
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

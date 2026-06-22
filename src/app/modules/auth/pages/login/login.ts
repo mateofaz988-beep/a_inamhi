@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from '../../../../core/services/auth'; // Verifica esta ruta
+import { AuthService } from '../../../../core/services/auth';
 
 @Component({
   selector: 'app-login',
@@ -8,16 +8,68 @@ import { AuthService } from '../../../../core/services/auth'; // Verifica esta r
   styleUrls: ['./login.scss'],
   standalone: false
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   username = '';
   password = '';
 
-  constructor(private router: Router, private authService: AuthService) {}
+  mostrarPassword = false;
+  mayusculasActivas = false;
+  recordarme = false;
+  cargando = false;
 
-  onLogin() {
-    this.authService.login({ user: this.username, pass: this.password }).subscribe({
+  usuarioError = false;
+  passwordError = false;
+  mensajeError = '';
+
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit(): void {
+    const usuarioGuardado = localStorage.getItem('login_username');
+
+    if (usuarioGuardado) {
+      this.username = usuarioGuardado;
+      this.recordarme = true;
+    }
+  }
+
+  detectarMayusculas(event: KeyboardEvent): void {
+    this.mayusculasActivas = event.getModifierState?.('CapsLock') ?? false;
+  }
+
+  limpiarErrores(): void {
+    this.usuarioError = false;
+    this.passwordError = false;
+    this.mensajeError = '';
+  }
+
+  onLogin(): void {
+    this.mensajeError = '';
+    this.usuarioError = !this.username.trim();
+    this.passwordError = !this.password.trim();
+
+    if (this.usuarioError || this.passwordError) {
+      this.mensajeError = 'Ingrese usuario y contraseña.';
+      return;
+    }
+
+    this.cargando = true;
+
+    this.authService.login({
+      user: this.username.trim(),
+      pass: this.password
+    }).subscribe({
       next: (res) => {
-        // Redirección basada en el rol de la base de datos
+        this.cargando = false;
+
+        if (this.recordarme) {
+          localStorage.setItem('login_username', this.username.trim());
+        } else {
+          localStorage.removeItem('login_username');
+        }
+
         if (res.role === 'admin') {
           this.router.navigate(['/admin/dashboard']);
         } else {
@@ -25,8 +77,9 @@ export class LoginComponent {
         }
       },
       error: (err) => {
+        this.cargando = false;
         console.error('Error en el acceso:', err);
-        alert('Usuario o contraseña no válidos');
+        this.mensajeError = 'Usuario o contraseña no válidos.';
       }
     });
   }

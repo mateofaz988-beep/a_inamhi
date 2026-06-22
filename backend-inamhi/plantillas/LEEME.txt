@@ -1,0 +1,66 @@
+MAPA DE CELDAS — PLANTILLA ACCIÓN DE PERSONAL (hoja: ap)
+==========================================================
+
+ENCABEZADO
+  M3        → Número de AP (ej: AP-RH-2026-0001)
+  K5        → Fecha de elaboración (YYYY-MM-DD)
+
+FUNCIONARIO
+  A6        → Apellidos  (rango fusionado A6:H7)
+  I6        → Nombres    (rango fusionado I6:P7)
+  E11       → Cédula     (rango fusionado E11:H11)
+  I11       → Rige desde (rango fusionado I11:L11)
+  M11       → Rige hasta (rango fusionado M11:P11)
+
+TIPO DE ACCIÓN (se escribe X en la celda)
+  A14 → Ingreso              D14 → Traspaso             I14 → Incremento RMU        L14 → Revisión Clas. Puesto
+  A15 → Reingreso            D15 → Cambio Administrativo I15 → Subrogación           L15 → Otro
+  A16 → Restitución          D16 → Intercambio Voluntario I16 → Encargo
+  A17 → Reintegro            D17 → Licencia             I17 → Cesación de Funciones
+  A18 → Ascenso              D18 → Comisión de Servicios I18 → Destitución
+  A19 → Traslado             D19 → Sanciones            I19 → Vacaciones
+
+MOTIVACIÓN / BASE LEGAL
+  A24       → Texto de motivación (rango fusionado A24:O24)
+
+SITUACIÓN ACTUAL
+  B28       → Proceso Institucional Actual
+  B30       → Nivel de Gestión Actual
+  B32       → Unidad Administrativa Actual
+  B34       → Lugar de Trabajo Actual
+  B36       → Denominación del Puesto Actual
+  B38       → Grupo Ocupacional Actual
+  B40       → Grado Actual          (fórmula VLOOKUP — se calcula sola)
+  B42       → Remuneración Actual   (fórmula VLOOKUP — se calcula sola)
+  B44       → Partida Individual Actual
+
+SITUACIÓN PROPUESTA
+  J28       → Proceso Institucional Propuesto
+  J30       → Nivel de Gestión Propuesto
+  J32       → Unidad Administrativa Propuesta
+  J34       → Lugar de Trabajo Propuesto
+  J36       → Denominación del Puesto Propuesto
+  J38       → Grupo Ocupacional Propuesto
+  J40       → Grado Propuesto       (fórmula VLOOKUP — se calcula sola)
+  J42       → Remuneración Propuesta (fórmula VLOOKUP — se calcula sola)
+  J44       → Partida Individual Propuesta
+
+POSESIÓN DEL PUESTO
+  C50       → Ciudad / Lugar
+
+RESPONSABLES DE APROBACIÓN
+  C61       → Nombre Director(a) TH
+  C62       → Puesto Director(a) TH
+  K61       → Nombre Autoridad Nominadora
+  K62       → Puesto Autoridad Nominadora
+
+ACEPTACIÓN DEL SERVIDOR
+  C74       → Nombre del servidor (sobrescribe fórmula original =A6&" "&I6)
+
+RESPONSABLES DE ELABORACIÓN / REVISIÓN / REGISTRO
+  C87       → Nombre Elaborado por    |  C88 → Puesto Elaborado por
+  G87       → Nombre Revisado por     |  G88 → Puesto Revisado por
+  M87       → Nombre Registrado por   |  M88 → Puesto Registrado por
+
+NOTA: La hoja 'Hoja2' contiene tablas de referencia para grupos ocupacionales,
+grados y remuneraciones. No modificar.

@@ -1,11 +1,12 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 import { AuthService } from '../../core/services/auth';
+import { AuditoriaService } from '../../core/services/auditoria';
+import { AuditEntry } from '../../core/models/interfaces';
 
 @Component({
   selector: 'app-auditoria',
@@ -16,10 +17,8 @@ import { AuthService } from '../../core/services/auth';
 })
 export class AuditoriaComponent implements OnInit {
 
-  private readonly API_URL = 'http://localhost:5000/api/auditoria';
-
-  auditoria: any[] = [];
-  auditoriaFiltrada: any[] = [];
+  auditoria: AuditEntry[] = [];
+  auditoriaFiltrada: AuditEntry[] = [];
 
   searchText: string = '';
   usuarioFiltro: string = '';
@@ -30,7 +29,7 @@ export class AuditoriaComponent implements OnInit {
   expandedId: number | null = null;
 
   constructor(
-    private http: HttpClient,
+    private auditoriaService: AuditoriaService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     public authService: AuthService
@@ -40,18 +39,10 @@ export class AuditoriaComponent implements OnInit {
     this.obtenerAuditoria();
   }
 
-  getHeaders() {
-    return new HttpHeaders({
-      Authorization: this.authService.getToken()
-    });
-  }
-
   obtenerAuditoria() {
     this.cargando = true;
 
-    this.http.get<any[]>(this.API_URL, {
-      headers: this.getHeaders()
-    }).subscribe({
+    this.auditoriaService.getAll().subscribe({
       next: (response) => {
         const datos = Array.isArray(response) ? response : [];
 

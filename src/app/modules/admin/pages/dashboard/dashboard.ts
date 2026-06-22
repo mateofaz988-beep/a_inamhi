@@ -1,12 +1,13 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { Chart, registerables } from 'chart.js';
 
 import { AuthService } from '../../../../core/services/auth';
+import { PersonalService } from '../../../../core/services/personal';
 import { SharedModule } from '../../../../shared/shared-module';
+import { Funcionario, FuncionarioPasivo } from '../../../../core/models/interfaces';
 
 Chart.register(...registerables);
 
@@ -23,11 +24,8 @@ Chart.register(...registerables);
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  private readonly API_PERSONAL = 'http://localhost:5000/api/personal';
-  private readonly API_PASIVOS = 'http://localhost:5000/api/personal/pasivo';
-
-  personal: any[] = [];
-  pasivos: any[] = [];
+  personal: Funcionario[] = [];
+  pasivos:  FuncionarioPasivo[] = [];
 
   totalActivos = 0;
   totalDesvinculados = 0;
@@ -39,7 +37,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     public authService: AuthService,
-    private http: HttpClient
+    private personalService: PersonalService
   ) {}
 
   ngOnInit(): void {
@@ -56,14 +54,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.destruirGraficas();
   }
 
-  getHeaders(): HttpHeaders {
-    return new HttpHeaders({
-      Authorization: this.authService.getToken()
-    });
-  }
-
   cargarDatosDashboard(): void {
-    this.http.get<any[]>(this.API_PERSONAL).subscribe({
+    this.personalService.getAll().subscribe({
       next: (data) => {
         this.personal = Array.isArray(data) ? data : [];
         this.calcularMetricas();
@@ -75,9 +67,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     if (this.authService.isAdmin()) {
-      this.http.get<any[]>(this.API_PASIVOS, {
-        headers: this.getHeaders()
-      }).subscribe({
+      this.personalService.getPasivos().subscribe({
         next: (data) => {
           this.pasivos = Array.isArray(data) ? data : [];
           this.totalDesvinculados = this.pasivos.length;
@@ -109,7 +99,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.totalUnidades = unidades.size;
   }
 
-  contarPorCampo(campo: string): { labels: string[]; values: number[] } {
+  contarPorCampo(campo: keyof Funcionario): { labels: string[]; values: number[] } {
     const contador: Record<string, number> = {};
 
     this.personal.forEach(emp => {

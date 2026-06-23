@@ -1,3 +1,4 @@
+@if (!documentoActualId) {
 <div class="ha-container">
 
   <!-- ── HEADER ── -->
@@ -215,9 +216,14 @@
                             <i class="bi bi-download"></i> Descargar
                           </button>
                         }
-                        <button class="btn-row btn-row--del" (click)="eliminar(a)" title="Eliminar">
-                          <i class="bi bi-trash-fill"></i>
+                        <button class="btn-row btn-row--firma" (click)="gestionarFirmas(a)" title="Gestionar Firmas" style="color: #f59e0b; background: #fef3c7; border: 1px solid #fcd34d;">
+                          <i class="bi bi-pen-fill"></i> Firmas
                         </button>
+                        @if (!a.es_nativo) {
+                          <button class="btn-row btn-row--del" (click)="eliminar(a)" title="Eliminar">
+                            <i class="bi bi-trash-fill"></i>
+                          </button>
+                        }
                       </div>
                     </td>
 
@@ -339,3 +345,145 @@
     </div>
   </div>
 }
+} <!-- CIERRA EL @if (!documentoActualId) -->
+
+<!-- ══════════════════════════════════════════════════════
+     VISOR PDF Y FIRMAS (CUANDO SE ABRE UN DOCUMENTO NATIVO)
+══════════════════════════════════════════════════════ -->
+@if (documentoActualId) {
+<div class="pdf-firma-layout" style="height: 100vh; display: flex; flex-direction: column; background: #f8fafc;">
+  <header class="preview-header" style="background: white; padding: 1rem 2rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+    <div class="header-titles">
+      <h2 style="margin:0; font-size: 1.25rem; font-weight: 600; color: #1e293b;">Gestión de Firmas Electrónicas</h2>
+      <span class="badge" style="background: #e0f2fe; color: #0284c7; margin-top: 4px; display: inline-block;">Historial / Documento en curso</span>
+    </div>
+    <div>
+      <button type="button" class="btn btn-warning" (click)="mostrarOffcanvasFirmas = true" style="margin-right: 1rem; border-radius: 8px; font-weight: 500;">
+        <i class="bi bi-vector-pen"></i> Mostrar Firmantes
+      </button>
+      <button class="btn btn-outline-secondary" (click)="cerrarOffcanvasFirmas()" style="border-radius: 8px;">
+        <i class="bi bi-x-lg"></i> Cerrar Documento
+      </button>
+    </div>
+  </header>
+  
+  <main class="preview-main" style="flex: 1; padding: 2rem; display: flex; justify-content: center; overflow: hidden;">
+    <div class="pdf-container modern-pdf-container" style="width: 100%; max-width: 1000px; height: 100%; background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); overflow: hidden;">
+      <iframe *ngIf="pdfFirmasUrl" [src]="pdfFirmasUrl" class="pdf-viewer" style="width: 100%; height: 100%; border: none;"></iframe>
+    </div>
+  </main>
+
+  <!-- Offcanvas de Firmas -->
+  <div class="offcanvas-overlay" *ngIf="mostrarOffcanvasFirmas" (click)="mostrarOffcanvasFirmas = false" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); z-index: 1040;"></div>
+  <div class="offcanvas-panel" [class.open]="mostrarOffcanvasFirmas" style="position: fixed; top: 0; right: -400px; width: 400px; height: 100vh; background: white; z-index: 1050; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -10px 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
+    <div class="offcanvas-header" style="padding: 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+      <div class="offcanvas-title" style="display: flex; align-items: center; gap: 0.75rem;">
+        <i class="bi bi-vector-pen" style="color: #3b82f6; font-size: 1.5rem;"></i>
+        <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1e293b;">Proceso de Firmas</h3>
+      </div>
+      <button class="btn-icon" (click)="mostrarOffcanvasFirmas = false" aria-label="Cerrar panel" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer;">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    
+    <div class="offcanvas-body" style="padding: 1.5rem; flex: 1; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <p style="color: #64748b; font-size: 0.875rem; margin: 0;">Estado de firmas para este documento</p>
+        <button class="btn btn-outline-primary btn-sm" (click)="cargarFirmasDocumento()" [disabled]="cargandoFirmas" style="border-radius: 6px; font-size: 0.75rem;">
+          <i class="bi bi-arrow-clockwise" [class.spin]="cargandoFirmas"></i> Actualizar
+        </button>
+      </div>
+
+      <div class="firmas-lista" *ngIf="firmasDocumento.length > 0; else noFirmas" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div *ngFor="let firma of firmasDocumento" class="firma-item" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; position: relative; overflow: hidden;">
+          <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%;" [ngStyle]="{'background-color': firma.estado === 'FIRMADA' ? '#10b981' : '#f59e0b'}"></div>
+          <div class="firma-info" style="display: flex; flex-direction: column; gap: 0.25rem;">
+            <span style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">{{ firma.seccion }}</span>
+            <span style="font-weight: 600; color: #1e293b;">{{ firma.nombre_firmante }}</span>
+            <small style="color: #64748b;">{{ firma.cargo_firmante }}</small>
+          </div>
+          <div class="firma-meta" style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <span class="badge" [ngClass]="{'bg-success': firma.estado === 'FIRMADA', 'bg-warning': firma.estado === 'PENDIENTE'}" style="padding: 0.35em 0.65em; border-radius: 6px;">{{ firma.estado }}</span>
+            <small *ngIf="firma.fecha_firma" style="color: #94a3b8;">{{ firma.fecha_firma | date:'short' }}</small>
+            <button *ngIf="firma.estado === 'PENDIENTE'" class="btn btn-primary btn-sm" (click)="abrirModalFirma(firma)" style="border-radius: 6px; padding: 0.25rem 0.75rem;">
+              Firmar
+            </button>
+          </div>
+        </div>
+      </div>
+      <ng-template #noFirmas>
+        <div style="text-align: center; padding: 3rem 1rem;">
+          <i class="bi bi-inbox" style="color: #cbd5e1; font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+          <p style="color: #64748b;">No hay firmas configuradas.</p>
+        </div>
+      </ng-template>
+
+      <div style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem;">
+        <button class="btn btn-dark w-100" (click)="finalizarDocumento()" style="border-radius: 8px; padding: 0.75rem; font-weight: 500;">
+          <i class="bi bi-check-all"></i> Finalizar Documento
+        </button>
+        <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 0.5rem;">Hacer clic solo cuando todas las firmas estén en verde.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Flotante Minimalista para Contraseña de Firma -->
+  <div class="modal-overlay" *ngIf="mostrarModalFirma" (click)="cerrarModalFirma()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center;">
+    <div class="modal-firma-moderno" (click)="$event.stopPropagation()" style="background: white; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+      <div class="modal-header" style="background: #f8fafc; padding: 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 40px; height: 40px; background: #e0e7ff; color: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+            <i class="bi bi-shield-lock"></i>
+          </div>
+          <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1e293b;">Autenticación</h3>
+        </div>
+        <button (click)="cerrarModalFirma()" style="background: none; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer;">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body" style="padding: 1.5rem;">
+        <div style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <p style="color: #64748b; font-size: 0.875rem; margin: 0 0 0.25rem 0;">Sección: <strong style="color: #1e293b;">{{ firmaSeleccionada?.seccion }}</strong></p>
+          <p style="color: #64748b; font-size: 0.875rem; margin: 0;">Firmante: <strong style="color: #1e293b;">{{ firmaSeleccionada?.nombre_firmante }}</strong></p>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <input type="file" id="firmaFile" (change)="seleccionarCertificadoFirma($event)" accept=".p12,.pfx" style="display: none;">
+          <label for="firmaFile" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; border: 2px dashed #cbd5e1; border-radius: 12px; cursor: pointer; transition: all 0.2s; background: #fafafa;" [ngStyle]="selectedFile ? {'border-color': '#10b981', 'background': '#ecfdf5'} : {}">
+            <i class="bi" [ngClass]="selectedFile ? 'bi-file-earmark-check text-success' : 'bi-cloud-arrow-up'" style="font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem;"></i>
+            <span style="font-weight: 500; color: #1e293b; text-align: center;">{{ selectedFile ? selectedFile.name : 'Seleccionar Certificado' }}</span>
+            <small style="color: #64748b; margin-top: 0.25rem;">Formatos soportados: .p12, .pfx</small>
+          </label>
+        </div>
+        
+        <div>
+          <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.5rem;">Contraseña del certificado</label>
+          <div style="position: relative;">
+            <i class="bi bi-key" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+            <input type="password" [(ngModel)]="passwordFirmaSeccion" placeholder="Ingrese su contraseña" style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'">
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer" style="padding: 1.5rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 1rem; background: #f8fafc;">
+        <button class="btn btn-light" (click)="cerrarModalFirma()" style="border-radius: 8px; font-weight: 500;">Cancelar</button>
+        <button class="btn btn-primary" (click)="firmarSeccion()" [disabled]="!selectedFile || !passwordFirmaSeccion || firmando" style="border-radius: 8px; font-weight: 500; min-width: 140px; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+          <span *ngIf="firmando" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <i *ngIf="!firmando" class="bi bi-pen"></i> 
+          <span>{{ firmando ? 'Firmando...' : 'Firmar Documento' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+}
+
+<style>
+  .offcanvas-panel.open { right: 0 !important; }
+  @keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+</style>

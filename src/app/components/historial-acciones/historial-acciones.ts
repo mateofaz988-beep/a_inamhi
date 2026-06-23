@@ -5,6 +5,9 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../core/services/auth';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { firstValueFrom } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector:    'app-historial-acciones',
@@ -40,11 +43,27 @@ export class HistorialAccionesComponent {
     'Licencia con Sueldo', 'Sanción', 'Cesación de Funciones', 'Otro'
   ];
 
+  // ── Estados para Firmas Electrónicas ──
+  mostrarOffcanvasFirmas = false;
+  mostrarModalFirma = false;
+  documentoActualId: number | null = null;
+  firmasDocumento: any[] = [];
+  firmaSeleccionada: any | null = null;
+  passwordFirmaSeccion = '';
+  selectedFile: File | null = null;
+  firmando = false;
+  cargandoFirmas = false;
+  descargandoPdf = false;
+  pdfFirmasUrl: SafeResourceUrl | null = null;
+
+  private readonly FIRMAS_API = 'http://localhost:5000/api/acciones-personal';
+
   constructor(
     private http:        HttpClient,
     private router:      Router,
     public  authService: AuthService,
-    private cdr:         ChangeDetectorRef
+    private cdr:         ChangeDetectorRef,
+    private sanitizer:   DomSanitizer
   ) {}
 
   private headers() {
@@ -144,7 +163,11 @@ export class HistorialAccionesComponent {
 
   // ── Descargar ──────────────────────────────────────────────────────────────
   descargar(accion: any) {
-    this.http.get(`${this.BASE}/${accion.id}/descargar`, {
+    const urlDescarga = accion.es_nativo 
+      ? `${this.FIRMAS_API}/${accion.id}/pdf` 
+      : `${this.BASE}/${accion.id}/descargar`;
+
+    this.http.get(urlDescarga, {
       headers:      this.headers(),
       responseType: 'blob'
     }).subscribe({
@@ -152,11 +175,24 @@ export class HistorialAccionesComponent {
         const url = URL.createObjectURL(blob);
         const a   = document.createElement('a');
         a.href     = url;
-        a.download = accion.archivo_nombre || `accion_${accion.id}`;
+        a.download = accion.archivo_nombre || `accion_${accion.id}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
       },
-      error: () => Swal.fire('Error', 'No se pudo descargar el archivo', 'error')
+      error: (err) => {
+        if (err.error instanceof Blob) {
+          err.error.text().then((text: string) => {
+            try {
+              const msg = JSON.parse(text).error;
+              Swal.fire('Error', msg || 'No se pudo descargar el archivo', 'error');
+            } catch (e) {
+              Swal.fire('Error', 'No se pudo descargar el archivo', 'error');
+            }
+          });
+        } else {
+          Swal.fire('Error', 'El archivo físico ya no existe en el servidor o la ruta es inválida.', 'error');
+        }
+      }
     });
   }
 
@@ -185,5 +221,137 @@ export class HistorialAccionesComponent {
 
   tieneArchivo(accion: any): boolean {
     return !!accion.archivo_nombre;
+  }
+
+  // ── Métodos para Firmas Electrónicas (Documentos Nativos) ─────────────────
+  
+  gestionarFirmas(accion: any) {
+    if (!accion.es_nativo || !accion.id) return;
+    this.documentoActualId = accion.id;
+    
+    // Obtener URL del PDF para vista previa
+    const url = `${this.FIRMAS_API}/${accion.id}/pdf`;
+    this.pdfFirmasUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    
+    this.mostrarOffcanvasFirmas = true;
+    this.cargarFirmasDocumento();
+  }
+
+  async cargarFirmasDocumento(): Promise<void> {
+    if (!this.documentoActualId) return;
+    
+    try {
+      this.cargandoFirmas = true;
+      this.cdr.detectChanges();
+      
+      const firmas = await firstValueFrom(this.http.get<any[]>(
+        `${this.FIRMAS_API}/${this.documentoActualId}/firmas`,
+        { headers: this.headers() }
+      ));
+      
+      this.firmasDocumento = firmas || [];
+    } catch (e: any) {
+      Swal.fire('Error', 'No se pudieron cargar las firmas', 'error');
+    } finally {
+      this.cargandoFirmas = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  abrirModalFirma(firma: any): void {
+    if (firma.estado === 'FIRMADA') return;
+    this.firmaSeleccionada = firma;
+    this.mostrarModalFirma = true;
+    this.passwordFirmaSeccion = '';
+    this.selectedFile = null;
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalFirma(): void {
+    this.mostrarModalFirma = false;
+    this.firmaSeleccionada = null;
+    this.passwordFirmaSeccion = '';
+    this.selectedFile = null;
+    this.cdr.detectChanges();
+  }
+
+  cerrarOffcanvasFirmas(): void {
+    this.mostrarOffcanvasFirmas = false;
+    this.documentoActualId = null;
+    this.pdfFirmasUrl = null;
+    this.firmasDocumento = [];
+    this.buscar(); // Refrescar lista principal por si cambiaron estados
+    this.cdr.detectChanges();
+  }
+
+  seleccionarCertificadoFirma(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0] ?? null;
+
+    if (!archivo) {
+      this.selectedFile = null;
+      return;
+    }
+
+    if (!archivo.name.toLowerCase().endsWith('.p12') && !archivo.name.toLowerCase().endsWith('.pfx')) {
+      input.value = '';
+      this.selectedFile = null;
+      Swal.fire('Archivo no válido', 'Seleccione un certificado .p12 o .pfx', 'warning');
+      return;
+    }
+    
+    this.selectedFile = archivo;
+  }
+
+  async firmarSeccion(): Promise<void> {
+    if (!this.documentoActualId || !this.firmaSeleccionada || !this.selectedFile || !this.passwordFirmaSeccion || this.firmando) return;
+    
+    try {
+      this.firmando = true;
+      this.cdr.detectChanges();
+      
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      const formData = new FormData();
+      formData.append('certificado', this.selectedFile);
+      formData.append('password', this.passwordFirmaSeccion);
+      formData.append('seccion', this.firmaSeleccionada.seccion);
+      
+      await firstValueFrom(this.http.post(
+        `${this.FIRMAS_API}/${this.documentoActualId}/firmar`, 
+        formData,
+        { headers: this.headers() }
+      ));
+      
+      Swal.fire('Firma exitosa', `Se firmó la sección ${this.firmaSeleccionada.seccion}`, 'success');
+      this.cerrarModalFirma();
+      
+      // Actualizar iframe para ver la nueva firma
+      const url = `${this.FIRMAS_API}/${this.documentoActualId}/pdf?t=${new Date().getTime()}`;
+      this.pdfFirmasUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+
+      await this.cargarFirmasDocumento();
+    } catch (e: any) {
+      Swal.fire('Error al firmar', e?.error?.error || 'Contraseña incorrecta o certificado inválido', 'error');
+    } finally {
+      this.firmando = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  async finalizarDocumento(): Promise<void> {
+    if (!this.documentoActualId) return;
+    try {
+      await firstValueFrom(this.http.post(
+        `${this.FIRMAS_API}/${this.documentoActualId}/finalizar`, 
+        {},
+        { headers: this.headers() }
+      ));
+      
+      Swal.fire('Documento finalizado', 'Todas las firmas se han completado', 'success');
+      this.cerrarOffcanvasFirmas();
+    } catch (e: any) {
+      Swal.fire('Error', e?.error?.error || 'Aún faltan firmas obligatorias', 'error');
+    }
   }
 }

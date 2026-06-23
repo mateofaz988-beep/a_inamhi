@@ -7,6 +7,12 @@ import glob
 from io import BytesIO
 from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
+from services.pdf_converter import PdfConverter
+from services.firma_service import FirmaService
+from services.documento_service import DocumentoService
+from services.certificado_service import CertificadoService
+import config_firmas
+from config import DB_CONFIG, FLASK_PORT, FLASK_DEBUG, MAX_CERTIFICADO_BYTES
 
 try:
     import openpyxl
@@ -17,12 +23,7 @@ except ImportError:
 app = Flask(__name__)
 CORS(app)
 
-db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'root',
-    'database': 'inamhi_rrhh'
-}
+db_config = DB_CONFIG
 
 # =========================
 # 🔌 CONEXIÓN A MYSQL
@@ -72,6 +73,20 @@ def obtener_ip():
 # =========================
 # 🔐 VALIDAR ADMIN
 # =========================
+import traceback
+
+@app.errorhandler(500)
+def internal_error(exception):
+    with open('error_500.log', 'a') as f:
+        f.write(traceback.format_exc())
+    return jsonify({"error": "Internal Server Error"}), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    with open('error_500.log', 'a') as f:
+        f.write(traceback.format_exc())
+    return jsonify({"error": str(e)}), 500
+
 def es_admin():
     token = request.headers.get('Authorization')
 
@@ -1633,15 +1648,58 @@ def buscar_historial_acciones():
         if persona and 'encontrado_en_personal' not in persona:
             persona['encontrado_en_personal'] = True
 
-        # Buscar acciones de esa cédula
+        # Buscar acciones del sistema antiguo
         cursor.execute("""
             SELECT id, cedula, nombres, numero_accion, tipo_accion,
                    fecha_accion, fecha_registro, archivo_nombre, registrado_por
             FROM historial_acciones
             WHERE cedula = %s
-            ORDER BY fecha_registro DESC
         """, (cedula_busqueda,))
-        acciones = cursor.fetchall()
+        acciones_viejas = cursor.fetchall()
+
+        for a in acciones_viejas:
+            a['es_nativo'] = False
+            a['estado_documento'] = None
+
+        # Buscar acciones del nuevo sistema (nativas)
+        cursor.execute("""
+            SELECT id, cedula_funcionario as cedula, numero_accion, estado as estado_documento,
+                   fecha_creacion as fecha_registro, fecha_creacion as fecha_accion,
+                   usuario_creacion as registrado_por, ruta_pdf_actual,
+                   datos_formulario
+            FROM documentos_accion_personal
+            WHERE cedula_funcionario = %s AND estado != 'BORRADOR'
+        """, (cedula_busqueda,))
+        acciones_nuevas = cursor.fetchall()
+
+        import json
+        import os
+
+        for a in acciones_nuevas:
+            a['es_nativo'] = True
+            a['nombres'] = persona['nombres'] if persona else ''
+            
+            # Extraer tipo_accion del JSON si es posible
+            try:
+                datos = json.loads(a.get('datos_formulario') or '{}')
+                a['tipo_accion'] = datos.get('tipo_accion') or datos.get('accion_personal') or 'ACCIÓN DE PERSONAL'
+            except:
+                a['tipo_accion'] = 'ACCIÓN DE PERSONAL'
+                
+            a['archivo_nombre'] = os.path.basename(a['ruta_pdf_actual']) if a.get('ruta_pdf_actual') else None
+            
+            # Limpiar datos crudos
+            if 'datos_formulario' in a: del a['datos_formulario']
+            if 'ruta_pdf_actual' in a: del a['ruta_pdf_actual']
+
+        acciones = acciones_viejas + acciones_nuevas
+        
+        # Ordenar por fecha_registro descendente
+        from datetime import datetime, date
+        acciones.sort(
+            key=lambda x: x.get('fecha_registro') if isinstance(x.get('fecha_registro'), datetime) else datetime.min, 
+            reverse=True
+        )
 
         # Serializar fechas
         for a in acciones:
@@ -1799,8 +1857,475 @@ def eliminar_accion_historial(id):
         if conexion: conexion.close()
 
 
+
+
+# =========================
+# 🚀 RUTAS DE FIRMAS ELECTRONICAS (NUEVAS)
+# =========================
+
+@app.route('/api/acciones-personal', methods=['POST'])
+def guardar_borrador():
+    datos = request.json
+    numero_accion = datos.get('numero_accion')
+    cedula = datos.get('cedula')
+
+    if not numero_accion or not cedula:
+        return jsonify({"ok": False, "error": "Número de acción y cédula son obligatorios"}), 400
+
+    usuario = obtener_usuario()
+    exito, doc_id, error = DocumentoService.guardar_borrador(
+        numero_accion, cedula, datos, usuario
+    )
+
+    if exito:
+        return jsonify({
+            "ok": True,
+            "mensaje": "Borrador guardado",
+            "doc_id": doc_id,
+            "numero_accion": numero_accion,
+            "estado": "BORRADOR"
+        })
+    return jsonify({"ok": False, "error": error, "doc_id": doc_id}), 400
+
+
+@app.route('/api/acciones-personal/<int:doc_id>/preparar-firmas', methods=['POST'])
+def preparar_firmas(doc_id):
+    """
+    Prepara un documento para firmas:
+    1. Obtiene el documento y valida que esté en BORRADOR
+    2. Genera el Excel con los datos del formulario guardado
+    3. Convierte el Excel a PDF
+    4. Crea las firmas pendientes
+    5. Bloquea el documento
+    """
+    try:
+        # 1. Obtener documento
+        doc = DocumentoService.obtener_documento(doc_id)
+        if not doc:
+            return jsonify({"ok": False, "error": "Documento no encontrado"}), 404
+
+        if doc['estado'] != 'BORRADOR':
+            return jsonify({"ok": False, "error": f"El documento ya no está en borrador (estado: {doc['estado']})"}), 400
+
+        # 2. Recuperar datos del formulario
+        datos_formulario = json.loads(doc['datos_formulario']) if doc['datos_formulario'] else {}
+        if not datos_formulario:
+            return jsonify({"ok": False, "error": "El documento no tiene datos de formulario guardados"}), 400
+
+        # 3. Crear directorio del documento
+        doc_dir = os.path.join(config_firmas.BASE_STORAGE_DIR, str(doc_id))
+        excel_dir = os.path.join(doc_dir, 'excel')
+        pdf_dir = os.path.join(doc_dir, 'pdf')
+        os.makedirs(excel_dir, exist_ok=True)
+        os.makedirs(pdf_dir, exist_ok=True)
+
+        # 4. Generar Excel con datos reales (reutilizando lógica de generar_accion)
+        excel_path = _generar_excel_documento(datos_formulario, excel_dir, doc['numero_accion'])
+
+        # 5. Convertir a PDF
+        pdf_path = PdfConverter.convert_excel_to_pdf(
+            excel_path, pdf_dir, config_firmas.LIBREOFFICE_PATH
+        )
+
+        # 6. Calcular hash inicial
+        hash_inicial = FirmaService.calcular_hash(pdf_path)
+
+        # 7. Actualizar documento en BD
+        DocumentoService.actualizar_estado_documento(
+            doc_id,
+            estado='PENDIENTE_FIRMAS',
+            ruta_excel=excel_path,
+            ruta_pdf_original=pdf_path,
+            ruta_pdf_actual=pdf_path,
+            hash_pdf=hash_inicial,
+            bloqueado=True
+        )
+
+        # 8. Registrar versión original del PDF
+        conn = DocumentoService.get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO versiones_documento
+            (documento_id, numero_version, tipo_version, ruta_archivo, hash_archivo)
+            VALUES (%s, 1, 'ORIGINAL', %s, %s)
+        """, (doc_id, pdf_path, hash_inicial))
+        cursor.execute(
+            "UPDATE documentos_accion_personal SET version_documento = 1 WHERE id = %s",
+            (doc_id,)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # 9. Crear firmas pendientes
+        exito, error = DocumentoService.crear_firmas_pendientes(
+            doc_id, config_firmas.SECCIONES_FIRMA, datos_formulario
+        )
+        if not exito:
+            return jsonify({"ok": False, "error": f"Error creando firmas: {error}"}), 500
+
+        # 10. Obtener firmas creadas para devolver
+        firmas = DocumentoService.obtener_firmas_documento(doc_id)
+
+        return jsonify({
+            "ok": True,
+            "mensaje": "Documento preparado para firmas",
+            "documento_id": doc_id,
+            "numero_accion": doc['numero_accion'],
+            "estado": "PENDIENTE_FIRMAS",
+            "excel_disponible": True,
+            "pdf_disponible": True,
+            "firmas": firmas
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+@app.route('/api/acciones-personal/<int:doc_id>/firmas', methods=['GET'])
+def listar_firmas(doc_id):
+    """Lista todas las firmas de un documento, con su estado."""
+    firmas = DocumentoService.obtener_firmas_documento(doc_id)
+    return jsonify(firmas)
+
+
+@app.route('/api/acciones-personal/<int:doc_id>/firmar', methods=['POST'])
+def firmar_documento(doc_id):
+    """
+    Firma una sección del documento con un certificado .p12/.pfx.
+    Recibe multipart/form-data: certificado, password, seccion.
+    """
+    # Validar campos requeridos
+    if 'certificado' not in request.files:
+        return jsonify({'ok': False, 'codigo': 'CERTIFICADO_NO_VALIDO', 'error': 'Seleccione un certificado .p12 o .pfx'}), 400
+    if 'password' not in request.form:
+        return jsonify({'ok': False, 'codigo': 'CERTIFICADO_PASSWORD_INVALIDO', 'error': 'Ingrese la contraseña del certificado'}), 400
+    if 'seccion' not in request.form:
+        return jsonify({'ok': False, 'error': 'Seleccione la sección a firmar'}), 400
+
+    cert_file = request.files['certificado']
+    password = request.form['password']
+    seccion = request.form['seccion']
+
+    # Validar extensión
+    filename = cert_file.filename or ''
+    if not filename.lower().endswith(('.p12', '.pfx')):
+        return jsonify({'ok': False, 'codigo': 'CERTIFICADO_NO_VALIDO', 'error': 'El archivo debe tener extensión .p12 o .pfx'}), 400
+
+    # Validar tamaño
+    p12_bytes = cert_file.read()
+    if len(p12_bytes) > MAX_CERTIFICADO_BYTES:
+        return jsonify({'ok': False, 'error': 'El certificado no debe superar los 10 MB'}), 400
+
+    if not p12_bytes:
+        return jsonify({'ok': False, 'error': 'El archivo del certificado está vacío'}), 400
+
+    # Validar sección
+    if seccion not in config_firmas.SECCIONES_FIRMA:
+        return jsonify({'ok': False, 'error': f'Sección no válida: {seccion}'}), 400
+
+    # 1. Cargar y validar certificado
+    cert_info = CertificadoService.cargar_certificado(p12_bytes, password)
+    if not cert_info.get('valido'):
+        return jsonify({
+            'ok': False,
+            'codigo': 'CERTIFICADO_PASSWORD_INVALIDO',
+            'error': cert_info.get('error', 'Certificado inválido o contraseña incorrecta')
+        }), 400
+
+    # 2. Validar vigencia
+    vigente, msj = CertificadoService.validar_vigencia(cert_info)
+    if not vigente:
+        return jsonify({'ok': False, 'codigo': 'CERTIFICADO_VENCIDO', 'error': msj}), 400
+
+    # 3. Obtener documento
+    doc = DocumentoService.obtener_documento(doc_id)
+    if not doc:
+        return jsonify({'ok': False, 'codigo': 'DOCUMENTO_NO_ENCONTRADO', 'error': 'Documento no encontrado'}), 404
+
+    if doc['estado'] not in ('PENDIENTE_FIRMAS', 'FIRMADO_PARCIALMENTE'):
+        return jsonify({'ok': False, 'codigo': 'DOCUMENTO_BLOQUEADO', 'error': f"El documento no acepta firmas (estado: {doc['estado']})"}), 400
+
+    # 4. Verificar la sección
+    firmas = DocumentoService.obtener_firmas_documento(doc_id)
+    firma_seccion = next((f for f in firmas if f['seccion'] == seccion), None)
+
+    if not firma_seccion:
+        return jsonify({'ok': False, 'codigo': 'FIRMA_NO_ENCONTRADA', 'error': 'Sección no encontrada en el documento'}), 404
+
+    if firma_seccion['estado'] == 'FIRMADA':
+        return jsonify({'ok': False, 'codigo': 'FIRMA_YA_REALIZADA', 'error': 'Esta sección ya fue firmada'}), 400
+
+    # 5. Verificar que el PDF existe
+    pdf_base = doc['ruta_pdf_actual']
+    if not pdf_base or not os.path.exists(pdf_base):
+        return jsonify({'ok': False, 'codigo': 'PDF_NO_ENCONTRADO', 'error': 'Archivo PDF actual no encontrado'}), 500
+
+    # 6. Calcular hash del PDF antes de firmar
+    hash_antes = FirmaService.calcular_hash(pdf_base)
+
+    # 7. Preparar ruta de salida con versionado
+    version = (doc['version_documento'] or 1) + 1
+    pdf_dir = os.path.dirname(pdf_base)
+    numero_accion_safe = (doc['numero_accion'] or 'documento').replace(' ', '_').replace('/', '-')
+    nuevo_pdf_path = os.path.join(pdf_dir, f'{numero_accion_safe}-v{version}.pdf')
+
+    # 8. Firmar el PDF
+    conf_seccion = config_firmas.SECCIONES_FIRMA[seccion]
+    exito_firma, err_firma = FirmaService.firmar_pdf(
+        pdf_base,
+        nuevo_pdf_path,
+        cert_info,
+        seccion,
+        firma_seccion['nombre_firmante'],
+        firma_seccion['cargo_firmante'],
+        conf_seccion['posicion']
+    )
+
+    if not exito_firma:
+        return jsonify({'ok': False, 'codigo': 'ERROR_FIRMA_PDF', 'error': f'Error al firmar: {err_firma}'}), 500
+
+    # 9. Calcular hash del PDF firmado
+    hash_despues = FirmaService.calcular_hash(nuevo_pdf_path)
+
+    # 10. Registrar firma en BD (con control de concurrencia)
+    exito_bd, firma_id, err_bd = DocumentoService.registrar_firma(
+        doc_id, seccion, cert_info,
+        hash_antes, hash_despues,
+        nuevo_pdf_path, version
+    )
+
+    if not exito_bd:
+        # Limpiar PDF generado si falla el registro
+        if os.path.exists(nuevo_pdf_path):
+            try:
+                os.remove(nuevo_pdf_path)
+            except Exception:
+                pass
+        return jsonify({'ok': False, 'codigo': 'ERROR_BASE_DATOS', 'error': f'Error al guardar: {err_bd}'}), 500
+
+    # 11. Limpiar datos sensibles
+    del p12_bytes
+    del password
+
+    return jsonify({
+        'ok': True,
+        'mensaje': 'Documento firmado exitosamente',
+        'documento_id': doc_id,
+        'firma_id': firma_id,
+        'seccion': seccion,
+        'estado_firma': 'FIRMADA',
+        'estado_documento': 'FIRMADO_PARCIALMENTE',
+        'version': version,
+        'certificado': {
+            'titular': cert_info.get('nombre_titular', ''),
+            'emisor': cert_info.get('emisor', ''),
+        }
+    })
+
+
+@app.route('/api/acciones-personal/<int:doc_id>/finalizar', methods=['POST'])
+def finalizar_documento(doc_id):
+    """Finaliza un documento si todas las firmas obligatorias están completadas."""
+    exito, error = DocumentoService.verificar_y_finalizar(doc_id)
+    if exito:
+        return jsonify({
+            'ok': True,
+            'mensaje': 'Documento finalizado exitosamente',
+            'estado': 'FIRMADO_COMPLETAMENTE'
+        })
+    return jsonify({'ok': False, 'error': error}), 400
+
+
+@app.route('/api/acciones-personal/<int:doc_id>/pdf', methods=['GET'])
+def descargar_pdf(doc_id):
+    """Descarga el PDF actual (la última versión firmada o el original)."""
+    doc = DocumentoService.obtener_documento(doc_id)
+    if not doc:
+        return jsonify({'ok': False, 'error': 'Documento no encontrado'}), 404
+
+    ruta = doc.get('ruta_pdf_actual') or doc.get('ruta_pdf_original')
+    if not ruta or not os.path.exists(ruta):
+        return jsonify({'ok': False, 'error': 'PDF no encontrado'}), 404
+
+    numero = doc.get('numero_accion', 'documento').replace(' ', '_').replace('/', '-')
+    nombre_descarga = f'{numero}.pdf'
+
+    return send_file(
+        ruta,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name=nombre_descarga
+    )
+
+
+@app.route('/api/acciones-personal/<int:doc_id>/excel', methods=['GET'])
+def descargar_excel_documento(doc_id):
+    """Descarga el Excel guardado del documento."""
+    doc = DocumentoService.obtener_documento(doc_id)
+    if not doc:
+        return jsonify({'ok': False, 'error': 'Documento no encontrado'}), 404
+
+    ruta = doc.get('ruta_excel')
+    if not ruta or not os.path.exists(ruta):
+        return jsonify({'ok': False, 'error': 'Excel no encontrado'}), 404
+
+    numero = doc.get('numero_accion', 'documento').replace(' ', '_').replace('/', '-')
+    nombre_descarga = f'{numero}.xlsx'
+
+    return send_file(
+        ruta,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=nombre_descarga
+    )
+
+
+def _generar_excel_documento(datos, excel_dir, numero_accion):
+    """
+    Genera el Excel de acción de personal desde datos del formulario.
+    Reutiliza la lógica de la ruta /api/generar-accion pero guarda a disco.
+    """
+    from openpyxl.utils import coordinate_to_tuple
+    from datetime import datetime as dt
+
+    def escribir_celda(ws, addr, valor):
+        row, col = coordinate_to_tuple(addr)
+        for rango in ws.merged_cells.ranges:
+            if rango.min_row <= row <= rango.max_row and rango.min_col <= col <= rango.max_col:
+                ws.cell(row=rango.min_row, column=rango.min_col, value=valor)
+                return
+        ws.cell(row=row, column=col, value=valor)
+
+    def parse_fecha(s, como_texto=False):
+        if not s:
+            return ''
+        for fmt in ('%Y-%m-%d', '%d-%m-%Y', '%d/%m/%Y'):
+            try:
+                d = dt.strptime(s, fmt)
+                return d.strftime('%d/%m/%Y') if como_texto else d
+            except ValueError:
+                pass
+        return s
+
+    carpeta = os.path.join(os.path.dirname(__file__), 'plantillas')
+    archivos = glob.glob(os.path.join(carpeta, '*.xlsx'))
+    if not archivos:
+        raise Exception("No se encontró plantilla Excel en 'plantillas/'.")
+
+    ruta_plantilla = archivos[0]
+    wb = openpyxl.load_workbook(ruta_plantilla)
+    hoja = wb['ap'] if 'ap' in wb.sheetnames else wb.active
+
+    # Encabezado
+    escribir_celda(hoja, 'M3', datos.get('numero_accion', ''))
+    escribir_celda(hoja, 'K5', parse_fecha(datos.get('fecha_elaboracion', '')))
+
+    # Funcionario
+    escribir_celda(hoja, 'A6', datos.get('apellidos', ''))
+    escribir_celda(hoja, 'I6', datos.get('nombres', ''))
+    escribir_celda(hoja, 'E11', datos.get('cedula', ''))
+    escribir_celda(hoja, 'I11', parse_fecha(datos.get('desde', datos.get('fecha_rige_desde', '')), como_texto=True))
+    escribir_celda(hoja, 'M11', parse_fecha(datos.get('hasta', datos.get('fecha_rige_hasta', '')), como_texto=True))
+
+    # Tipo de acción
+    tipo = (datos.get('accion_personal', datos.get('tipo_accion', '')) or '').upper()
+    marcas_accion = {
+        'INGRESO': 'A14', 'REINGRESO': 'A15', 'RESTITUCIÓN': 'A16',
+        'RESTITUCION': 'A16', 'REINTEGRO': 'A17', 'ASCENSO': 'A18',
+        'TRASLADO': 'A19', 'TRASPASO': 'D14', 'CAMBIO ADMINISTRATIVO': 'D15',
+        'INTERCAMBIO VOLUNTARIO': 'D16', 'LICENCIA': 'D17',
+        'COMISIÓN DE SERVICIOS': 'D18', 'COMISION DE SERVICIOS': 'D18',
+        'SANCIONES': 'D19', 'INCREMENTO RMU': 'I14',
+        'SUBROGACIÓN': 'I15', 'SUBROGACION': 'I15',
+        'ENCARGO': 'I16', 'CESACIÓN DE FUNCIONES': 'I17',
+        'CESACION DE FUNCIONES': 'I17', 'DESTITUCIÓN': 'I18',
+        'DESTITUCION': 'I18', 'VACACIONES': 'I19',
+        'REVISIÓN CLAS. PUESTO': 'L14', 'REVISION CLAS. PUESTO': 'L14',
+        'OTRO': 'L15',
+    }
+    celda_marca = marcas_accion.get(tipo)
+    if celda_marca:
+        escribir_celda(hoja, celda_marca, 'X')
+
+    # Motivación
+    escribir_celda(hoja, 'A24', datos.get('motivo_legal', ''))
+
+    # Situación actual
+    proc_actual = datos.get('proceso_institucional_actual', '')
+    unidad_act = datos.get('unidad', datos.get('unidad_administrativa', ''))
+    lugar_act = datos.get('lugar_trabajo_actual', '') or datos.get('ciudad', '')
+    denom_act = datos.get('denominacion_actual', '') or datos.get('cargo', '')
+    grupo = datos.get('grupo_ocupacional', '')
+    partida_act = datos.get('partida_actual', '')
+    nivel_gest_act = datos.get('nivel_gestion_actual', '')
+
+    escribir_celda(hoja, 'B28', proc_actual)
+    escribir_celda(hoja, 'B30', nivel_gest_act)
+    escribir_celda(hoja, 'B32', unidad_act)
+    escribir_celda(hoja, 'B34', lugar_act)
+    escribir_celda(hoja, 'B36', denom_act)
+    escribir_celda(hoja, 'B38', grupo)
+    escribir_celda(hoja, 'B44', partida_act)
+
+    # Situación propuesta
+    nivel_gest_prop = datos.get('nivel_gestion_propuesta', '') or nivel_gest_act
+    proc_prop = datos.get('proceso_institucional_propuesta', '') or proc_actual
+    unidad_prop = datos.get('unidad_propuesta', datos.get('unidad_administrativa_propuesta', '')) or unidad_act
+    lugar_prop = datos.get('lugar_trabajo_propuesta', '') or lugar_act
+    denom_prop = datos.get('denominacion_propuesta', '') or denom_act
+    partida_prop = datos.get('partida_propuesta', '') or partida_act
+
+    escribir_celda(hoja, 'J28', proc_prop)
+    escribir_celda(hoja, 'J30', nivel_gest_prop)
+    escribir_celda(hoja, 'J32', unidad_prop)
+    escribir_celda(hoja, 'J34', lugar_prop)
+    escribir_celda(hoja, 'J36', denom_prop)
+    escribir_celda(hoja, 'J38', grupo)
+    escribir_celda(hoja, 'J44', partida_prop)
+
+    # Posesión del puesto
+    nombre_posesion = f"{datos.get('apellidos', '')} {datos.get('nombres', '')}".strip()
+    if nombre_posesion:
+        escribir_celda(hoja, 'C48', nombre_posesion)
+    if datos.get('cedula'):
+        escribir_celda(hoja, 'N48', datos.get('cedula'))
+    escribir_celda(hoja, 'C50', datos.get('ciudad', ''))
+
+    # Responsables de aprobación
+    escribir_celda(hoja, 'C61', datos.get('nombre_director_th', ''))
+    escribir_celda(hoja, 'C62', datos.get('puesto_director_th', ''))
+    escribir_celda(hoja, 'K61', datos.get('nombre_autoridad', ''))
+    escribir_celda(hoja, 'K62', datos.get('puesto_autoridad', ''))
+
+    # Aceptación del servidor
+    escribir_celda(hoja, 'C74', datos.get('aceptacion_servidor', ''))
+    fecha_acep = parse_fecha(
+        datos.get('fecha_aceptacion', '') or datos.get('fecha_elaboracion', ''),
+        como_texto=True
+    )
+    if fecha_acep:
+        escribir_celda(hoja, 'C75', fecha_acep)
+
+    # Responsables elaboración / revisión / registro
+    escribir_celda(hoja, 'C87', datos.get('elaborado_por', ''))
+    escribir_celda(hoja, 'C88', datos.get('puesto_elaborado', ''))
+    escribir_celda(hoja, 'G87', datos.get('revisado_por', ''))
+    escribir_celda(hoja, 'G88', datos.get('puesto_revisado', ''))
+    escribir_celda(hoja, 'M87', datos.get('registrado_por', ''))
+    escribir_celda(hoja, 'M88', datos.get('puesto_registrado', ''))
+
+    # Guardar en disco
+    nombre_seguro = (numero_accion or 'documento').replace(' ', '_').replace('/', '-')
+    excel_path = os.path.join(excel_dir, f'{nombre_seguro}.xlsx')
+    wb.save(excel_path)
+
+    return excel_path
+
+
 # =========================
 # 🚀 RUN
 # =========================
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(port=FLASK_PORT, debug=FLASK_DEBUG)

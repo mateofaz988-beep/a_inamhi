@@ -440,7 +440,7 @@ input[type="file"]::file-selector-button:hover {
   gap: 0.75rem;
   font-size: 0.95rem;
   font-weight: 500;
-  border: 1px solid rgba(var(--color-success), 0.3);
+  border: 1px solid hsla(var(--hue-success), 65%, 42%, 0.3);
 }
 
 /* ========================================================= */
@@ -880,16 +880,31 @@ input[type="file"]::file-selector-button:hover {
 /* UTILITIES */
 /* ========================================================= */
 
-.spin { animation: spin 1s linear infinite; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
+.spin {
+  display: inline-block;
+  transform-origin: center;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .spinner {
   display: inline-block;
+  flex: 0 0 auto;
   width: 20px;
   height: 20px;
   border: 2.5px solid rgba(255,255,255,0.3);
   border-top-color: white;
   border-radius: 50%;
+  transform-origin: center;
   animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
@@ -928,3 +943,363 @@ input[type="file"]::file-selector-button:hover {
 }
 .form-status { display: flex; align-items: center; gap: 1rem; color: var(--color-text-muted); font-size: 1rem; }
 .form-status i { color: var(--color-success); font-size: 1.4rem; }
+
+/* ========================================================= */
+/* ROBUSTEZ, ACCESIBILIDAD Y DISEÑO RESPONSIVO */
+/* ========================================================= */
+
+:host {
+  isolation: isolate;
+}
+
+button,
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--color-primary-glow);
+  outline-offset: 2px;
+}
+
+.btn:focus-visible,
+.btn-icon:focus-visible,
+.btn-icon-soft:focus-visible,
+.btn-text:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-glow);
+}
+
+.btn:disabled,
+.btn-icon:disabled,
+.btn-icon-soft:disabled,
+.btn-text:disabled {
+  pointer-events: none;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+  background: var(--color-background);
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+select {
+  cursor: pointer;
+}
+
+.field,
+.situation-value,
+.preview-item,
+.header-info,
+.panel-heading > *,
+.preview-footer > * {
+  min-width: 0;
+}
+
+.preview-item dd,
+.preview-text,
+.firma-persona,
+.firma-cargo,
+.firma-seccion,
+.file-selected,
+.completion-note,
+.signature-notice p {
+  overflow-wrap: anywhere;
+}
+
+.modal-firma-moderno {
+  max-height: calc(100dvh - 3rem);
+}
+
+.modal-firma-moderno .modal-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.offcanvas-body {
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+body:has(.modal-overlay),
+body:has(.offcanvas-overlay) {
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .solicitud-container {
+    padding: 2rem 1.25rem;
+  }
+
+  .solicitud-header {
+    top: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .panel-heading,
+  .preview-header,
+  .preview-section,
+  .preview-footer,
+  .form-section,
+  .form-footer {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .solicitud-container {
+    padding: 1rem;
+  }
+
+  .solicitud-header {
+    position: static;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .header-info h1 {
+    font-size: 1.5rem;
+  }
+
+  .header-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .header-actions .btn {
+    width: 100%;
+  }
+
+  .panel-heading,
+  .preview-footer,
+  .form-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-section,
+  .panel-heading,
+  .preview-header,
+  .preview-section,
+  .preview-footer,
+  .form-footer {
+    padding: 1.25rem;
+  }
+
+  .section-header-line {
+    align-items: flex-start;
+    gap: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-number {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+
+  .control-grid,
+  .control-grid--3,
+  .preview-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .input-action {
+    flex-direction: column;
+  }
+
+  .input-action .btn {
+    width: 100%;
+  }
+
+  .situation-grid {
+    overflow-x: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .situation-header,
+  .situation-row {
+    min-width: 720px;
+  }
+
+  .preview-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .preview-situation-header,
+  .preview-situation-row {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-situation-header span + span,
+  .preview-situation-row span + span {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .offcanvas-panel {
+    width: min(100%, 420px);
+  }
+
+  .modal-overlay {
+    padding: 1rem;
+  }
+
+  .modal-firma-moderno {
+    width: calc(100% - 2rem);
+    max-height: calc(100dvh - 2rem);
+    border-radius: var(--radius-lg);
+  }
+
+  .modal-firma-moderno .modal-header,
+  .modal-firma-moderno .modal-body,
+  .modal-firma-moderno .modal-footer {
+    padding: 1.25rem;
+  }
+
+  .modal-firma-moderno .modal-footer {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .modal-firma-moderno .modal-footer button,
+  .btn-firmar-action {
+    width: 100%;
+  }
+
+  .completion-note {
+    border-radius: var(--radius-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .solicitud-container {
+    padding: 0.75rem;
+  }
+
+  .control-panel,
+  .preview-card,
+  .solicitud-header {
+    border-radius: var(--radius-md);
+  }
+
+  .btn-large {
+    padding: 1rem 1.25rem;
+    font-size: 0.95rem;
+  }
+
+  .firma-status {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .firma-action {
+    align-self: stretch;
+  }
+
+  .firma-action .btn {
+    width: 100%;
+  }
+
+  .signature-notice {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .spin,
+  .spinner {
+    animation-duration: 0.8s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :host {
+    --color-border: #94a3b8;
+    --color-border-strong: #64748b;
+  }
+
+  .btn,
+  input,
+  select,
+  textarea,
+  .control-panel,
+  .preview-card {
+    border-width: 2px;
+  }
+}
+
+@media print {
+  :host {
+    min-height: auto;
+    background: #fff;
+  }
+
+  .no-print,
+  .solicitud-header,
+  .offcanvas-overlay,
+  .offcanvas-panel,
+  .modal-overlay,
+  .modal-firma-moderno {
+    display: none !important;
+  }
+
+  .solicitud-container {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    animation: none;
+  }
+
+  .document-layout,
+  .document-layout.has-preview {
+    display: block;
+  }
+
+  .control-panel,
+  .preview-card {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .preview-card {
+    break-inside: avoid;
+  }
+}
+

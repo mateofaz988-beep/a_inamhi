@@ -1,489 +1,1017 @@
 @if (!documentoActualId) {
-<div class="ha-container">
-
-  <!-- ── HEADER ── -->
-  <header class="ha-header">
-    <div class="header-info">
-      <span class="tag">
-        <i class="bi bi-archive-fill"></i>
-        Repositorio institucional
-      </span>
-      <h2>Historial de Acciones de Personal</h2>
-      <p>Consulte, registre y descargue las acciones de personal por funcionario</p>
-    </div>
-    <button class="btn-back" (click)="volver()">
-      <i class="bi bi-arrow-left"></i>
-      Volver
-    </button>
-  </header>
-
-  <!-- ── BUSCADOR ── -->
-  <div class="search-card">
-    <div class="search-card-inner">
-      <div class="search-icon-wrap">
-        <i class="bi bi-search"></i>
-      </div>
-      <div class="search-fields">
-        <label>Buscar funcionario</label>
-        <div class="search-row">
-          <input
-            type="text"
-            class="search-input"
-            [(ngModel)]="textoBusqueda"
-            (keydown)="onEnter($event)"
-            placeholder="Ingrese cédula, nombre completo o número de nómina..."
-            [disabled]="buscando"
-          >
-          <button class="btn-search" (click)="buscar()" [disabled]="buscando || !textoBusqueda.trim()">
-            @if (buscando) {
-              <i class="bi bi-arrow-repeat spin-btn"></i> Buscando...
-            } @else {
-              <i class="bi bi-search"></i> Buscar
-            }
-          </button>
-          @if (yaSeHizoBusqueda) {
-            <button class="btn-clear" (click)="limpiarBusqueda()" title="Nueva búsqueda">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          }
-        </div>
-        <span class="search-hint">
-          <i class="bi bi-info-circle"></i>
-          Puede buscar por número de cédula, apellidos y nombres, o número de nómina
+  <main class="ha-container">
+    <header class="ha-header">
+      <div class="header-info">
+        <span class="tag">
+          <i class="bi bi-archive-fill" aria-hidden="true"></i>
+          Repositorio institucional
         </span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── RESULTADOS ── -->
-  @if (yaSeHizoBusqueda) {
-
-    <!-- Persona no encontrada en ningún lado -->
-    @if (!persona) {
-      <div class="empty-card empty-card--notfound">
-        <div class="empty-icon">
-          <i class="bi bi-person-x-fill"></i>
-        </div>
-        <h3>Funcionario no encontrado</h3>
-        <p>No se encontraron resultados para <strong>"{{ textoBusqueda }}"</strong> en la base de datos ni en el historial.</p>
-        <p class="empty-hint">Verifique que la cédula o el nombre esté correctamente escrito.</p>
-      </div>
-    }
-
-    @if (persona) {
-
-      <!-- ── TARJETA PERSONA ── -->
-      <div class="persona-card" [class.persona-card--noactivo]="!persona.encontrado_en_personal">
-
-        <div class="persona-avatar">
-          {{ (persona.nombres || '?').charAt(0) }}
-        </div>
-
-        <div class="persona-info">
-          <div class="persona-name">{{ persona.nombres }}</div>
-          <div class="persona-meta">
-            <span class="meta-chip">
-              <i class="bi bi-card-text"></i>
-              {{ persona.cedula }}
-            </span>
-            @if (persona.cargo) {
-              <span class="meta-chip">
-                <i class="bi bi-briefcase-fill"></i>
-                {{ persona.cargo }}
-              </span>
-            }
-            @if (persona.unidad) {
-              <span class="meta-chip">
-                <i class="bi bi-building"></i>
-                {{ persona.unidad }}
-              </span>
-            }
-            @if (persona.modalidad) {
-              <span class="meta-chip meta-chip--mode">
-                <i class="bi bi-file-person-fill"></i>
-                {{ persona.modalidad }}
-              </span>
-            }
-            @if (!persona.encontrado_en_personal) {
-              <span class="meta-chip meta-chip--warn">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                No está en el personal activo
-              </span>
-            }
-          </div>
-        </div>
-
-        <div class="persona-actions">
-          <span class="acciones-count">
-            <strong>{{ acciones.length }}</strong>
-            {{ acciones.length === 1 ? 'acción' : 'acciones' }}
-          </span>
-          <button class="btn-upload" (click)="abrirModal()">
-            <i class="bi bi-upload"></i>
-            Subir acción
-          </button>
-        </div>
-
+        <h1>Historial de Acciones de Personal</h1>
+        <p>
+          Consulte, visualice, descargue y registre los documentos asociados a
+          cada funcionario.
+        </p>
       </div>
 
-      <!-- Sin acciones -->
-      @if (acciones.length === 0) {
-        <div class="empty-card empty-card--noacciones">
-          <div class="empty-icon">
-            <i class="bi bi-folder2-open"></i>
-          </div>
-          <h3>Sin acciones de personal</h3>
-          <p><strong>{{ persona.nombres }}</strong> no tiene acciones de personal guardadas en el historial.</p>
-          <button class="btn-upload-lg" (click)="abrirModal()">
-            <i class="bi bi-cloud-upload-fill"></i>
-            Subir primera acción de personal
-          </button>
+      <button type="button" class="btn-back" (click)="volver()">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        Volver
+      </button>
+    </header>
+
+    <section class="search-card" aria-labelledby="titulo-busqueda">
+      <div class="search-card-inner">
+        <div class="search-icon-wrap" aria-hidden="true">
+          <i class="bi bi-search"></i>
         </div>
-      }
 
-      <!-- Tabla de acciones -->
-      @if (acciones.length > 0) {
-        <div class="acciones-card">
+        <div class="search-fields">
+          <label id="titulo-busqueda" for="busquedaFuncionario">
+            Buscar funcionario
+          </label>
 
-          <div class="acciones-header">
-            <div class="acciones-header-left">
-              <i class="bi bi-clock-history"></i>
-              <span>Historial de acciones — {{ acciones.length }} {{ acciones.length === 1 ? 'registro' : 'registros' }}</span>
+          <div class="search-row">
+            <div class="search-input-wrap">
+              <i class="bi bi-person-search" aria-hidden="true"></i>
+              <input
+                id="busquedaFuncionario"
+                type="search"
+                class="search-input"
+                [(ngModel)]="textoBusqueda"
+                (keydown)="onEnter($event)"
+                placeholder="Cédula, nombres, apellidos o número de nómina"
+                autocomplete="off"
+                [disabled]="buscando"
+              >
             </div>
-          </div>
 
-          <div class="acciones-table-wrap">
-            <table class="acciones-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Número AP</th>
-                  <th>Tipo de Acción</th>
-                  <th>Fecha Acción</th>
-                  <th>Fecha Registro</th>
-                  <th>Archivo</th>
-                  <th>Registrado por</th>
-                  <th class="th-act">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (a of acciones; track a.id; let i = $index) {
-                  <tr>
-                    <td class="td-num">{{ i + 1 }}</td>
-
-                    <td class="td-numero">
-                      <span class="num-badge">{{ a.numero_accion || '—' }}</span>
-                    </td>
-
-                    <td>
-                      <span class="tipo-badge">{{ a.tipo_accion || '—' }}</span>
-                    </td>
-
-                    <td class="td-fecha">
-                      @if (a.fecha_accion) {
-                        <i class="bi bi-calendar3"></i>
-                        {{ a.fecha_accion | date:'dd/MM/yyyy' }}
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </td>
-
-                    <td class="td-fecha td-registro">
-                      <i class="bi bi-clock"></i>
-                      {{ a.fecha_registro | date:'dd/MM/yyyy HH:mm' }}
-                    </td>
-
-                    <td>
-                      @if (tieneArchivo(a)) {
-                        <span class="archivo-chip">
-                          <i class="bi bi-paperclip"></i>
-                          {{ a.archivo_nombre }}
-                        </span>
-                      } @else {
-                        <span class="text-muted">Sin archivo</span>
-                      }
-                    </td>
-
-                    <td class="td-user">
-                      <i class="bi bi-person-fill"></i>
-                      {{ a.registrado_por || '—' }}
-                    </td>
-
-                    <td class="td-act">
-                      <div class="row-acts">
-                        @if (tieneArchivo(a)) {
-                          <button class="btn-row btn-row--down" (click)="descargar(a)" title="Descargar archivo">
-                            <i class="bi bi-download"></i> Descargar
-                          </button>
-                        }
-                        <button class="btn-row btn-row--firma" (click)="gestionarFirmas(a)" title="Gestionar Firmas" style="color: #f59e0b; background: #fef3c7; border: 1px solid #fcd34d;">
-                          <i class="bi bi-pen-fill"></i> Firmas
-                        </button>
-                        @if (!a.es_nativo) {
-                          <button class="btn-row btn-row--del" (click)="eliminar(a)" title="Eliminar">
-                            <i class="bi bi-trash-fill"></i>
-                          </button>
-                        }
-                      </div>
-                    </td>
-
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-
-        </div>
-      }
-
-    }
-
-  }
-
-  <!-- ── ESTADO INICIAL ── -->
-  @if (!yaSeHizoBusqueda) {
-    <div class="empty-card empty-card--initial">
-      <div class="empty-icon empty-icon--lg">
-        <i class="bi bi-person-lines-fill"></i>
-      </div>
-      <h3>Consultar historial de un funcionario</h3>
-      <p>Ingrese la cédula, nombre o número de nómina del funcionario en el buscador.</p>
-      <div class="tips-row">
-        <div class="tip-item">
-          <i class="bi bi-card-text"></i>
-          <span>Por cédula </span>
-        </div>
-        <div class="tip-item">
-          <i class="bi bi-person-fill"></i>
-          <span>Por nombre</span>
-        </div>
-        <div class="tip-item">
-          <i class="bi bi-hash"></i>
-          <span>Por nómina</span>
-        </div>
-      </div>
-    </div>
-  }
-
-</div>
-
-<!-- ══════════════════════════════════════════════════════
-     MODAL SUBIR ACCIÓN
-══════════════════════════════════════════════════════ -->
-@if (mostrarModal) {
-  <div class="modal-backdrop" (click)="cerrarModal()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-
-      <div class="modal-header">
-        <div class="modal-header-left">
-          <div class="modal-icon">
-            <i class="bi bi-cloud-upload-fill"></i>
-          </div>
-          <div>
-            <h4>Subir Acción de Personal</h4>
-            <p>{{ persona?.nombres }}</p>
-          </div>
-        </div>
-        <button class="modal-close" (click)="cerrarModal()">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-
-      <div class="modal-body">
-        <div class="modal-grid">
-
-          <div class="m-field">
-            <label>Número AP</label>
-            <input type="text" [(ngModel)]="formSubir.numero_accion"
-                   class="m-input" placeholder="Ej: AP-RH-2026-0001">
-          </div>
-
-          <div class="m-field">
-            <label>Tipo de acción <span class="req">*</span></label>
-            <select [(ngModel)]="formSubir.tipo_accion" class="m-input m-select">
-              <option value="">Seleccione...</option>
-              @for (t of tiposAccion; track t) {
-                <option [value]="t">{{ t }}</option>
+            <button
+              type="button"
+              class="btn-search"
+              (click)="buscar()"
+              [disabled]="buscando || !textoBusqueda.trim()"
+            >
+              @if (buscando) {
+                <i class="bi bi-arrow-repeat spin-btn" aria-hidden="true"></i>
+                Buscando...
+              } @else {
+                <i class="bi bi-search" aria-hidden="true"></i>
+                Buscar
               }
-            </select>
+            </button>
+
+            @if (yaSeHizoBusqueda || textoBusqueda) {
+              <button
+                type="button"
+                class="btn-clear"
+                (click)="limpiarBusqueda()"
+                title="Limpiar búsqueda"
+                aria-label="Limpiar búsqueda"
+              >
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+              </button>
+            }
           </div>
 
-          <div class="m-field">
-            <label>Fecha de la acción</label>
-            <input type="date" [(ngModel)]="formSubir.fecha_accion" class="m-input">
-          </div>
-
-          <div class="m-field m-field--full">
-            <label>Archivo (PDF, Excel, Word)</label>
-            <div class="file-drop">
-              <i class="bi bi-file-earmark-arrow-up-fill"></i>
-              <span>{{ archivoSeleccionado ? archivoSeleccionado.name : 'Seleccione un archivo...' }}</span>
-              <input type="file"
-                     accept=".pdf,.xlsx,.xls,.docx,.doc"
-                     (change)="onArchivoSeleccionado($event)"
-                     class="file-input">
-            </div>
-            <span class="m-hint">Formatos: PDF, Excel (.xlsx/.xls), Word (.docx/.doc)</span>
-          </div>
-
+          <span class="search-hint">
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            La consulta revisa tanto el personal registrado como el historial documental.
+          </span>
         </div>
       </div>
+    </section>
 
-      <div class="modal-footer">
-        <button class="btn btn-ghost" (click)="cerrarModal()" [disabled]="subiendoArchivo">
-          Cancelar
-        </button>
-        <button class="btn btn-primary" (click)="subirAccion()" [disabled]="subiendoArchivo">
-          @if (subiendoArchivo) {
-            <i class="bi bi-arrow-repeat spin-btn"></i> Guardando...
-          } @else {
-            <i class="bi bi-cloud-upload-fill"></i> Registrar acción
-          }
-        </button>
-      </div>
+    @if (yaSeHizoBusqueda) {
+      @if (!persona) {
+        <section class="empty-card empty-card--notfound">
+          <div class="empty-icon" aria-hidden="true">
+            <i class="bi bi-person-x-fill"></i>
+          </div>
+          <h2>Funcionario no encontrado</h2>
+          <p>
+            No se encontraron resultados para
+            <strong>“{{ ultimoTerminoBuscado }}”</strong>.
+          </p>
+          <p class="empty-hint">
+            Verifique la cédula, los nombres o el número de nómina e intente nuevamente.
+          </p>
+        </section>
+      }
 
-    </div>
-  </div>
-}
-} <!-- CIERRA EL @if (!documentoActualId) -->
+      @if (persona) {
+        <section
+          class="persona-card"
+          [class.persona-card--noactivo]="!persona.encontrado_en_personal"
+        >
+          <div class="persona-avatar" aria-hidden="true">
+            {{ (persona.nombres || '?').charAt(0) }}
+          </div>
 
-<!-- ══════════════════════════════════════════════════════
-     VISOR PDF Y FIRMAS (CUANDO SE ABRE UN DOCUMENTO NATIVO)
-══════════════════════════════════════════════════════ -->
-@if (documentoActualId) {
-<div class="pdf-firma-layout" style="height: 100vh; display: flex; flex-direction: column; background: #f8fafc;">
-  <header class="preview-header" style="background: white; padding: 1rem 2rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-    <div class="header-titles">
-      <h2 style="margin:0; font-size: 1.25rem; font-weight: 600; color: #1e293b;">Gestión de Firmas Electrónicas</h2>
-      <span class="badge" style="background: #e0f2fe; color: #0284c7; margin-top: 4px; display: inline-block;">Historial / Documento en curso</span>
-    </div>
-    <div>
-      <button type="button" class="btn btn-warning" (click)="mostrarOffcanvasFirmas = true" style="margin-right: 1rem; border-radius: 8px; font-weight: 500;">
-        <i class="bi bi-vector-pen"></i> Mostrar Firmantes
-      </button>
-      <button class="btn btn-outline-secondary" (click)="cerrarOffcanvasFirmas()" style="border-radius: 8px;">
-        <i class="bi bi-x-lg"></i> Cerrar Documento
-      </button>
-    </div>
-  </header>
-  
-  <main class="preview-main" style="flex: 1; padding: 2rem; display: flex; justify-content: center; overflow: hidden;">
-    <div class="pdf-container modern-pdf-container" style="width: 100%; max-width: 1000px; height: 100%; background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); overflow: hidden;">
-      <iframe *ngIf="pdfFirmasUrl" [src]="pdfFirmasUrl" class="pdf-viewer" style="width: 100%; height: 100%; border: none;"></iframe>
-    </div>
+          <div class="persona-info">
+            <div class="persona-title-row">
+              <h2 class="persona-name">{{ persona.nombres }}</h2>
+              @if (persona.encontrado_en_personal) {
+                <span class="status-pill status-pill--active">
+                  <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                  Personal activo
+                </span>
+              } @else {
+                <span class="status-pill status-pill--inactive">
+                  <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                  Fuera del registro activo
+                </span>
+              }
+            </div>
+
+            <div class="persona-meta">
+              <span class="meta-chip">
+                <i class="bi bi-card-text" aria-hidden="true"></i>
+                {{ persona.cedula }}
+              </span>
+
+              @if (persona.numero_nomina) {
+                <span class="meta-chip">
+                  <i class="bi bi-hash" aria-hidden="true"></i>
+                  Nómina {{ persona.numero_nomina }}
+                </span>
+              }
+
+              @if (persona.cargo) {
+                <span class="meta-chip">
+                  <i class="bi bi-briefcase-fill" aria-hidden="true"></i>
+                  {{ persona.cargo }}
+                </span>
+              }
+
+              @if (persona.unidad) {
+                <span class="meta-chip">
+                  <i class="bi bi-building" aria-hidden="true"></i>
+                  {{ persona.unidad }}
+                </span>
+              }
+
+              @if (persona.modalidad) {
+                <span class="meta-chip meta-chip--mode">
+                  <i class="bi bi-file-person-fill" aria-hidden="true"></i>
+                  {{ persona.modalidad }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="persona-actions">
+            <div class="acciones-summary">
+              <span>
+                <strong>{{ acciones.length }}</strong>
+                {{ acciones.length === 1 ? 'acción' : 'acciones' }}
+              </span>
+              <small>
+                {{ totalNativas }} del sistema · {{ totalCargadas }} cargadas
+              </small>
+            </div>
+
+            <button type="button" class="btn-upload" (click)="abrirModal()">
+              <i class="bi bi-cloud-arrow-up-fill" aria-hidden="true"></i>
+              Subir documento
+            </button>
+          </div>
+        </section>
+
+        @if (acciones.length === 0) {
+          <section class="empty-card empty-card--noacciones">
+            <div class="empty-icon" aria-hidden="true">
+              <i class="bi bi-folder2-open"></i>
+            </div>
+            <h2>Sin acciones registradas</h2>
+            <p>
+              <strong>{{ persona.nombres }}</strong> aún no tiene documentos en
+              su historial.
+            </p>
+            <button type="button" class="btn-upload-lg" (click)="abrirModal()">
+              <i class="bi bi-cloud-upload-fill" aria-hidden="true"></i>
+              Subir primera acción de personal
+            </button>
+          </section>
+        }
+
+        @if (acciones.length > 0) {
+          <section class="acciones-card" aria-labelledby="titulo-historial">
+            <div class="acciones-header">
+              <div class="acciones-header-left">
+                <i class="bi bi-clock-history" aria-hidden="true"></i>
+                <div>
+                  <h2 id="titulo-historial">Historial documental</h2>
+                  <span>
+                    {{ accionesFiltradas.length }} de {{ acciones.length }} registros
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="btn-icon-text"
+                (click)="buscar()"
+                [disabled]="buscando"
+              >
+                <i
+                  class="bi bi-arrow-clockwise"
+                  [class.spin-btn]="buscando"
+                  aria-hidden="true"
+                ></i>
+                Actualizar
+              </button>
+            </div>
+
+            <div class="acciones-toolbar">
+              <div class="toolbar-search">
+                <i class="bi bi-funnel" aria-hidden="true"></i>
+                <input
+                  type="search"
+                  [(ngModel)]="filtroAcciones"
+                  placeholder="Filtrar por número, archivo, usuario o estado"
+                  aria-label="Filtrar acciones"
+                >
+              </div>
+
+              <select
+                [(ngModel)]="filtroTipo"
+                class="toolbar-select"
+                aria-label="Filtrar por tipo de acción"
+              >
+                <option value="">Todos los tipos</option>
+                @for (tipo of tiposDisponibles; track tipo) {
+                  <option [value]="tipo">{{ tipo }}</option>
+                }
+              </select>
+
+              <select
+                [(ngModel)]="ordenAcciones"
+                class="toolbar-select"
+                aria-label="Ordenar acciones"
+              >
+                <option value="recientes">Más recientes</option>
+                <option value="antiguas">Más antiguas</option>
+                <option value="numero">Número de acción</option>
+              </select>
+
+              @if (filtroAcciones || filtroTipo || ordenAcciones !== 'recientes') {
+                <button
+                  type="button"
+                  class="btn-toolbar-clear"
+                  (click)="limpiarFiltros()"
+                >
+                  <i class="bi bi-x-circle" aria-hidden="true"></i>
+                  Limpiar
+                </button>
+              }
+            </div>
+
+            @if (accionesFiltradas.length === 0) {
+              <div class="table-empty">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <strong>No existen coincidencias</strong>
+                <span>Modifique los filtros para mostrar otros registros.</span>
+              </div>
+            } @else {
+              <div class="acciones-table-wrap">
+                <table class="acciones-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Número AP</th>
+                      <th>Tipo de acción</th>
+                      <th>Fecha</th>
+                      <th>Origen</th>
+                      <th>Documento</th>
+                      <th>Estado</th>
+                      <th>Registrado por</th>
+                      <th class="th-act">Opciones</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    @for (accion of accionesFiltradas; track accion.id; let i = $index) {
+                      <tr>
+                        <td class="td-num">{{ i + 1 }}</td>
+
+                        <td class="td-numero">
+                          <span class="num-badge">
+                            {{ accion.numero_accion || 'Sin número' }}
+                          </span>
+                          <small class="registro-date">
+                            Registrado
+                            {{ accion.fecha_registro | date:'dd/MM/yyyy HH:mm' }}
+                          </small>
+                        </td>
+
+                        <td>
+                          <span class="tipo-badge">
+                            {{ accion.tipo_accion || 'No especificado' }}
+                          </span>
+                        </td>
+
+                        <td class="td-fecha">
+                          @if (accion.fecha_accion) {
+                            <i class="bi bi-calendar3" aria-hidden="true"></i>
+                            {{ accion.fecha_accion | date:'dd/MM/yyyy' }}
+                          } @else {
+                            <span class="text-muted">Sin fecha</span>
+                          }
+                        </td>
+
+                        <td>
+                          @if (esNativo(accion)) {
+                            <span class="origen-badge origen-badge--native">
+                              <i class="bi bi-cpu-fill" aria-hidden="true"></i>
+                              Sistema
+                            </span>
+                          } @else {
+                            <span class="origen-badge origen-badge--upload">
+                              <i class="bi bi-cloud-arrow-up-fill" aria-hidden="true"></i>
+                              Cargado
+                            </span>
+                          }
+                        </td>
+
+                        <td>
+                          @if (tieneArchivo(accion)) {
+                            <button
+                              type="button"
+                              class="archivo-button"
+                              (click)="verDocumento(accion)"
+                            >
+                              <i
+                                class="bi"
+                                [ngClass]="iconoArchivo(accion)"
+                                aria-hidden="true"
+                              ></i>
+                              <span>{{ accion.archivo_nombre || 'Documento PDF' }}</span>
+                            </button>
+                          } @else {
+                            <span class="text-muted">Sin archivo</span>
+                          }
+                        </td>
+
+                        <td>
+                          <span
+                            class="estado-badge"
+                            [ngClass]="claseEstadoAccion(accion)"
+                          >
+                            {{ estadoAccion(accion) }}
+                          </span>
+                        </td>
+
+                        <td class="td-user">
+                          <i class="bi bi-person-fill" aria-hidden="true"></i>
+                          <span>{{ accion.registrado_por || 'No disponible' }}</span>
+                        </td>
+
+                        <td class="td-act">
+                          <div class="row-acts">
+                            @if (tieneArchivo(accion)) {
+                              <button
+                                type="button"
+                                class="btn-row btn-row--view"
+                                (click)="verDocumento(accion)"
+                                title="Ver documento"
+                                aria-label="Ver documento"
+                              >
+                                <i class="bi bi-eye-fill" aria-hidden="true"></i>
+                              </button>
+
+                              <button
+                                type="button"
+                                class="btn-row btn-row--down"
+                                (click)="descargar(accion)"
+                                title="Descargar documento"
+                                aria-label="Descargar documento"
+                              >
+                                <i class="bi bi-download" aria-hidden="true"></i>
+                              </button>
+                            }
+
+                            @if (esNativo(accion)) {
+                              <button
+                                type="button"
+                                class="btn-row btn-row--firma"
+                                (click)="gestionarFirmas(accion)"
+                                title="Gestionar firmas electrónicas"
+                                aria-label="Gestionar firmas electrónicas"
+                              >
+                                <i class="bi bi-vector-pen" aria-hidden="true"></i>
+                              </button>
+                            } @else {
+                              <button
+                                type="button"
+                                class="btn-row btn-row--del"
+                                (click)="eliminar(accion)"
+                                title="Eliminar registro"
+                                aria-label="Eliminar registro"
+                              >
+                                <i class="bi bi-trash-fill" aria-hidden="true"></i>
+                              </button>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </section>
+        }
+      }
+    } @else {
+      <section class="empty-card empty-card--initial">
+        <div class="empty-icon empty-icon--lg" aria-hidden="true">
+          <i class="bi bi-person-lines-fill"></i>
+        </div>
+        <h2>Consultar historial de un funcionario</h2>
+        <p>
+          Ingrese la cédula, nombres, apellidos o número de nómina en el buscador.
+        </p>
+
+        <div class="tips-row">
+          <div class="tip-item">
+            <i class="bi bi-card-text" aria-hidden="true"></i>
+            <span>Búsqueda por cédula</span>
+          </div>
+          <div class="tip-item">
+            <i class="bi bi-person-fill" aria-hidden="true"></i>
+            <span>Búsqueda por nombre</span>
+          </div>
+          <div class="tip-item">
+            <i class="bi bi-hash" aria-hidden="true"></i>
+            <span>Búsqueda por nómina</span>
+          </div>
+        </div>
+      </section>
+    }
   </main>
 
-  <!-- Offcanvas de Firmas -->
-  <div class="offcanvas-overlay" *ngIf="mostrarOffcanvasFirmas" (click)="mostrarOffcanvasFirmas = false" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); z-index: 1040;"></div>
-  <div class="offcanvas-panel" [class.open]="mostrarOffcanvasFirmas" style="position: fixed; top: 0; right: -400px; width: 400px; height: 100vh; background: white; z-index: 1050; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: -10px 0 30px rgba(0,0,0,0.1); display: flex; flex-direction: column;">
-    <div class="offcanvas-header" style="padding: 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-      <div class="offcanvas-title" style="display: flex; align-items: center; gap: 0.75rem;">
-        <i class="bi bi-vector-pen" style="color: #3b82f6; font-size: 1.5rem;"></i>
-        <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1e293b;">Proceso de Firmas</h3>
-      </div>
-      <button class="btn-icon" (click)="mostrarOffcanvasFirmas = false" aria-label="Cerrar panel" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer;">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-    
-    <div class="offcanvas-body" style="padding: 1.5rem; flex: 1; overflow-y: auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <p style="color: #64748b; font-size: 0.875rem; margin: 0;">Estado de firmas para este documento</p>
-        <button class="btn btn-outline-primary btn-sm" (click)="cargarFirmasDocumento()" [disabled]="cargandoFirmas" style="border-radius: 6px; font-size: 0.75rem;">
-          <i class="bi bi-arrow-clockwise" [class.spin]="cargandoFirmas"></i> Actualizar
-        </button>
-      </div>
-
-      <div class="firmas-lista" *ngIf="firmasDocumento.length > 0; else noFirmas" style="display: flex; flex-direction: column; gap: 1rem;">
-        <div *ngFor="let firma of firmasDocumento" class="firma-item" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; position: relative; overflow: hidden;">
-          <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%;" [ngStyle]="{'background-color': firma.estado === 'FIRMADA' ? '#10b981' : '#f59e0b'}"></div>
-          <div class="firma-info" style="display: flex; flex-direction: column; gap: 0.25rem;">
-            <span style="font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">{{ firma.seccion }}</span>
-            <span style="font-weight: 600; color: #1e293b;">{{ firma.nombre_firmante }}</span>
-            <small style="color: #64748b;">{{ firma.cargo_firmante }}</small>
+  @if (mostrarModal) {
+    <div class="modal-backdrop" (click)="cerrarModal()">
+      <section
+        class="modal-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tituloModalSubir"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="modal-header">
+          <div class="modal-header-left">
+            <div class="modal-icon" aria-hidden="true">
+              <i class="bi bi-cloud-upload-fill"></i>
+            </div>
+            <div>
+              <h2 id="tituloModalSubir">Registrar acción de personal</h2>
+              <p>{{ persona?.nombres }} · {{ persona?.cedula }}</p>
+            </div>
           </div>
-          <div class="firma-meta" style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
-            <span class="badge" [ngClass]="{'bg-success': firma.estado === 'FIRMADA', 'bg-warning': firma.estado === 'PENDIENTE'}" style="padding: 0.35em 0.65em; border-radius: 6px;">{{ firma.estado }}</span>
-            <small *ngIf="firma.fecha_firma" style="color: #94a3b8;">{{ firma.fecha_firma | date:'short' }}</small>
-            <button *ngIf="firma.estado === 'PENDIENTE'" class="btn btn-primary btn-sm" (click)="abrirModalFirma(firma)" style="border-radius: 6px; padding: 0.25rem 0.75rem;">
-              Firmar
+
+          <button
+            type="button"
+            class="modal-close"
+            (click)="cerrarModal()"
+            [disabled]="subiendoArchivo"
+            aria-label="Cerrar modal"
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <div class="modal-body">
+          <div class="modal-grid">
+            <div class="m-field">
+              <label for="numeroAccion">Número AP</label>
+              <input
+                id="numeroAccion"
+                type="text"
+                [(ngModel)]="formSubir.numero_accion"
+                class="m-input"
+                placeholder="Ej.: AP-RH-2026-0001"
+                maxlength="80"
+              >
+              <span class="m-hint">Puede dejarse vacío si el documento no tiene numeración.</span>
+            </div>
+
+            <div class="m-field">
+              <label for="tipoAccion">
+                Tipo de acción <span class="req">*</span>
+              </label>
+              <select
+                id="tipoAccion"
+                [(ngModel)]="formSubir.tipo_accion"
+                class="m-input m-select"
+              >
+                <option value="">Seleccione...</option>
+                @for (tipo of tiposAccion; track tipo) {
+                  <option [value]="tipo">{{ tipo }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="m-field">
+              <label for="fechaAccion">Fecha de la acción</label>
+              <input
+                id="fechaAccion"
+                type="date"
+                [(ngModel)]="formSubir.fecha_accion"
+                class="m-input"
+              >
+            </div>
+
+            <div class="m-field m-field--full">
+              <label for="archivoAccionInput">
+                Documento <span class="req">*</span>
+              </label>
+
+              <label
+                class="file-drop"
+                [class.file-drop--selected]="!!archivoSeleccionado"
+                for="archivoAccionInput"
+              >
+                <input
+                  id="archivoAccionInput"
+                  type="file"
+                  accept=".pdf,.xlsx,.xls,.docx,.doc"
+                  (change)="onArchivoSeleccionado($event)"
+                  class="file-input"
+                >
+
+                @if (archivoSeleccionado) {
+                  <div class="file-selected-icon" aria-hidden="true">
+                    <i class="bi bi-file-earmark-check-fill"></i>
+                  </div>
+                  <div class="file-selected-info">
+                    <strong>{{ archivoSeleccionado.name }}</strong>
+                    <span>{{ archivoSeleccionadoTamano }}</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="file-remove"
+                    (click)="quitarArchivoSeleccionado($event)"
+                    aria-label="Quitar archivo"
+                  >
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                  </button>
+                } @else {
+                  <i class="bi bi-file-earmark-arrow-up-fill" aria-hidden="true"></i>
+                  <div>
+                    <strong>Seleccione un documento</strong>
+                    <span>PDF, Excel o Word · máximo 20 MB</span>
+                  </div>
+                }
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <footer class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-ghost"
+            (click)="cerrarModal()"
+            [disabled]="subiendoArchivo"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="subirAccion()"
+            [disabled]="!formularioSubirValido"
+          >
+            @if (subiendoArchivo) {
+              <i class="bi bi-arrow-repeat spin-btn" aria-hidden="true"></i>
+              Guardando...
+            } @else {
+              <i class="bi bi-cloud-upload-fill" aria-hidden="true"></i>
+              Registrar acción
+            }
+          </button>
+        </footer>
+      </section>
+    </div>
+  }
+
+  @if (mostrarVisorArchivo) {
+    <div class="viewer-backdrop" (click)="cerrarVisorArchivo()">
+      <section
+        class="viewer-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tituloVisorArchivo"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="viewer-header">
+          <div class="viewer-title">
+            <div class="viewer-title-icon" aria-hidden="true">
+              <i class="bi" [ngClass]="accionVisualizada ? iconoArchivo(accionVisualizada) : 'bi-file-earmark'"></i>
+            </div>
+            <div>
+              <h2 id="tituloVisorArchivo">{{ visorArchivoNombre || 'Documento' }}</h2>
+              <span>{{ accionVisualizada?.numero_accion || 'Acción de personal' }}</span>
+            </div>
+          </div>
+
+          <div class="viewer-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="descargarDesdeVisor()"
+              [disabled]="cargandoVisorArchivo"
+            >
+              <i class="bi bi-download" aria-hidden="true"></i>
+              Descargar
+            </button>
+            <button
+              type="button"
+              class="viewer-close"
+              (click)="cerrarVisorArchivo()"
+              aria-label="Cerrar visor"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
             </button>
           </div>
-        </div>
-      </div>
-      <ng-template #noFirmas>
-        <div style="text-align: center; padding: 3rem 1rem;">
-          <i class="bi bi-inbox" style="color: #cbd5e1; font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-          <p style="color: #64748b;">No hay firmas configuradas.</p>
-        </div>
-      </ng-template>
+        </header>
 
-      <div style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem;">
-        <button class="btn btn-dark w-100" (click)="finalizarDocumento()" style="border-radius: 8px; padding: 0.75rem; font-weight: 500;">
-          <i class="bi bi-check-all"></i> Finalizar Documento
-        </button>
-        <p style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 0.5rem;">Hacer clic solo cuando todas las firmas estén en verde.</p>
-      </div>
+        <div class="viewer-body">
+          @if (cargandoVisorArchivo) {
+            <div class="viewer-loading">
+              <i class="bi bi-arrow-repeat spin-btn" aria-hidden="true"></i>
+              <strong>Cargando documento...</strong>
+            </div>
+          } @else if (visorArchivoEsPdf && visorArchivoUrl) {
+            <iframe
+              [src]="visorArchivoUrl"
+              title="Vista previa del documento PDF"
+              class="viewer-iframe"
+            ></iframe>
+          } @else {
+            <div class="viewer-unavailable">
+              <i class="bi bi-file-earmark-lock2" aria-hidden="true"></i>
+              <h3>Vista previa no disponible</h3>
+              <p>
+                Los archivos Word y Excel deben descargarse para abrirlos con su
+                aplicación correspondiente.
+              </p>
+              <button type="button" class="btn btn-primary" (click)="descargarDesdeVisor()">
+                <i class="bi bi-download" aria-hidden="true"></i>
+                Descargar {{ visorArchivoNombre }}
+              </button>
+            </div>
+          }
+        </div>
+      </section>
     </div>
-  </div>
-
-  <!-- Modal Flotante Minimalista para Contraseña de Firma -->
-  <div class="modal-overlay" *ngIf="mostrarModalFirma" (click)="cerrarModalFirma()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000; display: flex; align-items: center; justify-content: center;">
-    <div class="modal-firma-moderno" (click)="$event.stopPropagation()" style="background: white; border-radius: 16px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
-      <div class="modal-header" style="background: #f8fafc; padding: 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <div style="width: 40px; height: 40px; background: #e0e7ff; color: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
-            <i class="bi bi-shield-lock"></i>
-          </div>
-          <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #1e293b;">Autenticación</h3>
-        </div>
-        <button (click)="cerrarModalFirma()" style="background: none; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer;">
-          <i class="bi bi-x"></i>
-        </button>
-      </div>
-      
-      <div class="modal-body" style="padding: 1.5rem;">
-        <div style="background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-          <p style="color: #64748b; font-size: 0.875rem; margin: 0 0 0.25rem 0;">Sección: <strong style="color: #1e293b;">{{ firmaSeleccionada?.seccion }}</strong></p>
-          <p style="color: #64748b; font-size: 0.875rem; margin: 0;">Firmante: <strong style="color: #1e293b;">{{ firmaSeleccionada?.nombre_firmante }}</strong></p>
-        </div>
-
-        <div style="margin-bottom: 1.5rem;">
-          <input type="file" id="firmaFile" (change)="seleccionarCertificadoFirma($event)" accept=".p12,.pfx" style="display: none;">
-          <label for="firmaFile" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; border: 2px dashed #cbd5e1; border-radius: 12px; cursor: pointer; transition: all 0.2s; background: #fafafa;" [ngStyle]="selectedFile ? {'border-color': '#10b981', 'background': '#ecfdf5'} : {}">
-            <i class="bi" [ngClass]="selectedFile ? 'bi-file-earmark-check text-success' : 'bi-cloud-arrow-up'" style="font-size: 2rem; color: #94a3b8; margin-bottom: 0.5rem;"></i>
-            <span style="font-weight: 500; color: #1e293b; text-align: center;">{{ selectedFile ? selectedFile.name : 'Seleccionar Certificado' }}</span>
-            <small style="color: #64748b; margin-top: 0.25rem;">Formatos soportados: .p12, .pfx</small>
-          </label>
-        </div>
-        
-        <div>
-          <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.5rem;">Contraseña del certificado</label>
-          <div style="position: relative;">
-            <i class="bi bi-key" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-            <input type="password" [(ngModel)]="passwordFirmaSeccion" placeholder="Ingrese su contraseña" style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'">
-          </div>
-        </div>
-      </div>
-      
-      <div class="modal-footer" style="padding: 1.5rem; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 1rem; background: #f8fafc;">
-        <button class="btn btn-light" (click)="cerrarModalFirma()" style="border-radius: 8px; font-weight: 500;">Cancelar</button>
-        <button class="btn btn-primary" (click)="firmarSeccion()" [disabled]="!selectedFile || !passwordFirmaSeccion || firmando" style="border-radius: 8px; font-weight: 500; min-width: 140px; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
-          <span *ngIf="firmando" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          <i *ngIf="!firmando" class="bi bi-pen"></i> 
-          <span>{{ firmando ? 'Firmando...' : 'Firmar Documento' }}</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-</div>
-}
-
-<style>
-  .offcanvas-panel.open { right: 0 !important; }
-  @keyframes modalSlideUp {
-    from { opacity: 0; transform: translateY(20px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
   }
-</style>
+} @else {
+  <main class="firma-workspace">
+    <header class="firma-workspace-header">
+      <div class="firma-breadcrumb">
+        <button type="button" class="workspace-back" (click)="cerrarGestionFirmas()">
+          <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        </button>
+        <div>
+          <span>Historial / Gestión de firmas</span>
+          <h1>{{ accionDocumentoActual?.numero_accion || 'Acción de personal' }}</h1>
+        </div>
+      </div>
+
+      <div class="workspace-header-actions">
+        <div class="firma-progress-compact">
+          <span>{{ progresoFirmas }}% firmado</span>
+          <div class="progress-track">
+            <div class="progress-value" [style.width.%]="progresoFirmas"></div>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary" (click)="cargarPdfFirmas()">
+          <i
+            class="bi bi-arrow-clockwise"
+            [class.spin-btn]="cargandoPdfFirmas"
+            aria-hidden="true"
+          ></i>
+          Actualizar PDF
+        </button>
+
+        <button type="button" class="btn btn-warning" (click)="abrirPanelFirmas()">
+          <i class="bi bi-vector-pen" aria-hidden="true"></i>
+          Firmantes
+        </button>
+
+        <button type="button" class="btn btn-ghost" (click)="cerrarGestionFirmas()">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+          Cerrar
+        </button>
+      </div>
+    </header>
+
+    <section class="firma-workspace-body">
+      <div class="pdf-shell">
+        @if (cargandoPdfFirmas) {
+          <div class="pdf-loading">
+            <i class="bi bi-arrow-repeat spin-btn" aria-hidden="true"></i>
+            <strong>Actualizando documento firmado...</strong>
+          </div>
+        } @else if (pdfFirmasUrl) {
+          <iframe
+            [src]="pdfFirmasUrl"
+            title="Documento PDF para firmas"
+            class="pdf-viewer"
+          ></iframe>
+        } @else {
+          <div class="pdf-loading pdf-loading--error">
+            <i class="bi bi-file-earmark-x" aria-hidden="true"></i>
+            <strong>No se pudo mostrar el PDF.</strong>
+            <button type="button" class="btn btn-primary" (click)="cargarPdfFirmas()">
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
+    </section>
+
+    @if (mostrarOffcanvasFirmas) {
+      <div class="offcanvas-overlay" (click)="cerrarPanelFirmas()"></div>
+    }
+
+    <aside class="offcanvas-panel" [class.open]="mostrarOffcanvasFirmas">
+      <header class="offcanvas-header">
+        <div class="offcanvas-title">
+          <div class="offcanvas-title-icon" aria-hidden="true">
+            <i class="bi bi-vector-pen"></i>
+          </div>
+          <div>
+            <h2>Proceso de firmas</h2>
+            <span>Las firmas son independientes y no requieren un orden.</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="btn-icon"
+          (click)="cerrarPanelFirmas()"
+          aria-label="Cerrar panel de firmas"
+        >
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="offcanvas-body">
+        <div class="firmas-summary">
+          <div>
+            <span>Avance general</span>
+            <strong>{{ progresoFirmas }}%</strong>
+          </div>
+          <div class="progress-track progress-track--large">
+            <div class="progress-value" [style.width.%]="progresoFirmas"></div>
+          </div>
+          <small>
+            {{ firmasDocumento.length }} secciones configuradas
+          </small>
+        </div>
+
+        <div class="firmas-toolbar">
+          <span>Estado de firmantes</span>
+          <button
+            type="button"
+            class="btn-refresh"
+            (click)="cargarFirmasDocumento()"
+            [disabled]="cargandoFirmas"
+          >
+            <i
+              class="bi bi-arrow-clockwise"
+              [class.spin-btn]="cargandoFirmas"
+              aria-hidden="true"
+            ></i>
+            Actualizar
+          </button>
+        </div>
+
+        @if (cargandoFirmas && firmasDocumento.length === 0) {
+          <div class="firmas-empty">
+            <i class="bi bi-arrow-repeat spin-btn" aria-hidden="true"></i>
+            <strong>Cargando firmas...</strong>
+          </div>
+        } @else if (firmasDocumento.length > 0) {
+          <div class="firmas-lista">
+            @for (firma of firmasDocumento; track firma.id || firma.seccion) {
+              <article class="firma-card" [ngClass]="estadoFirmaClase(firma)">
+                <div class="firma-card-status" aria-hidden="true"></div>
+
+                <div class="firma-card-head">
+                  <span class="firma-seccion">{{ firma.seccion }}</span>
+                  <span class="firma-estado">{{ firma.estado }}</span>
+                </div>
+
+                <div class="firma-persona">
+                  <div class="firma-avatar" aria-hidden="true">
+                    {{ (firma.nombre_firmante || '?').charAt(0) }}
+                  </div>
+                  <div>
+                    <strong>{{ firma.nombre_firmante }}</strong>
+                    <span>{{ firma.cargo_firmante || 'Cargo no especificado' }}</span>
+                  </div>
+                </div>
+
+                @if (firma.fecha_firma) {
+                  <div class="firma-fecha">
+                    <i class="bi bi-calendar-check" aria-hidden="true"></i>
+                    Firmado el {{ firma.fecha_firma | date:'dd/MM/yyyy HH:mm' }}
+                  </div>
+                }
+
+                @if (!firmaEstaFirmada(firma)) {
+                  <button
+                    type="button"
+                    class="btn-firmar"
+                    (click)="abrirModalFirma(firma)"
+                  >
+                    <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
+                    Firmar esta sección
+                  </button>
+                } @else {
+                  <div class="firma-completada">
+                    <i class="bi bi-patch-check-fill" aria-hidden="true"></i>
+                    Firma aplicada
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="firmas-empty">
+            <i class="bi bi-inbox" aria-hidden="true"></i>
+            <strong>No hay firmas configuradas</strong>
+            <span>Prepare el documento para firmas antes de continuar.</span>
+          </div>
+        }
+      </div>
+
+      <footer class="offcanvas-footer">
+        <button
+          type="button"
+          class="btn-finalizar"
+          (click)="finalizarDocumento()"
+          [disabled]="!todasFirmasCompletadas || finalizandoDocumento"
+        >
+          @if (finalizandoDocumento) {
+            <i class="bi bi-arrow-repeat spin-btn" aria-hidden="true"></i>
+            Finalizando...
+          } @else {
+            <i class="bi bi-check-all" aria-hidden="true"></i>
+            Finalizar documento
+          }
+        </button>
+        <small>
+          El documento puede finalizarse cuando todas las firmas estén completas.
+        </small>
+      </footer>
+    </aside>
+
+    @if (mostrarModalFirma) {
+      <div class="signature-modal-backdrop" (click)="cerrarModalFirma()">
+        <section
+          class="signature-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="tituloModalFirma"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="signature-modal-header">
+            <div class="signature-modal-title">
+              <div class="signature-modal-icon" aria-hidden="true">
+                <i class="bi bi-shield-lock-fill"></i>
+              </div>
+              <div>
+                <h2 id="tituloModalFirma">Firma electrónica</h2>
+                <span>Certificado personal PKCS#12</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="viewer-close"
+              (click)="cerrarModalFirma()"
+              [disabled]="firmando"
+              aria-label="Cerrar modal de firma"
+            >
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          </header>
+
+          <div class="signature-modal-body">
+            <div class="firma-target">
+              <span>Sección a firmar</span>
+              <strong>{{ firmaSeleccionada?.seccion }}</strong>
+              <small>
+                {{ firmaSeleccionada?.nombre_firmante }} ·
+                {{ firmaSeleccionada?.cargo_firmante }}
+              </small>
+            </div>
+
+            <div class="signature-field">
+              <label for="firmaFile">Certificado digital</label>
+              <label
+                for="firmaFile"
+                class="certificate-drop"
+                [class.certificate-drop--selected]="!!selectedFile"
+              >
+                <input
+                  id="firmaFile"
+                  type="file"
+                  accept=".p12,.pfx"
+                  (change)="seleccionarCertificadoFirma($event)"
+                >
+
+                @if (selectedFile) {
+                  <i class="bi bi-file-earmark-check-fill" aria-hidden="true"></i>
+                  <div>
+                    <strong>{{ selectedFile.name }}</strong>
+                    <span>Certificado listo para firmar</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="certificate-remove"
+                    (click)="quitarCertificadoFirma($event)"
+                    aria-label="Quitar certificado"
+                  >
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                  </button>
+                } @else {
+                  <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+                  <div>
+                    <strong>Seleccionar certificado</strong>
+                    <span>Formatos permitidos: .p12 y .pfx</span>
+                  </div>
+                }
+              </label>
+            </div>
+
+            <div class="signature-field">
+              <label for="passwordFirma">Contraseña del certificado</label>
+              <div class="password-input-wrap">
+                <i class="bi bi-key-fill" aria-hidden="true"></i>
+                <input
+                  id="passwordFirma"
+                  [type]="mostrarPasswordFirma ? 'text' : 'password'"
+                  [(ngModel)]="passwordFirmaSeccion"
+                  placeholder="Ingrese la contraseña"
+                  autocomplete="current-password"
+                  [disabled]="firmando"
+                >
+                <button
+                  type="button"
+                  (click)="mostrarPasswordFirma = !mostrarPasswordFirma"
+                  [attr.aria-label]="mostrarPasswordFirma ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  <i
+                    class="bi"
+                    [ngClass]="mostrarPasswordFirma ? 'bi-eye-slash-fill' : 'bi-eye-fill'"
+                    aria-hidden="true"
+                  ></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="signature-security-note">
+              <i class="bi bi-shield-check" aria-hidden="true"></i>
+              <p>
+                El certificado y la contraseña se utilizan únicamente durante esta
+                operación y no se almacenan en el sistema.
+              </p>
+            </div>
+          </div>
+
+          <footer class="signature-modal-footer">
+            <button
+              type="button"
+              class="btn btn-ghost"
+              (click)="cerrarModalFirma()"
+              [disabled]="firmando"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="firmarSeccion()"
+              [disabled]="!selectedFile || !passwordFirmaSeccion.trim() || firmando"
+            >
+              @if (firmando) {
+                <i class="bi bi-arrow-repeat spin-btn" aria-hidden="true"></i>
+                Firmando...
+              } @else {
+                <i class="bi bi-pen-fill" aria-hidden="true"></i>
+                Firmar documento
+              }
+            </button>
+          </footer>
+        </section>
+      </div>
+    }
+  </main>
+}

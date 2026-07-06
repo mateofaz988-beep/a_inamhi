@@ -1,0 +1,29 @@
+2026-07-03 13:12:02,787 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-07-03 13:12:02,787 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2026-07-03 13:12:02,789 - werkzeug - INFO -  * Restarting with stat
+2026-07-03 13:12:04,509 - werkzeug - WARNING -  * Debugger is active!
+2026-07-03 13:12:04,513 - werkzeug - INFO -  * Debugger PIN: 623-889-675
+2026-07-03 13:12:27,396 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2026 13:12:27] "OPTIONS /api/auth/login HTTP/1.1" 200 -
+2026-07-03 13:12:27,715 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2026 13:12:27] "POST /api/auth/login HTTP/1.1" 200 -
+2026-07-03 13:15:01,930 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-07-03 13:15:01,930 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2026-07-03 13:15:01,932 - werkzeug - INFO -  * Restarting with stat
+2026-07-03 13:15:03,565 - werkzeug - WARNING -  * Debugger is active!
+2026-07-03 13:15:03,568 - werkzeug - INFO -  * Debugger PIN: 623-889-675
+2026-07-03 13:16:41,739 - werkzeug - WARNING -  * Debugger is active!
+2026-07-03 13:16:41,743 - werkzeug - INFO -  * Debugger PIN: 623-889-675
+2026-07-03 13:16:48,916 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Sistemas\\Documents\\inamhi rrhh\\a_inamhi\\backend-inamhi\\app.py', reloading
+2026-07-03 13:16:50,920 - werkzeug - WARNING -  * Debugger is active!
+2026-07-03 13:16:50,923 - werkzeug - INFO -  * Debugger PIN: 623-889-675
+2026-07-03 13:16:55,486 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2026 13:16:55] "OPTIONS /api/personal HTTP/1.1" 200 -
+2026-07-03 13:16:55,488 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2026 13:16:55] "OPTIONS /api/personal/pasivo HTTP/1.1" 200 -
+2026-07-03 13:16:55,489 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2026 13:16:55] "OPTIONS /api/personal HTTP/1.1" 200 -
+2026-07-03 13:16:55,757 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2026 13:16:55] "GET /api/personal HTTP/1.1" 200 -
+2026-07-03 13:16:55,793 - __main__ - ERROR - Excepción no manejada: name 'es_admin' is not defined
+2026-07-03 13:16:55,803 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2026 13:16:55] "[35m[1mGET /api/personal/pasivo HTTP/1.1[0m" 500 -
+2026-07-03 13:16:55,812 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2026 13:16:55] "GET /api/personal HTTP/1.1" 200 -
+2026-07-03 13:17:04,639 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2026 13:17:04] "OPTIONS /api/auth/login HTTP/1.1" 200 -
+2026-07-03 13:17:04,977 - werkzeug - INFO - 127.0.0.1 - - [03/Jul/2026 13:17:04] "POST /api/auth/login HTTP/1.1" 200 -
+2026-07-03 13:17:18,783 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Sistemas\\Documents\\inamhi rrhh\\a_inamhi\\backend-inamhi\\app.py', reloading

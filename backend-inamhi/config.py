@@ -46,3 +46,16 @@ BASE_STORAGE_DIR = os.path.join(
 # 🔐 SEGURIDAD
 # =========================
 MAX_CERTIFICADO_BYTES = int(os.getenv('MAX_CERTIFICADO_MB', '10')) * 1024 * 1024
+
+
+# =========================
+# 🔐 JWT AUTHENTICATION
+# =========================
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'supersecretkey-inamhi-rrhh-2026-change-in-production')
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRE_MINUTES', '360'))
+JWT_REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv('JWT_REFRESH_TOKEN_EXPIRE_DAYS', '7'))
+
+# =========================
+# 🗄️ DATABASE POOL CONFIG
+# =========================
+DB_POOL_SIZE = int(os.getenv('DB_POOL_SIZE', '5'))

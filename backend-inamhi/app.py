@@ -4,6 +4,8 @@ import mysql.connector
 import json
 import os
 import glob
+import copy
+import inspect
 from io import BytesIO
 from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
@@ -51,6 +53,136 @@ def json_serializer(obj):
 def fecha_ecuador():
     tz_ec = timezone(timedelta(hours=-5))
     return datetime.now(tz_ec).strftime('%Y-%m-%d %H:%M:%S')
+
+
+# =========================
+# 📄 UTILIDADES PDF PARA FIRMAS
+# =========================
+def obtener_total_paginas_pdf(ruta_pdf):
+    """Devuelve el total de páginas del PDF y valida que sea firmable."""
+    if not ruta_pdf:
+        raise ValueError("No se recibió la ruta del PDF.")
+
+    ruta_pdf = os.path.abspath(ruta_pdf)
+    if not os.path.exists(ruta_pdf):
+        raise FileNotFoundError(f"No existe el PDF: {ruta_pdf}")
+
+    try:
+        try:
+            from pypdf import PdfReader
+        except ImportError:
+            from PyPDF2 import PdfReader
+
+        lector = PdfReader(ruta_pdf)
+        total = len(lector.pages)
+    except Exception as error:
+        raise ValueError(f"No se pudo leer el PDF generado: {error}") from error
+
+    if total <= 0:
+        raise ValueError("El PDF generado no contiene páginas.")
+
+    return total
+
+
+def normalizar_indice_pagina(pagina_configurada, total_paginas):
+    """
+    Convierte la página configurada en un índice válido para pyHanko.
+
+    pyHanko usa índices desde cero:
+      página visual 1 -> índice 0
+      página visual 2 -> índice 1
+    """
+    if total_paginas <= 0:
+        raise ValueError("El PDF no contiene páginas.")
+
+    try:
+        pagina = int(pagina_configurada)
+    except (TypeError, ValueError):
+        pagina = 0
+
+    if pagina < 0:
+        pagina = total_paginas + pagina
+
+    if pagina < 0:
+        pagina = 0
+    elif pagina >= total_paginas:
+        pagina = total_paginas - 1
+
+    return pagina
+
+
+def normalizar_posicion_firma(posicion, total_paginas, pagina_preferida=0):
+    """
+    Conserva las coordenadas originales y corrige únicamente el índice
+    de página cuando la configuración incluye página/on_page/page.
+    """
+    pagina_valida = normalizar_indice_pagina(pagina_preferida, total_paginas)
+    posicion_normalizada = copy.deepcopy(posicion)
+
+    if isinstance(posicion_normalizada, dict):
+        claves_pagina = (
+            'pagina', 'page', 'on_page', 'page_index', 'indice_pagina'
+        )
+        clave_encontrada = next(
+            (clave for clave in claves_pagina if clave in posicion_normalizada),
+            None
+        )
+
+        if clave_encontrada:
+            posicion_normalizada[clave_encontrada] = pagina_valida
+        else:
+            # No elimina ni altera x1/y1/x2/y2 o box.
+            posicion_normalizada['pagina'] = pagina_valida
+
+    elif isinstance(posicion_normalizada, (list, tuple)):
+        # Algunas implementaciones usan (pagina, x1, y1, x2, y2).
+        if len(posicion_normalizada) == 5:
+            valores = list(posicion_normalizada)
+            valores[0] = pagina_valida
+            posicion_normalizada = (
+                tuple(valores)
+                if isinstance(posicion_normalizada, tuple)
+                else valores
+            )
+
+    return posicion_normalizada, pagina_valida
+
+
+def ejecutar_firma_pdf(
+    ruta_entrada,
+    ruta_salida,
+    cert_info,
+    seccion,
+    nombre_firmante,
+    cargo_firmante,
+    posicion,
+    pagina
+):
+    """
+    Invoca FirmaService.firmar_pdf y transmite la página si el servicio
+    declara un parámetro compatible. Mantiene compatibilidad con la firma
+    anterior que recibía solamente la posición.
+    """
+    parametros = inspect.signature(FirmaService.firmar_pdf).parameters
+    kwargs = {}
+
+    for nombre_parametro in (
+        'pagina', 'page', 'on_page', 'page_index', 'indice_pagina'
+    ):
+        if nombre_parametro in parametros:
+            kwargs[nombre_parametro] = pagina
+            break
+
+    return FirmaService.firmar_pdf(
+        ruta_entrada,
+        ruta_salida,
+        cert_info,
+        seccion,
+        nombre_firmante,
+        cargo_firmante,
+        posicion,
+        **kwargs
+    )
 
 # =========================
 # 🔐 OBTENER USUARIO DEL TOKEN
@@ -1927,6 +2059,19 @@ def preparar_firmas(doc_id):
             excel_path, pdf_dir, config_firmas.LIBREOFFICE_PATH
         )
 
+        if not pdf_path or not os.path.exists(pdf_path):
+            return jsonify({
+                "ok": False,
+                "codigo": "PDF_NO_GENERADO",
+                "error": "LibreOffice no generó el PDF de la Acción de Personal."
+            }), 500
+
+        total_paginas = obtener_total_paginas_pdf(pdf_path)
+        app.logger.info(
+            "Documento %s preparado con %s página(s): %s",
+            doc_id, total_paginas, pdf_path
+        )
+
         # 6. Calcular hash inicial
         hash_inicial = FirmaService.calcular_hash(pdf_path)
 
@@ -1993,136 +2138,333 @@ def listar_firmas(doc_id):
 @app.route('/api/acciones-personal/<int:doc_id>/firmar', methods=['POST'])
 def firmar_documento(doc_id):
     """
-    Firma una sección del documento con un certificado .p12/.pfx.
-    Recibe multipart/form-data: certificado, password, seccion.
+    Firma una sección del documento con certificado PKCS#12 (.p12/.pfx).
+
+    Las firmas son independientes: no se valida orden secuencial. La página
+    configurada se ajusta automáticamente al número real de páginas del PDF.
     """
-    # Validar campos requeridos
-    if 'certificado' not in request.files:
-        return jsonify({'ok': False, 'codigo': 'CERTIFICADO_NO_VALIDO', 'error': 'Seleccione un certificado .p12 o .pfx'}), 400
-    if 'password' not in request.form:
-        return jsonify({'ok': False, 'codigo': 'CERTIFICADO_PASSWORD_INVALIDO', 'error': 'Ingrese la contraseña del certificado'}), 400
-    if 'seccion' not in request.form:
-        return jsonify({'ok': False, 'error': 'Seleccione la sección a firmar'}), 400
+    p12_bytes = None
+    password = None
+    nuevo_pdf_path = None
 
-    cert_file = request.files['certificado']
-    password = request.form['password']
-    seccion = request.form['seccion']
+    try:
+        # 1. Validaciones de entrada
+        cert_file = request.files.get('certificado')
+        password = request.form.get('password', '')
+        seccion = (request.form.get('seccion') or '').strip()
 
-    # Validar extensión
-    filename = cert_file.filename or ''
-    if not filename.lower().endswith(('.p12', '.pfx')):
-        return jsonify({'ok': False, 'codigo': 'CERTIFICADO_NO_VALIDO', 'error': 'El archivo debe tener extensión .p12 o .pfx'}), 400
+        if not cert_file or not cert_file.filename:
+            return jsonify({
+                'ok': False,
+                'codigo': 'CERTIFICADO_NO_VALIDO',
+                'error': 'Seleccione un certificado .p12 o .pfx.'
+            }), 400
 
-    # Validar tamaño
-    p12_bytes = cert_file.read()
-    if len(p12_bytes) > MAX_CERTIFICADO_BYTES:
-        return jsonify({'ok': False, 'error': 'El certificado no debe superar los 10 MB'}), 400
+        if not password:
+            return jsonify({
+                'ok': False,
+                'codigo': 'CERTIFICADO_PASSWORD_INVALIDO',
+                'error': 'Ingrese la contraseña del certificado.'
+            }), 400
 
-    if not p12_bytes:
-        return jsonify({'ok': False, 'error': 'El archivo del certificado está vacío'}), 400
+        if not seccion:
+            return jsonify({
+                'ok': False,
+                'codigo': 'SECCION_REQUERIDA',
+                'error': 'Seleccione la sección a firmar.'
+            }), 400
 
-    # Validar sección
-    if seccion not in config_firmas.SECCIONES_FIRMA:
-        return jsonify({'ok': False, 'error': f'Sección no válida: {seccion}'}), 400
+        filename = os.path.basename(cert_file.filename)
+        if not filename.lower().endswith(('.p12', '.pfx')):
+            return jsonify({
+                'ok': False,
+                'codigo': 'CERTIFICADO_NO_VALIDO',
+                'error': 'El archivo debe tener extensión .p12 o .pfx.'
+            }), 400
 
-    # 1. Cargar y validar certificado
-    cert_info = CertificadoService.cargar_certificado(p12_bytes, password)
-    if not cert_info.get('valido'):
-        return jsonify({
-            'ok': False,
-            'codigo': 'CERTIFICADO_PASSWORD_INVALIDO',
-            'error': cert_info.get('error', 'Certificado inválido o contraseña incorrecta')
-        }), 400
+        p12_bytes = cert_file.read(MAX_CERTIFICADO_BYTES + 1)
 
-    # 2. Validar vigencia
-    vigente, msj = CertificadoService.validar_vigencia(cert_info)
-    if not vigente:
-        return jsonify({'ok': False, 'codigo': 'CERTIFICADO_VENCIDO', 'error': msj}), 400
+        if not p12_bytes:
+            return jsonify({
+                'ok': False,
+                'codigo': 'CERTIFICADO_VACIO',
+                'error': 'El archivo del certificado está vacío.'
+            }), 400
 
-    # 3. Obtener documento
-    doc = DocumentoService.obtener_documento(doc_id)
-    if not doc:
-        return jsonify({'ok': False, 'codigo': 'DOCUMENTO_NO_ENCONTRADO', 'error': 'Documento no encontrado'}), 404
+        if len(p12_bytes) > MAX_CERTIFICADO_BYTES:
+            return jsonify({
+                'ok': False,
+                'codigo': 'CERTIFICADO_DEMASIADO_GRANDE',
+                'error': 'El certificado no debe superar el tamaño permitido.'
+            }), 413
 
-    if doc['estado'] not in ('PENDIENTE_FIRMAS', 'FIRMADO_PARCIALMENTE'):
-        return jsonify({'ok': False, 'codigo': 'DOCUMENTO_BLOQUEADO', 'error': f"El documento no acepta firmas (estado: {doc['estado']})"}), 400
+        if seccion not in config_firmas.SECCIONES_FIRMA:
+            return jsonify({
+                'ok': False,
+                'codigo': 'SECCION_NO_VALIDA',
+                'error': f'Sección no válida: {seccion}'
+            }), 400
 
-    # 4. Verificar la sección
-    firmas = DocumentoService.obtener_firmas_documento(doc_id)
-    firma_seccion = next((f for f in firmas if f['seccion'] == seccion), None)
+        # 2. Cargar y validar certificado
+        cert_info = CertificadoService.cargar_certificado(p12_bytes, password)
+        if not cert_info.get('valido'):
+            return jsonify({
+                'ok': False,
+                'codigo': 'CERTIFICADO_PASSWORD_INVALIDO',
+                'error': cert_info.get(
+                    'error',
+                    'Certificado inválido o contraseña incorrecta.'
+                )
+            }), 400
 
-    if not firma_seccion:
-        return jsonify({'ok': False, 'codigo': 'FIRMA_NO_ENCONTRADA', 'error': 'Sección no encontrada en el documento'}), 404
+        vigente, mensaje_vigencia = CertificadoService.validar_vigencia(cert_info)
+        if not vigente:
+            return jsonify({
+                'ok': False,
+                'codigo': 'CERTIFICADO_VENCIDO',
+                'error': mensaje_vigencia
+            }), 422
 
-    if firma_seccion['estado'] == 'FIRMADA':
-        return jsonify({'ok': False, 'codigo': 'FIRMA_YA_REALIZADA', 'error': 'Esta sección ya fue firmada'}), 400
+        # 3. Obtener y validar documento
+        doc = DocumentoService.obtener_documento(doc_id)
+        if not doc:
+            return jsonify({
+                'ok': False,
+                'codigo': 'DOCUMENTO_NO_ENCONTRADO',
+                'error': 'Documento no encontrado.'
+            }), 404
 
-    # 5. Verificar que el PDF existe
-    pdf_base = doc['ruta_pdf_actual']
-    if not pdf_base or not os.path.exists(pdf_base):
-        return jsonify({'ok': False, 'codigo': 'PDF_NO_ENCONTRADO', 'error': 'Archivo PDF actual no encontrado'}), 500
+        if doc.get('estado') not in ('PENDIENTE_FIRMAS', 'FIRMADO_PARCIALMENTE'):
+            return jsonify({
+                'ok': False,
+                'codigo': 'DOCUMENTO_BLOQUEADO',
+                'error': (
+                    'El documento no acepta firmas '
+                    f"(estado: {doc.get('estado')})."
+                )
+            }), 409
 
-    # 6. Calcular hash del PDF antes de firmar
-    hash_antes = FirmaService.calcular_hash(pdf_base)
+        firmas = DocumentoService.obtener_firmas_documento(doc_id)
+        firma_seccion = next(
+            (firma for firma in firmas if firma.get('seccion') == seccion),
+            None
+        )
 
-    # 7. Preparar ruta de salida con versionado
-    version = (doc['version_documento'] or 1) + 1
-    pdf_dir = os.path.dirname(pdf_base)
-    numero_accion_safe = (doc['numero_accion'] or 'documento').replace(' ', '_').replace('/', '-')
-    nuevo_pdf_path = os.path.join(pdf_dir, f'{numero_accion_safe}-v{version}.pdf')
+        if not firma_seccion:
+            return jsonify({
+                'ok': False,
+                'codigo': 'FIRMA_NO_ENCONTRADA',
+                'error': 'La sección no está configurada para este documento.'
+            }), 404
 
-    # 8. Firmar el PDF
-    conf_seccion = config_firmas.SECCIONES_FIRMA[seccion]
-    exito_firma, err_firma = FirmaService.firmar_pdf(
-        pdf_base,
-        nuevo_pdf_path,
-        cert_info,
-        seccion,
-        firma_seccion['nombre_firmante'],
-        firma_seccion['cargo_firmante'],
-        conf_seccion['posicion']
-    )
+        if str(firma_seccion.get('estado', '')).upper() == 'FIRMADA':
+            return jsonify({
+                'ok': False,
+                'codigo': 'FIRMA_YA_REALIZADA',
+                'error': 'Esta sección ya fue firmada.'
+            }), 409
 
-    if not exito_firma:
-        return jsonify({'ok': False, 'codigo': 'ERROR_FIRMA_PDF', 'error': f'Error al firmar: {err_firma}'}), 500
+        # No se comprueban firmas anteriores: todas son independientes.
 
-    # 9. Calcular hash del PDF firmado
-    hash_despues = FirmaService.calcular_hash(nuevo_pdf_path)
+        # 4. Validar el PDF actual y corregir página de firma
+        pdf_base = doc.get('ruta_pdf_actual') or doc.get('ruta_pdf_original')
+        if not pdf_base or not os.path.exists(pdf_base):
+            return jsonify({
+                'ok': False,
+                'codigo': 'PDF_NO_ENCONTRADO',
+                'error': 'El PDF actual del documento no existe.'
+            }), 404
 
-    # 10. Registrar firma en BD (con control de concurrencia)
-    exito_bd, firma_id, err_bd = DocumentoService.registrar_firma(
-        doc_id, seccion, cert_info,
-        hash_antes, hash_despues,
-        nuevo_pdf_path, version
-    )
+        total_paginas = obtener_total_paginas_pdf(pdf_base)
+        conf_seccion = config_firmas.SECCIONES_FIRMA[seccion]
 
-    if not exito_bd:
-        # Limpiar PDF generado si falla el registro
-        if os.path.exists(nuevo_pdf_path):
+        pagina_configurada = (
+            conf_seccion.get('pagina',
+                conf_seccion.get('page',
+                    conf_seccion.get('on_page', 0)
+                )
+            )
+            if isinstance(conf_seccion, dict)
+            else 0
+        )
+
+        posicion_original = (
+            conf_seccion.get('posicion')
+            if isinstance(conf_seccion, dict)
+            else conf_seccion
+        )
+
+        if posicion_original is None:
+            return jsonify({
+                'ok': False,
+                'codigo': 'POSICION_FIRMA_NO_CONFIGURADA',
+                'error': f'No existe posición de firma para {seccion}.'
+            }), 422
+
+        posicion_firma, pagina_firma = normalizar_posicion_firma(
+            posicion_original,
+            total_paginas,
+            pagina_configurada
+        )
+
+        app.logger.info(
+            'Firma documento=%s seccion=%s paginas=%s pagina_configurada=%s pagina_usada=%s',
+            doc_id,
+            seccion,
+            total_paginas,
+            pagina_configurada,
+            pagina_firma
+        )
+
+        # 5. Preparar versión de salida
+        hash_antes = FirmaService.calcular_hash(pdf_base)
+        version = int(doc.get('version_documento') or 1) + 1
+        pdf_dir = os.path.dirname(pdf_base)
+        os.makedirs(pdf_dir, exist_ok=True)
+
+        numero_accion_safe = str(
+            doc.get('numero_accion') or 'documento'
+        ).replace(' ', '_').replace('/', '-')
+        nuevo_pdf_path = os.path.join(
+            pdf_dir,
+            f'{numero_accion_safe}-v{version}.pdf'
+        )
+
+        # 6. Aplicar firma
+        try:
+            exito_firma, error_firma = ejecutar_firma_pdf(
+                pdf_base,
+                nuevo_pdf_path,
+                cert_info,
+                seccion,
+                firma_seccion.get('nombre_firmante', ''),
+                firma_seccion.get('cargo_firmante', ''),
+                posicion_firma,
+                pagina_firma
+            )
+        except Exception as error:
+            detalle = str(error)
+            app.logger.exception(
+                'Error aplicando firma PDF documento=%s seccion=%s',
+                doc_id,
+                seccion
+            )
+
+            if 'Page index out of range' in detalle:
+                return jsonify({
+                    'ok': False,
+                    'codigo': 'PAGINA_FIRMA_NO_VALIDA',
+                    'error': (
+                        'La página configurada para la firma no existe en el PDF. '
+                        f'El documento tiene {total_paginas} página(s) y se intentó '
+                        f'usar el índice {pagina_firma}. Revise services/firma_service.py.'
+                    )
+                }), 422
+
+            return jsonify({
+                'ok': False,
+                'codigo': 'ERROR_FIRMA_PDF',
+                'error': f'No se pudo aplicar la firma: {detalle}'
+            }), 500
+
+        if not exito_firma:
+            detalle = str(error_firma or 'Error desconocido al firmar el PDF.')
+
+            if nuevo_pdf_path and os.path.exists(nuevo_pdf_path):
+                try:
+                    os.remove(nuevo_pdf_path)
+                except OSError:
+                    pass
+
+            codigo = (
+                'PAGINA_FIRMA_NO_VALIDA'
+                if 'Page index out of range' in detalle
+                else 'ERROR_FIRMA_PDF'
+            )
+            estado_http = 422 if codigo == 'PAGINA_FIRMA_NO_VALIDA' else 500
+
+            return jsonify({
+                'ok': False,
+                'codigo': codigo,
+                'error': f'Error al firmar: {detalle}'
+            }), estado_http
+
+        if not os.path.exists(nuevo_pdf_path) or os.path.getsize(nuevo_pdf_path) == 0:
+            return jsonify({
+                'ok': False,
+                'codigo': 'PDF_FIRMADO_NO_GENERADO',
+                'error': 'El servicio no generó el PDF firmado.'
+            }), 500
+
+        # 7. Registrar firma en base de datos
+        hash_despues = FirmaService.calcular_hash(nuevo_pdf_path)
+        exito_bd, firma_id, error_bd = DocumentoService.registrar_firma(
+            doc_id,
+            seccion,
+            cert_info,
+            hash_antes,
+            hash_despues,
+            nuevo_pdf_path,
+            version
+        )
+
+        if not exito_bd:
             try:
                 os.remove(nuevo_pdf_path)
-            except Exception:
+            except OSError:
                 pass
-        return jsonify({'ok': False, 'codigo': 'ERROR_BASE_DATOS', 'error': f'Error al guardar: {err_bd}'}), 500
 
-    # 11. Limpiar datos sensibles
-    del p12_bytes
-    del password
+            return jsonify({
+                'ok': False,
+                'codigo': 'ERROR_BASE_DATOS',
+                'error': f'No se pudo registrar la firma: {error_bd}'
+            }), 500
 
-    return jsonify({
-        'ok': True,
-        'mensaje': 'Documento firmado exitosamente',
-        'documento_id': doc_id,
-        'firma_id': firma_id,
-        'seccion': seccion,
-        'estado_firma': 'FIRMADA',
-        'estado_documento': 'FIRMADO_PARCIALMENTE',
-        'version': version,
-        'certificado': {
-            'titular': cert_info.get('nombre_titular', ''),
-            'emisor': cert_info.get('emisor', ''),
-        }
-    })
+        doc_actualizado = DocumentoService.obtener_documento(doc_id) or {}
+
+        return jsonify({
+            'ok': True,
+            'mensaje': 'Documento firmado exitosamente.',
+            'documento_id': doc_id,
+            'firma_id': firma_id,
+            'seccion': seccion,
+            'estado_firma': 'FIRMADA',
+            'estado_documento': doc_actualizado.get(
+                'estado', 'FIRMADO_PARCIALMENTE'
+            ),
+            'version': version,
+            'pagina_firma': pagina_firma,
+            'total_paginas': total_paginas,
+            'certificado': {
+                'titular': cert_info.get('nombre_titular', ''),
+                'emisor': cert_info.get('emisor', '')
+            }
+        }), 200
+
+    except ValueError as error:
+        app.logger.exception(
+            'PDF inválido al firmar documento=%s', doc_id
+        )
+        return jsonify({
+            'ok': False,
+            'codigo': 'PDF_NO_VALIDO',
+            'error': str(error)
+        }), 422
+
+    except Exception as error:
+        app.logger.exception(
+            'Error inesperado firmando documento=%s', doc_id
+        )
+        return jsonify({
+            'ok': False,
+            'codigo': 'ERROR_INTERNO_FIRMA',
+            'error': f'No se pudo firmar el documento: {error}'
+        }), 500
+
+    finally:
+        # No guardar ni reutilizar datos sensibles del PKCS#12.
+        password = None
+        p12_bytes = None
 
 
 @app.route('/api/acciones-personal/<int:doc_id>/finalizar', methods=['POST'])

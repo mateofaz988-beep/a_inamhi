@@ -7,3 +7,7 @@ cryptography==49.0.0
 Pillow==12.2.0
 reportlab==4.5.0
 python-dotenv==1.1.0
+pypdf>=6.0.0
+pywin32==312; platform_system == "Windows"
+qrcode==8.2
+PyJWT==2.10.1

@@ -1,133 +1,248 @@
 <div class="auditoria-container">
-
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-left">
-      <h2>Auditoría del Sistema</h2>
-      <p>Historial detallado de acciones realizadas en el sistema</p>
+  <header class="audit-header">
+    <div class="header-copy">
+      <span class="eyebrow"><i class="bi bi-shield-check"></i> Control institucional</span>
+      <h1>Auditoría del sistema</h1>
+      <p>Monitoreo, trazabilidad y revisión de eventos registrados por el sistema.</p>
     </div>
 
-    <button class="btn-volver" (click)="volver()">
-      <i class="bi bi-arrow-left me-2"></i>
-      Volver
+    <div class="header-actions">
+      <span class="realtime-status" [ngClass]="claseEstadoTiempoReal">
+        <span class="status-dot"></span>
+        {{ textoEstadoTiempoReal }}
+      </span>
+
+      <button type="button" class="btn btn-soft" (click)="alternarTiempoReal()">
+        <i class="bi" [ngClass]="tiempoRealPausado ? 'bi-play-fill' : 'bi-pause-fill'"></i>
+        {{ tiempoRealPausado ? 'Reanudar' : 'Pausar' }}
+      </button>
+
+      <button type="button" class="btn btn-soft" (click)="cargarAuditoria()" [disabled]="cargando">
+        <i class="bi bi-arrow-clockwise" [class.spin]="cargando"></i>
+        Actualizar
+      </button>
+
+      <button type="button" class="btn btn-export" (click)="exportarCsv()" [disabled]="exportando">
+        <i class="bi" [ngClass]="exportando ? 'bi-arrow-repeat spin' : 'bi-file-earmark-spreadsheet-fill'"></i>
+        {{ exportando ? 'Exportando...' : 'Exportar CSV' }}
+      </button>
+
+      <button type="button" class="btn btn-back" (click)="volver()">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+      </button>
+    </div>
+  </header>
+
+  <section class="summary-grid" aria-label="Resumen de auditoría">
+    <article class="summary-card summary-card--total">
+      <div class="summary-icon"><i class="bi bi-database-fill-check"></i></div>
+      <div><span>Total de eventos</span><strong>{{ resumen.total | number }}</strong></div>
+    </article>
+    <article class="summary-card summary-card--today">
+      <div class="summary-icon"><i class="bi bi-calendar2-check-fill"></i></div>
+      <div><span>Registrados hoy</span><strong>{{ resumen.hoy | number }}</strong></div>
+    </article>
+    <article class="summary-card summary-card--updates">
+      <div class="summary-icon"><i class="bi bi-pencil-square"></i></div>
+      <div><span>Actualizaciones</span><strong>{{ resumen.actualizaciones | number }}</strong></div>
+    </article>
+    <article class="summary-card summary-card--signatures">
+      <div class="summary-icon"><i class="bi bi-vector-pen"></i></div>
+      <div><span>Firmas y finalizaciones</span><strong>{{ resumen.firmas | number }}</strong></div>
+    </article>
+    <article class="summary-card summary-card--errors">
+      <div class="summary-icon"><i class="bi bi-exclamation-octagon-fill"></i></div>
+      <div><span>Eventos con error</span><strong>{{ resumen.errores | number }}</strong></div>
+    </article>
+  </section>
+
+  <section class="filters-card">
+    <div class="filters-heading">
+      <div>
+        <h2>Filtros de consulta</h2>
+        <p>Combine criterios para localizar eventos específicos.</p>
+      </div>
+      <button type="button" class="btn-link" (click)="limpiarFiltros()" [disabled]="!hayFiltrosActivos">
+        <i class="bi bi-eraser-fill"></i> Limpiar filtros
+      </button>
+    </div>
+
+    <div class="filters-grid">
+      <label class="field field--search">
+        <span>Búsqueda general</span>
+        <div class="input-icon">
+          <i class="bi bi-search"></i>
+          <input type="text" [(ngModel)]="searchText" (input)="programarBusqueda()"
+                 placeholder="Usuario, acción, tabla, detalle, IP, registro...">
+          @if (searchText) {
+            <button type="button" (click)="limpiarBusqueda()" aria-label="Limpiar búsqueda"><i class="bi bi-x-lg"></i></button>
+          }
+        </div>
+      </label>
+
+      <label class="field">
+        <span>Acción</span>
+        <select [(ngModel)]="filtroAccion" (change)="aplicarFiltros()">
+          <option value="">Todas</option>
+          @for (accion of catalogos.acciones; track accion) { <option [value]="accion">{{ traducirAccion(accion) }}</option> }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Módulo / tabla</span>
+        <select [(ngModel)]="filtroTabla" (change)="aplicarFiltros()">
+          <option value="">Todos</option>
+          @for (tabla of catalogos.tablas; track tabla) { <option [value]="tabla">{{ tabla }}</option> }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Usuario</span>
+        <select [(ngModel)]="filtroUsuario" (change)="aplicarFiltros()">
+          <option value="">Todos</option>
+          @for (usuario of catalogos.usuarios; track usuario) { <option [value]="usuario">{{ usuario }}</option> }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Desde</span>
+        <input type="date" [(ngModel)]="fechaDesde" (change)="aplicarFiltros()">
+      </label>
+
+      <label class="field">
+        <span>Hasta</span>
+        <input type="date" [(ngModel)]="fechaHasta" (change)="aplicarFiltros()">
+      </label>
+
+      <label class="field field--compact">
+        <span>Filas</span>
+        <select [(ngModel)]="limite" (change)="cambiarLimite()">
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="25">25</option>
+          <option [ngValue]="50">50</option>
+          <option [ngValue]="100">100</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  @if (nuevosPendientes > 0) {
+    <button type="button" class="new-events-banner" (click)="cargarNuevosEventos()">
+      <i class="bi bi-bell-fill"></i>
+      {{ nuevosPendientes }} {{ nuevosPendientes === 1 ? 'evento nuevo' : 'eventos nuevos' }}
+      <span>Mostrar ahora</span>
     </button>
-  </div>
+  }
 
-  <!-- BUSCADOR -->
-  <div class="search-box">
-    <i class="bi bi-search"></i>
-    <input
-      type="text"
-      placeholder="Buscar por usuario, acción, tabla, detalle, IP o fecha..."
-      [(ngModel)]="searchText"
-      (input)="buscar()"
-    >
-  </div>
+  @if (errorMensaje) {
+    <div class="alert-error">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <div><strong>No se pudo cargar la auditoría</strong><span>{{ errorMensaje }}</span></div>
+      <button type="button" (click)="cargarAuditoria()">Reintentar</button>
+    </div>
+  }
 
-  <!-- TABLA -->
-  <div class="table-wrapper custom-scrollbar">
-    <table class="table table-hover auditoria-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Usuario</th>
-          <th>Acción</th>
-          <th>Tabla</th>
-          <th>ID Registro</th>
-          <th>Detalle</th>
-          <th>IP</th>
-          <th>Fecha</th>
-          <th>Ver Cambios</th>
-        </tr>
-      </thead>
+  <section class="table-card">
+    <div class="table-card-header">
+      <div>
+        <h2>Registro de eventos</h2>
+        <p>{{ total | number }} resultados · Página {{ pagina }} de {{ paginas }}</p>
+      </div>
+      @if (ultimoEventoTiempoReal) {
+        <small><i class="bi bi-broadcast-pin"></i> Último evento: {{ formatearFecha(ultimoEventoTiempoReal) }}</small>
+      }
+    </div>
 
-      <tbody>
-        <tr *ngIf="cargando">
-          <td colspan="9" class="text-center py-4">
-            Cargando auditoría...
-          </td>
-        </tr>
-
-        <ng-container *ngFor="let item of auditoriaFiltrada">
-          <tr class="row-hover">
-            <td>{{ item.id }}</td>
-            <td>{{ item.usuario }}</td>
-
-            <td>
-              <span class="badge-accion" [ngClass]="obtenerClaseAccion(item.accion)">
-                {{ traducirAccion(item.accion) }}
-              </span>
-            </td>
-
-            <td>{{ item.tabla_afectada }}</td>
-            <td>{{ item.registro_id || '-' }}</td>
-            <td class="text-start">{{ item.detalle || 'Sin detalle' }}</td>
-            <td>{{ item.ip_usuario || '-' }}</td>
-            <td>{{ formatearFecha(item.fecha) }}</td>
-
-            <td>
-              <button class="btn-toggle" (click)="toggleDetalle(item.id)">
-                <i class="bi" [ngClass]="expandedId === item.id ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
-                {{ expandedId === item.id ? 'Ocultar' : 'Ver' }}
-              </button>
-            </td>
+    <div class="table-wrapper">
+      <table class="auditoria-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Módulo / tabla</th>
+            <th>Registro</th><th>Detalle</th><th>Origen</th><th class="th-actions">Cambios</th>
           </tr>
+        </thead>
+        <tbody>
+          @if (cargando && registros.length === 0) {
+            @for (_ of skeletonRows; track $index) {
+              <tr class="skeleton-row"><td colspan="9"><span></span></td></tr>
+            }
+          } @else {
+            @for (item of registros; track item.id) {
+              <tr [class.row-expanded]="expandedId === item.id" [class.row-error]="item.estado === 'ERROR'">
+                <td><span class="id-pill">#{{ item.id }}</span></td>
+                <td class="date-cell"><strong>{{ formatearFechaCorta(item.fecha) }}</strong><small>{{ formatearHora(item.fecha) }}</small></td>
+                <td><span class="user-cell"><i class="bi bi-person-circle"></i>{{ item.usuario || 'desconocido' }}</span></td>
+                <td><span class="action-badge" [ngClass]="obtenerClaseAccion(item.accion)"><i class="bi" [ngClass]="obtenerIconoAccion(item.accion)"></i>{{ traducirAccion(item.accion) }}</span></td>
+                <td><span class="table-chip">{{ item.tabla_afectada || 'sistema' }}</span></td>
+                <td>{{ item.registro_id ?? '—' }}</td>
+                <td class="detail-cell" [title]="item.detalle || ''">{{ item.detalle || 'Sin detalle' }}</td>
+                <td class="origin-cell"><span>{{ item.ip_usuario || '—' }}</span><small>{{ item.metodo_http || '' }} {{ item.endpoint || '' }}</small></td>
+                <td class="th-actions">
+                  <button type="button" class="btn-toggle" (click)="toggleDetalle(item.id)" [attr.aria-expanded]="expandedId === item.id">
+                    <i class="bi" [ngClass]="expandedId === item.id ? 'bi-chevron-up' : 'bi-eye-fill'"></i>
+                    {{ expandedId === item.id ? 'Ocultar' : 'Ver' }}
+                  </button>
+                </td>
+              </tr>
 
-          <tr *ngIf="expandedId === item.id" class="detail-row">
-            <td colspan="9">
-              <div class="changes-panel">
+              @if (expandedId === item.id) {
+                <tr class="detail-row">
+                  <td colspan="9">
+                    <div class="changes-panel">
+                      <header class="changes-header">
+                        <div><i class="bi bi-intersect"></i><div><h3>Detalle del evento #{{ item.id }}</h3><p>{{ item.detalle || 'Sin descripción adicional' }}</p></div></div>
+                        <button type="button" class="copy-button" (click)="copiarRegistro(item)"><i class="bi bi-copy"></i> Copiar JSON</button>
+                      </header>
 
-                <div class="changes-header">
-                  <div class="changes-title">
-                    <i class="bi bi-arrow-repeat me-2"></i>
-                    Resumen de cambios
-                  </div>
-                </div>
-
-                <div *ngIf="parseCambios(item.datos_anteriores, item.datos_nuevos).length > 0; else sinCambios" class="changes-list">
-
-                  <div
-                    class="change-item"
-                    *ngFor="let cambio of parseCambios(item.datos_anteriores, item.datos_nuevos)"
-                  >
-                    <div class="change-field">
-                      <i class="bi bi-dot"></i>
-                      {{ cambio.campo }}
-                    </div>
-
-                    <div class="change-values">
-                      <div class="value-box before-box">
-                        <span class="label">Antes</span>
-                        <div class="value-text">{{ cambio.antes }}</div>
+                      <div class="technical-grid">
+                        <div><span>Usuario</span><strong>{{ item.usuario || '—' }}</strong></div>
+                        <div><span>IP</span><strong>{{ item.ip_usuario || '—' }}</strong></div>
+                        <div><span>Endpoint</span><strong>{{ item.metodo_http || '—' }} {{ item.endpoint || '' }}</strong></div>
+                        <div><span>Resultado</span><strong [class.text-danger]="item.estado === 'ERROR'">{{ item.estado || 'EXITOSO' }} {{ item.codigo_http || '' }}</strong></div>
                       </div>
 
-                      <div class="value-box after-box">
-                        <span class="label">Ahora</span>
-                        <div class="value-text">{{ cambio.despues }}</div>
-                      </div>
+                      @if (obtenerCambios(item).length > 0) {
+                        <div class="changes-list">
+                          @for (cambio of obtenerCambios(item); track cambio.campo) {
+                            <article class="change-item">
+                              <div class="change-field"><i class="bi bi-dot"></i>{{ cambio.campo }}</div>
+                              <div class="change-values">
+                                <div class="value-box before-box"><span>Antes</span><pre>{{ cambio.antes }}</pre></div>
+                                <i class="bi bi-arrow-right change-arrow"></i>
+                                <div class="value-box after-box"><span>Después</span><pre>{{ cambio.despues }}</pre></div>
+                              </div>
+                            </article>
+                          }
+                        </div>
+                      } @else {
+                        <div class="no-changes"><i class="bi bi-info-circle"></i>No existen diferencias estructuradas para este evento.</div>
+                      }
+
+                      @if (item.user_agent) {
+                        <div class="user-agent"><span>Navegador / cliente</span><code>{{ item.user_agent }}</code></div>
+                      }
                     </div>
-                  </div>
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr><td colspan="9"><div class="empty-state"><i class="bi bi-inbox"></i><h3>No hay registros</h3><p>No existen eventos que coincidan con los filtros seleccionados.</p></div></td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
 
-                </div>
-
-                <ng-template #sinCambios>
-                  <div class="no-changes">
-                    No hay diferencias detalladas para mostrar.
-                  </div>
-                </ng-template>
-
-              </div>
-            </td>
-          </tr>
-        </ng-container>
-
-        <tr *ngIf="!cargando && auditoriaFiltrada.length === 0">
-          <td colspan="9" class="text-center py-4">
-            No hay registros
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
+    <footer class="pagination-bar">
+      <span>Mostrando {{ rangoInicio }}–{{ rangoFin }} de {{ total | number }}</span>
+      <div class="pagination-controls">
+        <button type="button" (click)="irPagina(1)" [disabled]="pagina <= 1"><i class="bi bi-chevron-double-left"></i></button>
+        <button type="button" (click)="irPagina(pagina - 1)" [disabled]="pagina <= 1"><i class="bi bi-chevron-left"></i></button>
+        <span>Página <strong>{{ pagina }}</strong> de <strong>{{ paginas }}</strong></span>
+        <button type="button" (click)="irPagina(pagina + 1)" [disabled]="pagina >= paginas"><i class="bi bi-chevron-right"></i></button>
+        <button type="button" (click)="irPagina(paginas)" [disabled]="pagina >= paginas"><i class="bi bi-chevron-double-right"></i></button>
+      </div>
+    </footer>
+  </section>
 </div>

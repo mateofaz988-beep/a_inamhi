@@ -8,7 +8,6 @@ import {
   ChangeDetectorRef,
   Component,
   DestroyRef,
-  DoCheck,
   OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -25,6 +24,8 @@ import Swal from 'sweetalert2';
 
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/services/auth';
+import { BaseLegalService, BaseLegalItem } from '../../core/services/base-legal';
+import { EscalaOcupacionalService } from '../../core/services/escala-ocupacional';
 
 interface PersonaEstructura {
   id?: number;
@@ -101,7 +102,7 @@ interface DocumentoResponse {
 
 interface EscalaOcupacional {
   grado: string;
-  remuneracion: number;
+  remuneracion: string | number;
 }
 
 /**
@@ -119,6 +120,7 @@ export interface FormularioAccionPersonal {
   desde: string;
   hasta: string;
   accion_personal: string;
+  motivo_legal: string;
 
   proceso_institucional_actual: string;
   nivel_gestion_actual: string;
@@ -143,6 +145,9 @@ export interface FormularioAccionPersonal {
   nombre_autoridad: string;
   puesto_autoridad: string;
 
+  nombre_responsable_th: string;
+  puesto_responsable_th: string;
+
   elaborado_por: string;
   puesto_elaborado: string;
 
@@ -155,12 +160,14 @@ export interface FormularioAccionPersonal {
 
 type CampoNombreResponsable =
   | 'nombre_autoridad'
+  | 'nombre_responsable_th'
   | 'elaborado_por'
   | 'revisado_por'
   | 'registrado_por';
 
 type CampoPuestoResponsable =
   | 'puesto_autoridad'
+  | 'puesto_responsable_th'
   | 'puesto_elaborado'
   | 'puesto_revisado'
   | 'puesto_registrado';
@@ -173,7 +180,10 @@ type CampoPuestoResponsable =
   styleUrls: ['./solicitud-permisos.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SolicitudPermisosComponent implements OnInit, DoCheck {
+export class SolicitudPermisosComponent implements OnInit {
+  catalogoBaseLegal: BaseLegalItem[] = [];
+  baseLegalBloqueada: boolean = false;
+
   private readonly apiBaseUrl = String(
     environment.apiUrl || 'http://localhost:5000/api'
   ).replace(/\/$/, '');
@@ -200,28 +210,7 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
   private readonly minCertificadoBytes = 64;
   private readonly intervaloActualizacionFirmasMs = 15_000;
 
-  readonly tiposAccionPersonal = [
-    'Ingreso',
-    'Reingreso',
-    'Restitución',
-    'Reintegro',
-    'Ascenso',
-    'Traslado',
-    'Traspaso',
-    'Cambio administrativo',
-    'Intercambio voluntario',
-    'Licencia',
-    'Comisión de servicios',
-    'Sanciones',
-    'Incremento RMU',
-    'Subrogación',
-    'Encargo',
-    'Cesación de funciones',
-    'Destitución',
-    'Vacaciones',
-    'Revisión clas. puesto',
-    'Otro'
-  ] as const;
+  tiposAccionPersonal: string[] = [];
 
   /** Catálogos equivalentes a las listas desplegables de Hoja2. */
   readonly procesosInstitucionales = [
@@ -273,41 +262,14 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
     'LOJA'
   ] as const;
 
-  readonly gruposOcupacionales = [
-    'SERVIDOR PUBLICO DE APOYO 1',
-    'SERVIDOR PUBLICO DE APOYO 2',
-    'SERVIDOR PUBLICO DE APOYO 3',
-    'SERVIDOR PUBLICO DE APOYO 4',
-    'SERVIDOR PUBLICO 1',
-    'SERVIDOR PUBLICO 2',
-    'SERVIDOR PUBLICO 3',
-    'SERVIDOR PUBLICO 4',
-    'SERVIDOR PUBLICO 5',
-    'SERVIDOR PUBLICO 6',
-    'SERVIDOR PUBLICO 7',
-    'NIVEL JERARQUICO SUPERIOR 2',
-    'NIVEL JERARQUICO SUPERIOR 3'
-  ] as const;
-
   /**
-   * Tabla de Hoja2. El valor 9001 para SERVIDOR PUBLICO 2 se conserva
-   * exactamente como consta en la plantilla entregada.
+   * Grupos ocupacionales y escala de remuneración (tabla de Hoja2).
+   * Ya no viven hardcodeados aquí: se cargan desde /api/escala-ocupacional
+   * (tabla escala_ocupacional) en ngOnInit, para que un typo o un cambio de
+   * escala se corrija en la base de datos y no en el código fuente.
    */
-  private readonly escalaOcupacional: Readonly<Record<string, EscalaOcupacional>> = {
-    'SERVIDOR PUBLICO DE APOYO 1': { grado: '3', remuneracion: 585 },
-    'SERVIDOR PUBLICO DE APOYO 2': { grado: '4', remuneracion: 622 },
-    'SERVIDOR PUBLICO DE APOYO 3': { grado: '5', remuneracion: 675 },
-    'SERVIDOR PUBLICO DE APOYO 4': { grado: '6', remuneracion: 733 },
-    'SERVIDOR PUBLICO 1': { grado: '7', remuneracion: 817 },
-    'SERVIDOR PUBLICO 2': { grado: '8', remuneracion: 9001 },
-    'SERVIDOR PUBLICO 3': { grado: '9', remuneracion: 986 },
-    'SERVIDOR PUBLICO 4': { grado: '10', remuneracion: 1086 },
-    'SERVIDOR PUBLICO 5': { grado: '11', remuneracion: 1212 },
-    'SERVIDOR PUBLICO 6': { grado: '12', remuneracion: 1412 },
-    'SERVIDOR PUBLICO 7': { grado: '13', remuneracion: 1676 },
-    'NIVEL JERARQUICO SUPERIOR 2': { grado: 'NJS2', remuneracion: 2368 },
-    'NIVEL JERARQUICO SUPERIOR 3': { grado: 'NJS3', remuneracion: 2418 }
-  };
+  gruposOcupacionales: string[] = [];
+  private escalaOcupacional: Record<string, EscalaOcupacional> = {};
 
   formulario: FormularioAccionPersonal = this.crearFormularioInicial();
 
@@ -339,62 +301,73 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
   selectedFile: File | null = null;
   passwordFirmaSeccion = '';
 
-  private ultimoGrupoActual = '';
-  private ultimoGrupoPropuesto = '';
-
-  private readonly personalBase: readonly PersonaEstructura[] = [
-    {
-      nombres: 'TUFIÑO JUNIA ALEX ISRAEL',
-      denominacion_puesto:
-        'DIRECTOR/A DE ADMINISTRACIÓN DE TALENTO HUMANO',
-      unidad_organica: 'DIRECCIÓN DE ADMINISTRACIÓN DE RECURSOS HUMANOS'
-    },
-    {
-      nombres: 'OCAÑA BONILLA LEONOR KAROLINA',
-      denominacion_puesto: 'SECRETARIA',
-      unidad_organica: 'DIRECCIÓN DE ADMINISTRACIÓN DE RECURSOS HUMANOS'
-    },
-    {
-      nombres: 'DUEÑAS JARAMILLO OSCAR FACUNDO',
-      denominacion_puesto: 'ANALISTA DE RECURSOS HUMANOS',
-      unidad_organica: 'DIRECCIÓN DE ADMINISTRACIÓN DE RECURSOS HUMANOS'
-    },
-    {
-      nombres: 'CABEZAS ALMEIDA JANNETH ALEXANDRA',
-      denominacion_puesto: 'ANALISTA DE TALENTO HUMANO 2',
-      unidad_organica: 'DIRECCIÓN DE ADMINISTRACIÓN DE RECURSOS HUMANOS'
-    },
-    {
-      nombres: 'PAREDES ANDRANGO MIGUEL ANGEL',
-      denominacion_puesto: 'ANALISTA 3 DE TALENTO HUMANO',
-      unidad_organica: 'DIRECCIÓN DE ADMINISTRACIÓN DE RECURSOS HUMANOS'
-    },
-    {
-      nombres: 'CUTI AMAGUAÑA GINA ELIZABETH',
-      denominacion_puesto: 'ANALISTA DE TALENTO HUMANO 1',
-      unidad_organica: 'DIRECCIÓN DE ADMINISTRACIÓN DE RECURSOS HUMANOS'
-    },
-    {
-      nombres: 'CORNEJO HIDALGO PABLO ANDRÉS',
-      denominacion_puesto: 'DIRECTOR EJECUTIVO, ENCARGADO',
-      unidad_organica: 'DIRECCIÓN EJECUTIVA'
-    }
-  ];
+  /** Protege guardarBorrador contra doble-POST: reutiliza la promesa en vuelo. */
+  private lastSavePromise: Promise<boolean> | null = null;
 
   constructor(
     private readonly http: HttpClient,
     private readonly router: Router,
     public readonly authService: AuthService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly destroyRef: DestroyRef
+    private readonly destroyRef: DestroyRef,
+    private readonly baseLegalService: BaseLegalService,
+    private readonly escalaOcupacionalService: EscalaOcupacionalService
   ) {}
 
   ngOnInit(): void {
-    this.estructuraPersonal = this.ordenarYDepurarPersonas([
-      ...this.personalBase
-    ]);
-    this.listaAutoridades = this.obtenerAutoridadesLocales();
+    this.escalaOcupacionalService.obtenerEscala()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.gruposOcupacionales = data.map((item) => item.grupo_ocupacional);
+          this.escalaOcupacional = Object.fromEntries(
+            data.map((item) => [
+              this.normalizarTexto(item.grupo_ocupacional),
+              { grado: item.grado, remuneracion: item.remuneracion }
+            ])
+          );
+          this.actualizarVista();
+        },
+        error: (err: unknown) => {
+          console.warn('[SolicitudPermisos] No se pudo cargar la escala ocupacional:', err);
+          void Swal.fire({
+            icon: 'warning',
+            title: 'No se pudo cargar la escala ocupacional',
+            text: 'El grupo, grado y remuneración deberán completarse manualmente.',
+            timer: 2600,
+            showConfirmButton: false
+          });
+        }
+      });
 
+    // FIX #1: suscripción con cancelación automática y manejo explícito de error.
+    // Si /api/base-legal falla, el select queda con la opción 'Otro' y se notifica
+    // en consola sin romper la UI.
+    this.baseLegalService.obtenerBaseLegal()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.catalogoBaseLegal = data;
+          this.tiposAccionPersonal = [
+            ...data.map((item) => item.tipo_movimiento),
+            'Otro'
+          ];
+          this.actualizarVista();
+        },
+        error: (err: unknown) => {
+          console.warn('[SolicitudPermisos] No se pudo cargar el catálogo de base legal:', err);
+          // Fallback: al menos 'Otro' siempre disponible para no bloquear al usuario.
+          this.tiposAccionPersonal = ['Otro'];
+          this.actualizarVista();
+        }
+      });
+
+    // El personal y las autoridades ya no se precargan con una lista fija en
+    // el código: ambas listas vienen exclusivamente de la API (fuente única
+    // de verdad, editable desde las pantallas de Personal/Autoridades). Usar
+    // nombres hardcodeados como "primer vistazo" es riesgoso en un documento
+    // legal: alguien podría seleccionar un responsable desactualizado antes
+    // de que la respuesta real del backend reemplace la lista.
     void this.cargarEstructuraPersonal();
     void this.cargarAutoridades();
 
@@ -412,20 +385,23 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
       });
   }
 
-  /**
-   * Mantiene grado y remuneración sincronizados aunque el HTML use
-   * [(ngModel)] directamente sobre los grupos ocupacionales.
-   */
-  ngDoCheck(): void {
-    if (this.formulario.grupo_actual !== this.ultimoGrupoActual) {
-      this.ultimoGrupoActual = this.formulario.grupo_actual;
-      this.aplicarEscalaOcupacional('actual');
-    }
+  // FIX #2: ngDoCheck eliminado. La sincronización de escala ahora se dispara
+  // únicamente desde (ngModelChange) en cada <select> de grupo ocupacional,
+  // lo que es correcto con ChangeDetectionStrategy.OnPush.
+  // Métodos actualizarEscalaActual() y actualizarEscalaPropuesta() siguen
+  // disponibles para ser llamados desde el HTML.
 
-    if (this.formulario.grupo_propuesta !== this.ultimoGrupoPropuesto) {
-      this.ultimoGrupoPropuesto = this.formulario.grupo_propuesta;
-      this.aplicarEscalaOcupacional('propuesta');
-    }
+
+  /**
+   * El borrador solo puede guardarse cuando el documento es nuevo (sin ID)
+   * o cuando su estado sigue siendo BORRADOR en el backend.
+   * Cualquier otro estado (FIRMADO_PARCIALMENTE, FINALIZADO, etc.) bloquea el guardado.
+   */
+  get puedoGuardarBorrador(): boolean {
+    // Documento nuevo — aun no tiene ID, siempre se puede guardar
+    if (!this.documentoActualId) return true;
+    // Documento existente — solo si el backend lo sigue considerando un borrador
+    return this.estadoDocumento === 'BORRADOR';
   }
 
   get nombreCompletoFuncionario(): string {
@@ -482,16 +458,17 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
   }
 
   getHeaders(): HttpHeaders {
-    const tokenOriginal = String(this.authService.getToken() || '').trim();
+    const token = String(this.authService.getToken() || '').trim();
 
-    if (!tokenOriginal) {
+    if (!token) {
       return new HttpHeaders();
     }
 
-    // El backend actual valida directamente tokens con prefijo tk_.
-    // Si AuthService almacenó accidentalmente "Bearer tk_...", se elimina Bearer.
-    const token = tokenOriginal.replace(/^Bearer\s+/i, '').trim();
-
+    // El backend (decodificar_token en app.py) exige que el header empiece
+    // con "Bearer ". AuthService.getToken() ya devuelve "Bearer <token>",
+    // así que se reenvía tal cual: quitar el prefijo provoca 403 en todos
+    // los endpoints protegidos (cédula, autoridades, personal-estructura,
+    // generar-accion, etc.).
     return new HttpHeaders({ Authorization: token });
   }
 
@@ -524,6 +501,41 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
     this.formulario.cedula = String(this.formulario.cedula || '')
       .replace(/\D/g, '')
       .slice(0, 10);
+  }
+
+  /**
+   * Normaliza un texto eliminando tildes, espacios extra y convirtiéndolo a mayúsculas.
+   * Esto permite comparaciones robustas sin importar formato de origen.
+   */
+  private normalizarTexto(valor: unknown): string {
+    return String(valor || '')
+      .trim()
+      .toUpperCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ');
+  }
+
+  onAccionPersonalChange(accion: string): void {
+    if (!accion || this.normalizarTexto(accion) === 'OTRO') {
+      this.formulario.motivo_legal = '';
+      this.baseLegalBloqueada = false;
+      return;
+    }
+
+    const accionNormalizada = this.normalizarTexto(accion);
+
+    const baseEncontrada = this.catalogoBaseLegal.find(
+      item => this.normalizarTexto(item.tipo_movimiento) === accionNormalizada
+    );
+
+    if (baseEncontrada) {
+      this.formulario.motivo_legal = baseEncontrada.base_legal;
+      this.baseLegalBloqueada = true;
+    } else {
+      this.formulario.motivo_legal = '';
+      this.baseLegalBloqueada = false;
+    }
   }
 
   async consultarCedula(): Promise<void> {
@@ -601,10 +613,17 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
         this.estructuraPersonal = this.ordenarYDepurarPersonas(personas);
       }
     } catch (error) {
-      console.warn(
-        'No se pudo cargar personal-estructura; se conserva la lista local.',
-        error
-      );
+      // Sin fallback local: si la API falla, los selects de responsables
+      // quedan vacíos. Se avisa explícitamente porque, a diferencia de antes,
+      // ya no hay una lista quemada en el código que disimule el problema.
+      console.warn('No se pudo cargar personal-estructura.', error);
+      void Swal.fire({
+        icon: 'warning',
+        title: 'No se pudo cargar el personal',
+        text: 'Los selectores de responsables podrían aparecer vacíos. Recargue la página para reintentar.',
+        timer: 2600,
+        showConfirmButton: false
+      });
     } finally {
       this.cargandoPersonal = false;
       this.actualizarVista();
@@ -635,10 +654,17 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
         this.listaAutoridades = this.ordenarYDepurarPersonas(autoridades);
       }
     } catch (error) {
-      console.warn(
-        'No se pudo cargar autoridades; se conserva la lista local.',
-        error
-      );
+      // Sin fallback local: si la API falla, el select de autoridad
+      // nominadora queda vacío. Se avisa explícitamente por la misma razón
+      // que en cargarEstructuraPersonal().
+      console.warn('No se pudo cargar autoridades.', error);
+      void Swal.fire({
+        icon: 'warning',
+        title: 'No se pudo cargar la lista de autoridades',
+        text: 'El selector de autoridad nominadora podría aparecer vacío. Recargue la página para reintentar.',
+        timer: 2600,
+        showConfirmButton: false
+      });
     } finally {
       this.cargandoAutoridades = false;
       this.actualizarVista();
@@ -759,14 +785,29 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
   }
 
   async guardarBorrador(mostrarExito = false): Promise<boolean> {
-    if (this.guardandoBorrador) {
+    // Guard de estado: no intentar guardar si el doc ya fue firmado o finalizado.
+    if (!this.puedoGuardarBorrador) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'No disponible',
+        text: `El documento ya no está en borrador (estado: ${this.estadoDocumento}). No se puede guardar nuevamente.`
+      });
       return false;
     }
 
-    if (this.documentoActualId) {
-      return true;
+    // FIX #3: Anti-doble-POST. Si ya existe una promesa en vuelo (incluso si el
+    // flag ya se liberó por un finally previo), reutilizamos la misma promesa.
+    // Esto protege contra clicks rápidos Y contra retries tras timeout de red.
+    if (this.lastSavePromise !== null) {
+      return this.lastSavePromise;
     }
 
+    // NOTA: no se corta aquí aunque ya exista documentoActualId. El backend
+    // (DocumentoService.guardar_borrador) hace upsert por numero_accion
+    // mientras el estado siga en BORRADOR, así que cada llamada debe volver
+    // a enviar el formulario; de lo contrario, si prepararDocumentoParaFirmas
+    // falla después del primer guardado, los cambios posteriores del usuario
+    // nunca llegarían al backend en el reintento.
     const error = this.validarFormularioCompleto();
 
     if (error) {
@@ -774,6 +815,15 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
       return false;
     }
 
+    this.lastSavePromise = this._ejecutarGuardado(mostrarExito).finally(() => {
+      this.lastSavePromise = null;
+    });
+
+    return this.lastSavePromise;
+  }
+
+  /** Implementación interna del guardado — nunca llamar directamente. */
+  private async _ejecutarGuardado(mostrarExito: boolean): Promise<boolean> {
     try {
       this.guardandoBorrador = true;
       this.actualizarVista();
@@ -1323,8 +1373,6 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
     }
 
     this.formulario = this.crearFormularioInicial();
-    this.ultimoGrupoActual = '';
-    this.ultimoGrupoPropuesto = '';
     this.documentoActualId = null;
     this.estadoDocumento = 'BORRADOR';
     this.firmasDocumento = [];
@@ -1382,6 +1430,7 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
       desde: fechaActual,
       hasta: fechaActual,
       accion_personal: '',
+      motivo_legal: '',
 
       proceso_institucional_actual: '',
       nivel_gestion_actual: '',
@@ -1406,6 +1455,9 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
       nombre_autoridad: '',
       puesto_autoridad: '',
 
+      nombre_responsable_th: '',
+      puesto_responsable_th: '',
+
       elaborado_por: '',
       puesto_elaborado: '',
 
@@ -1422,6 +1474,13 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
 
     if (!f.numero_accion.trim()) {
       return 'Ingrese el número de la Acción de Personal.';
+    }
+
+    // El backend guarda/actualiza el borrador usando numero_accion como clave
+    // única. Si dos usuarios dejan el prefijo automático sin completar
+    // (AP-RH-2026-), guardarían sobre el mismo documento sin darse cuenta.
+    if (/^AP-RH-\d{4}-$/.test(f.numero_accion.trim())) {
+      return 'Complete el consecutivo del número de Acción de Personal (por ejemplo: AP-RH-2026-001).';
     }
 
     if (!f.fecha_elaboracion) {
@@ -1499,6 +1558,11 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
         etiqueta: 'autoridad nominadora'
       },
       {
+        nombre: f.nombre_responsable_th,
+        puesto: f.puesto_responsable_th,
+        etiqueta: 'responsable de talento humano'
+      },
+      {
         nombre: f.elaborado_por,
         puesto: f.puesto_elaborado,
         etiqueta: 'responsable de elaboración'
@@ -1531,62 +1595,67 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
    * Payload compatible con la ruta existente /api/generar-accion.
    * Los alias fecha_rige_* y tipo_accion se conservan para el backend actual.
    */
+  /**
+   * FIX #4: Payload limpio — una sola clave canónica por campo.
+   * Se mantienen los alias que el backend de Flask lee explícitamente
+   * (tipo_accion, fecha_rige_desde/hasta) pero se eliminan las triplicaciones
+   * (unidad/unidad_administrativa/unidad_actual → solo unidad_actual, etc.).
+   */
   private construirPayloadPlantilla(): Record<string, string> {
     const f = this.formulario;
 
     return {
-      numero_accion: f.numero_accion.trim(),
+      // ── Identificación del documento ──────────────────────────────────────
+      numero_accion:    f.numero_accion.trim(),
       fecha_elaboracion: f.fecha_elaboracion,
 
+      // ── Funcionario ───────────────────────────────────────────────────────
       apellidos: f.apellidos.trim(),
-      nombres: f.nombres.trim(),
-      cedula: f.cedula.trim(),
+      nombres:   f.nombres.trim(),
+      cedula:    f.cedula.trim(),
 
-      desde: f.desde,
-      hasta: f.hasta,
+      // ── Vigencia — dos alias para compatibilidad con el backend actual ────
       fecha_rige_desde: f.desde,
       fecha_rige_hasta: f.hasta,
+
+      // ── Tipo de acción — dos alias: el nuevo y el que usa el backend ──────
       accion_personal: f.accion_personal,
-      tipo_accion: f.accion_personal.toUpperCase(),
+      tipo_accion:     f.accion_personal.toUpperCase(),
+      motivo_legal:    f.motivo_legal || '',
 
+      // ── Situación actual ──────────────────────────────────────────────────
       proceso_institucional_actual: f.proceso_institucional_actual.trim(),
-      nivel_gestion_actual: f.nivel_gestion_actual.trim(),
-      unidad: f.unidad_actual.trim(),
-      unidad_administrativa: f.unidad_actual.trim(),
-      unidad_actual: f.unidad_actual.trim(),
-      ciudad: f.lugar_trabajo_actual.trim(),
-      lugar_trabajo_actual: f.lugar_trabajo_actual.trim(),
-      cargo: f.denominacion_actual.trim(),
-      denominacion_actual: f.denominacion_actual.trim(),
-      grupo_ocupacional: f.grupo_actual.trim(),
-      grupo_ocupacional_actual: f.grupo_actual.trim(),
-      grado_actual: f.grado_actual.trim(),
-      remuneracion_actual: f.remuneracion_actual.trim(),
-      partida_actual: f.partida_actual.trim(),
+      nivel_gestion_actual:         f.nivel_gestion_actual.trim(),
+      unidad_actual:                f.unidad_actual.trim(),
+      lugar_trabajo_actual:         f.lugar_trabajo_actual.trim(),
+      denominacion_actual:          f.denominacion_actual.trim(),
+      grupo_ocupacional:            f.grupo_actual.trim(),   // alias que lee el backend
+      grado_actual:                 f.grado_actual.trim(),
+      remuneracion_actual:          f.remuneracion_actual.trim(),
+      partida_actual:               f.partida_actual.trim(),
 
+      // ── Situación propuesta ───────────────────────────────────────────────
       proceso_institucional_propuesta: f.proceso_institucional_propuesta.trim(),
-      nivel_gestion_propuesta: f.nivel_gestion_propuesta.trim(),
-      unidad_administrativa_propuesta: f.unidad_propuesta.trim(),
-      unidad_propuesta: f.unidad_propuesta.trim(),
-      lugar_trabajo_propuesta: f.lugar_trabajo_propuesta.trim(),
-      denominacion_propuesta: f.denominacion_propuesta.trim(),
-      grupo_ocupacional_propuesto: f.grupo_propuesta.trim(),
-      grupo_propuesta: f.grupo_propuesta.trim(),
-      grado_propuesta: f.grado_propuesta.trim(),
-      remuneracion_propuesta: f.remuneracion_propuesta.trim(),
-      partida_propuesta: f.partida_propuesta.trim(),
+      nivel_gestion_propuesta:         f.nivel_gestion_propuesta.trim(),
+      unidad_propuesta:                f.unidad_propuesta.trim(),
+      lugar_trabajo_propuesta:         f.lugar_trabajo_propuesta.trim(),
+      denominacion_propuesta:          f.denominacion_propuesta.trim(),
+      grupo_propuesta:                 f.grupo_propuesta.trim(),
+      grado_propuesta:                 f.grado_propuesta.trim(),
+      remuneracion_propuesta:          f.remuneracion_propuesta.trim(),
+      partida_propuesta:               f.partida_propuesta.trim(),
 
-      nombre_autoridad: f.nombre_autoridad.trim(),
-      puesto_autoridad: f.puesto_autoridad.trim(),
-
-      elaborado_por: f.elaborado_por.trim(),
-      puesto_elaborado: f.puesto_elaborado.trim(),
-
-      revisado_por: f.revisado_por.trim(),
-      puesto_revisado: f.puesto_revisado.trim(),
-
-      registrado_por: f.registrado_por.trim(),
-      puesto_registrado: f.puesto_registrado.trim()
+      // ── Responsables ─────────────────────────────────────────────────────
+      nombre_autoridad:      f.nombre_autoridad.trim(),
+      puesto_autoridad:      f.puesto_autoridad.trim(),
+      nombre_responsable_th: f.nombre_responsable_th.trim(),
+      puesto_responsable_th: f.puesto_responsable_th.trim(),
+      elaborado_por:         f.elaborado_por.trim(),
+      puesto_elaborado:      f.puesto_elaborado.trim(),
+      revisado_por:          f.revisado_por.trim(),
+      puesto_revisado:       f.puesto_revisado.trim(),
+      registrado_por:        f.registrado_por.trim(),
+      puesto_registrado:     f.puesto_registrado.trim()
     };
   }
 
@@ -1655,8 +1724,6 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
       remuneracion_propuesta: rmuApi
     };
 
-    this.ultimoGrupoActual = '';
-    this.ultimoGrupoPropuesto = '';
     this.aplicarEscalaOcupacional('actual', rmuApi);
     this.aplicarEscalaOcupacional('propuesta', rmuApi);
     this.actualizarVista();
@@ -1756,14 +1823,6 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
 
     return [...unicas.values()].sort((a, b) =>
       a.nombres.localeCompare(b.nombres, 'es', { sensitivity: 'base' })
-    );
-  }
-
-  private obtenerAutoridadesLocales(): PersonaEstructura[] {
-    return this.ordenarYDepurarPersonas(
-      this.personalBase.filter((persona) =>
-        this.normalizarTexto(persona.denominacion_puesto).includes('DIRECTOR')
-      )
     );
   }
 
@@ -2124,15 +2183,6 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
     );
   }
 
-  private normalizarTexto(valor: unknown): string {
-    return String(valor || '')
-      .trim()
-      .toUpperCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, ' ');
-  }
-
   private escaparHtml(valor: unknown): string {
     return String(valor || '')
       .replace(/&/g, '&amp;')
@@ -2146,3 +2196,5 @@ export class SolicitudPermisosComponent implements OnInit, DoCheck {
     this.cdr.markForCheck();
   }
 }
+
+//sapooooo

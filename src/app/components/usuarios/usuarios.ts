@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../core/services/auth';
+import { environment } from '../../../environments/environment';
 
 interface Usuario {
   id:      number;
@@ -21,7 +22,7 @@ interface Usuario {
 })
 export class UsuariosComponent implements OnInit {
 
-  private readonly API = 'http://localhost:5000/api/usuarios';
+  private readonly API = `${String(environment.apiUrl || 'http://localhost:5000/api').replace(/\/$/, '')}/usuarios`;
 
   cargando     = false;
   guardando    = false;

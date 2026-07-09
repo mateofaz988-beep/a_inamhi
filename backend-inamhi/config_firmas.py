@@ -15,11 +15,11 @@ SECCIONES_FIRMA = {
         "obligatoria": True,
         "etiqueta": "Elaborado por",
         "posicion": {
-            "pagina": 3,
-            "x1": 50,
+            "pagina": 1,
+            "x1": 40,
             "y1": 55,
-            "x2": 250,
-            "y2": 130
+            "x2": 200,
+            "y2": 125
         }
     },
     "REVISADO_POR": {
@@ -27,11 +27,11 @@ SECCIONES_FIRMA = {
         "obligatoria": True,
         "etiqueta": "Revisado por",
         "posicion": {
-            "pagina": 3,
-            "x1": 300,
+            "pagina": 1,
+            "x1": 220,
             "y1": 55,
-            "x2": 500,
-            "y2": 130
+            "x2": 380,
+            "y2": 125
         }
     },
     "REGISTRADO_POR": {
@@ -39,11 +39,11 @@ SECCIONES_FIRMA = {
         "obligatoria": True,
         "etiqueta": "Registrado por",
         "posicion": {
-            "pagina": 3,
-            "x1": 550,
+            "pagina": 1,
+            "x1": 400,
             "y1": 55,
-            "x2": 750,
-            "y2": 130
+            "x2": 560,
+            "y2": 125
         }
     },
     "DIRECTOR_TALENTO_HUMANO": {
@@ -51,11 +51,11 @@ SECCIONES_FIRMA = {
         "obligatoria": True,
         "etiqueta": "Director(a) de Talento Humano",
         "posicion": {
-            "pagina": 2,
-            "x1": 100,
-            "y1": 200,
-            "x2": 350,
-            "y2": 280
+            "pagina": 0,
+            "x1": 50,
+            "y1": 35,
+            "x2": 210,
+            "y2": 105
         }
     },
     "AUTORIDAD_NOMINADORA": {
@@ -63,11 +63,11 @@ SECCIONES_FIRMA = {
         "obligatoria": True,
         "etiqueta": "Autoridad Nominadora",
         "posicion": {
-            "pagina": 2,
-            "x1": 450,
-            "y1": 200,
-            "x2": 700,
-            "y2": 280
+            "pagina": 0,
+            "x1": 340,
+            "y1": 35,
+            "x2": 500,
+            "y2": 105
         }
     },
     "ACEPTACION_SERVIDOR": {
@@ -75,11 +75,11 @@ SECCIONES_FIRMA = {
         "obligatoria": True,
         "etiqueta": "Aceptación del servidor",
         "posicion": {
-            "pagina": 3,
-            "x1": 100,
-            "y1": 350,
-            "x2": 350,
-            "y2": 430
+            "pagina": 0,
+            "x1": 300,
+            "y1": 115,
+            "x2": 460,
+            "y2": 185
         }
     }
 }

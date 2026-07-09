@@ -252,6 +252,7 @@
               id="accion_personal"
               name="accion_personal"
               [(ngModel)]="formulario.accion_personal"
+              (ngModelChange)="onAccionPersonalChange($event)"
               #accionPersonalModel="ngModel"
               required
               [class.is-invalid]="accionPersonalModel.invalid && accionPersonalModel.touched"
@@ -293,8 +294,26 @@
             </small>
           </div>
         </div>
-      </fieldset>
 
+        <div class="field mt-3">
+          <label for="motivo_legal">
+            Base Legal / Explicación
+            <span class="required-mark" aria-hidden="true">*</span>
+          </label>
+          <textarea
+            id="motivo_legal"
+            name="motivo_legal"
+            [(ngModel)]="formulario.motivo_legal"
+            #motivoLegalModel="ngModel"
+            required
+            rows="3"
+            [class.is-invalid]="motivoLegalModel.invalid && motivoLegalModel.touched"
+            [readonly]="baseLegalBloqueada"
+            [class.readonly-control]="baseLegalBloqueada"
+            placeholder="Seleccione un tipo de acción o escriba la base legal..."
+          ></textarea>
+        </div>
+      </fieldset>
 
       <!-- 04. Situación actual y propuesta -->
       <fieldset class="form-section" [disabled]="formularioBloqueado">
@@ -315,17 +334,7 @@
           <button
             type="button"
             class="btn btn-outline-primary btn-sm"
-            (click)="
-              formulario.proceso_institucional_propuesta = formulario.proceso_institucional_actual;
-              formulario.nivel_gestion_propuesta = formulario.nivel_gestion_actual;
-              formulario.unidad_propuesta = formulario.unidad_actual;
-              formulario.lugar_trabajo_propuesta = formulario.lugar_trabajo_actual;
-              formulario.denominacion_propuesta = formulario.denominacion_actual;
-              formulario.grupo_propuesta = formulario.grupo_actual;
-              formulario.grado_propuesta = formulario.grado_actual;
-              formulario.remuneracion_propuesta = formulario.remuneracion_actual;
-              formulario.partida_propuesta = formulario.partida_actual
-            "
+            (click)="copiarSituacionActualAPropuesta()"
           >
             <i class="bi bi-copy" aria-hidden="true"></i>
             <span>Copiar actual a propuesta</span>
@@ -340,7 +349,10 @@
           </div>
 
           <div class="situation-row" role="row">
-            <div class="situation-label" role="rowheader">Proceso institucional</div>
+            <div class="situation-label" role="rowheader">
+              Proceso institucional
+              <span class="required-mark" aria-hidden="true">*</span>
+            </div>
             <div class="situation-value" role="cell">
               <select
                 id="proceso_institucional_actual"
@@ -396,7 +408,10 @@
           </div>
 
           <div class="situation-row" role="row">
-            <div class="situation-label" role="rowheader">Unidad administrativa</div>
+            <div class="situation-label" role="rowheader">
+              Unidad administrativa
+              <span class="required-mark" aria-hidden="true">*</span>
+            </div>
             <div class="situation-value" role="cell">
               <select
                 id="unidad_actual"
@@ -452,13 +467,16 @@
                 <option value="DIRECCION REGIONAL TECNICA HIDROMETEOROLOGICA GUAYAS - GALAPAGOS">DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA GUAYAS - GALÁPAGOS</option>
                 <option value="DIRECCION REGIONAL TECNICA HIDROMETEOROLOGICA MORONA SANTIAGO">DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA MORONA SANTIAGO</option>
                 <option value="DIRECCION REGIONAL TECNICA HIDROMETEOROLOGICA JUBONES - PUYANGO">DIRECCIÓN REGIONAL TÉCNICA HIDROMETEOROLÓGICA JUBONES - PUYANGO</option>
-                <option value="GESTION PRIMARIA DE LA INFORMACION HIDROMETEOROLOGICA">GESTIÓN PRIMARIA DE LA INFORMACIÓN HIDROMETEOROLÓGICA</option>
+                <option value="GESTION PRIMARIA DE LA INFORMACION HIDROMETEOROLOGICA">GESTIÓN PRIMARIA DE LA INFORMACIÓN HIDROMETEOROLOGICA</option>
               </select>
             </div>
           </div>
 
           <div class="situation-row" role="row">
-            <div class="situation-label" role="rowheader">Lugar de trabajo</div>
+            <div class="situation-label" role="rowheader">
+              Lugar de trabajo
+              <span class="required-mark" aria-hidden="true">*</span>
+            </div>
             <div class="situation-value" role="cell">
               <select
                 id="lugar_trabajo_actual"
@@ -514,7 +532,10 @@
           </div>
 
           <div class="situation-row" role="row">
-            <div class="situation-label" role="rowheader">Denominación del puesto</div>
+            <div class="situation-label" role="rowheader">
+              Denominación del puesto
+              <span class="required-mark" aria-hidden="true">*</span>
+            </div>
             <div class="situation-value" role="cell">
               <input
                 id="denominacion_actual"
@@ -540,28 +561,20 @@
           </div>
 
           <div class="situation-row" role="row">
-            <div class="situation-label" role="rowheader">Grupo ocupacional</div>
+            <div class="situation-label" role="rowheader">
+              Grupo ocupacional
+              <span class="required-mark" aria-hidden="true">*</span>
+            </div>
             <div class="situation-value" role="cell">
               <select
                 id="grupo_actual"
                 name="grupo_actual"
                 [(ngModel)]="formulario.grupo_actual"
+                (ngModelChange)="actualizarEscalaActual()"
                 aria-label="Grupo ocupacional actual"
               >
                 <option value="">Seleccione un grupo</option>
-                <option value="SERVIDOR PUBLICO DE APOYO 1">SERVIDOR PÚBLICO DE APOYO 1</option>
-                <option value="SERVIDOR PUBLICO DE APOYO 2">SERVIDOR PÚBLICO DE APOYO 2</option>
-                <option value="SERVIDOR PUBLICO DE APOYO 3">SERVIDOR PÚBLICO DE APOYO 3</option>
-                <option value="SERVIDOR PUBLICO DE APOYO 4">SERVIDOR PÚBLICO DE APOYO 4</option>
-                <option value="SERVIDOR PUBLICO 1">SERVIDOR PÚBLICO 1</option>
-                <option value="SERVIDOR PUBLICO 2">SERVIDOR PÚBLICO 2</option>
-                <option value="SERVIDOR PUBLICO 3">SERVIDOR PÚBLICO 3</option>
-                <option value="SERVIDOR PUBLICO 4">SERVIDOR PÚBLICO 4</option>
-                <option value="SERVIDOR PUBLICO 5">SERVIDOR PÚBLICO 5</option>
-                <option value="SERVIDOR PUBLICO 6">SERVIDOR PÚBLICO 6</option>
-                <option value="SERVIDOR PUBLICO 7">SERVIDOR PÚBLICO 7</option>
-                <option value="NIVEL JERARQUICO SUPERIOR 2">NIVEL JERÁRQUICO SUPERIOR 2</option>
-                <option value="NIVEL JERARQUICO SUPERIOR 3">NIVEL JERÁRQUICO SUPERIOR 3</option>
+                <option *ngFor="let grupo of gruposOcupacionales" [value]="grupo">{{ grupo }}</option>
               </select>
             </div>
             <div class="situation-value" role="cell">
@@ -569,22 +582,11 @@
                 id="grupo_propuesta"
                 name="grupo_propuesta"
                 [(ngModel)]="formulario.grupo_propuesta"
+                (ngModelChange)="actualizarEscalaPropuesta()"
                 aria-label="Grupo ocupacional propuesto"
               >
                 <option value="">Seleccione un grupo</option>
-                <option value="SERVIDOR PUBLICO DE APOYO 1">SERVIDOR PÚBLICO DE APOYO 1</option>
-                <option value="SERVIDOR PUBLICO DE APOYO 2">SERVIDOR PÚBLICO DE APOYO 2</option>
-                <option value="SERVIDOR PUBLICO DE APOYO 3">SERVIDOR PÚBLICO DE APOYO 3</option>
-                <option value="SERVIDOR PUBLICO DE APOYO 4">SERVIDOR PÚBLICO DE APOYO 4</option>
-                <option value="SERVIDOR PUBLICO 1">SERVIDOR PÚBLICO 1</option>
-                <option value="SERVIDOR PUBLICO 2">SERVIDOR PÚBLICO 2</option>
-                <option value="SERVIDOR PUBLICO 3">SERVIDOR PÚBLICO 3</option>
-                <option value="SERVIDOR PUBLICO 4">SERVIDOR PÚBLICO 4</option>
-                <option value="SERVIDOR PUBLICO 5">SERVIDOR PÚBLICO 5</option>
-                <option value="SERVIDOR PUBLICO 6">SERVIDOR PÚBLICO 6</option>
-                <option value="SERVIDOR PUBLICO 7">SERVIDOR PÚBLICO 7</option>
-                <option value="NIVEL JERARQUICO SUPERIOR 2">NIVEL JERÁRQUICO SUPERIOR 2</option>
-                <option value="NIVEL JERARQUICO SUPERIOR 3">NIVEL JERÁRQUICO SUPERIOR 3</option>
+                <option *ngFor="let grupo of gruposOcupacionales" [value]="grupo">{{ grupo }}</option>
               </select>
             </div>
           </div>
@@ -735,6 +737,44 @@
         </legend>
 
         <div class="responsibility-list">
+          <div class="responsibility-row">
+            <div class="field">
+              <label for="nombre_responsable_th">
+                Director/a o Responsable de Talento Humano
+                <span class="required-mark" aria-hidden="true">*</span>
+              </label>
+              <select
+                id="nombre_responsable_th"
+                name="nombre_responsable_th"
+                [(ngModel)]="formulario.nombre_responsable_th"
+                #responsableThModel="ngModel"
+                (ngModelChange)="seleccionarResponsable('nombre_responsable_th', 'puesto_responsable_th', $event)"
+                required
+                [class.is-invalid]="responsableThModel.invalid && responsableThModel.touched"
+                [attr.aria-busy]="cargandoPersonal"
+              >
+                <option value="">
+                  {{ cargandoPersonal ? 'Cargando personal...' : 'Seleccione un responsable' }}
+                </option>
+                <option *ngFor="let persona of estructuraPersonal" [value]="persona.nombres">
+                  {{ persona.nombres }}
+                </option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="puesto_responsable_th">Puesto</label>
+              <input
+                id="puesto_responsable_th"
+                name="puesto_responsable_th"
+                type="text"
+                [(ngModel)]="formulario.puesto_responsable_th"
+                readonly
+                class="readonly-control"
+                placeholder="Se completa automáticamente"
+              >
+            </div>
+          </div>
+
           <div class="responsibility-row">
             <div class="field">
               <label for="elaborado_por">
@@ -936,8 +976,12 @@
               <dd>{{ formatearFechaVisual(formulario.hasta) || '—' }}</dd>
             </div>
           </dl>
-        </section>
 
+          <div class="preview-base-legal mt-3" *ngIf="formulario.motivo_legal">
+            <dt>Base Legal Aplicada</dt>
+            <dd>{{ formulario.motivo_legal }}</dd>
+          </div>
+        </section>
 
         <section class="preview-section">
           <h3>Situación actual y propuesta</h3>
@@ -1002,6 +1046,12 @@
             <strong>{{ formulario.nombre_autoridad || '—' }}</strong><br>
             <span>{{ formulario.puesto_autoridad || '—' }}</span>
           </div>
+
+          <h3>Responsable de Talento Humano</h3>
+          <div class="preview-text">
+            <strong>{{ formulario.nombre_responsable_th || '—' }}</strong><br>
+            <span>{{ formulario.puesto_responsable_th || '—' }}</span>
+          </div>
         </section>
 
         <section class="preview-section">
@@ -1062,7 +1112,10 @@
           type="button"
           class="btn btn-primary"
           (click)="prepararDocumentoParaFirmas()"
-          [disabled]="preparandoDocumento || guardandoBorrador"
+          [disabled]="preparandoDocumento || guardandoBorrador || !puedoGuardarBorrador"
+          [title]="!puedoGuardarBorrador
+            ? 'El documento ya no está en borrador (' + estadoDocumento + '). No se puede volver a guardar.'
+            : 'Enviar el documento al flujo de firmas electrónicas'"
         >
           <span *ngIf="preparandoDocumento || guardandoBorrador" class="spinner" aria-hidden="true"></span>
           <i

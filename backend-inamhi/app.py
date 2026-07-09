@@ -6,6 +6,8 @@ import os
 import glob
 import copy
 import inspect
+import jwt
+import datetime
 from io import BytesIO
 from datetime import date, datetime, timezone, timedelta
 from decimal import Decimal
@@ -14,7 +16,7 @@ from services.firma_service import FirmaService
 from services.documento_service import DocumentoService
 from services.certificado_service import CertificadoService
 import config_firmas
-from config import DB_CONFIG, FLASK_PORT, FLASK_DEBUG, MAX_CERTIFICADO_BYTES
+from config import DB_CONFIG, FLASK_PORT, FLASK_DEBUG, MAX_CERTIFICADO_BYTES, JWT_SECRET_KEY
 
 try:
     import openpyxl
@@ -23,7 +25,13 @@ except ImportError:
     OPENPYXL_DISPONIBLE = False
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+
+# Clave secreta para firmar los JWT — viene de config.py (JWT_SECRET_KEY en .env).
+# Antes se leía os.environ.get('SECRET_KEY', ...), una variable que .env nunca
+# definió (el archivo usa JWT_SECRET_KEY), así que siempre se usaba el valor
+# de respaldo hardcodeado aquí mismo, visible en el repositorio.
+SECRET_KEY = JWT_SECRET_KEY
 
 db_config = DB_CONFIG
 
@@ -71,7 +79,7 @@ def obtener_total_paginas_pdf(ruta_pdf):
         try:
             from pypdf import PdfReader
         except ImportError:
-            from PyPDF2 import PdfReader
+            from pypdf import PdfReader
 
         lector = PdfReader(ruta_pdf)
         total = len(lector.pages)
@@ -185,12 +193,28 @@ def ejecutar_firma_pdf(
     )
 
 # =========================
+# 🔐 DECODIFICAR TOKEN
+# =========================
+def decodificar_token(auth_header):
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return None
+    token = auth_header.split(' ')[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+# =========================
 # 🔐 OBTENER USUARIO DEL TOKEN
 # =========================
 def obtener_usuario():
-    token = request.headers.get('Authorization')
-    if token and token.startswith('tk_'):
-        return token.replace('tk_', '')
+    auth_header = request.headers.get('Authorization')
+    payload = decodificar_token(auth_header)
+    if payload and 'usuario' in payload:
+        return payload['usuario']
     return 'desconocido'
 
 # =========================
@@ -206,51 +230,26 @@ def obtener_ip():
 # 🔐 VALIDAR ADMIN
 # =========================
 import traceback
+from werkzeug.exceptions import HTTPException
 
-@app.errorhandler(500)
-def internal_error(exception):
-    with open('error_500.log', 'a') as f:
-        f.write(traceback.format_exc())
-    return jsonify({"error": "Internal Server Error"}), 500
+@app.errorhandler(HTTPException)
+def handle_http_exception(e):
+    """Retorna el código HTTP correcto para 404, 403, etc. sin loggear como error 500."""
+    return jsonify({"error": e.description}), e.code
 
 @app.errorhandler(Exception)
 def handle_exception(e):
+    """Solo captura excepciones reales del servidor (no HTTPException)."""
     with open('error_500.log', 'a') as f:
         f.write(traceback.format_exc())
     return jsonify({"error": str(e)}), 500
 
 def es_admin():
-    token = request.headers.get('Authorization')
-
-    if not token or not token.startswith('tk_'):
-        return False
-
-    usuario = token.replace('tk_', '')
-
-    conexion = None
-    cursor = None
-
-    try:
-        conexion = get_connection()
-        cursor = conexion.cursor(dictionary=True)
-
-        cursor.execute(
-            "SELECT rol FROM usuarios WHERE usuario = %s",
-            (usuario,)
-        )
-        result = cursor.fetchone()
-
-        return result is not None and result['rol'] == 'admin'
-
-    except Exception as e:
-        print("ERROR VALIDANDO ADMIN:", str(e))
-        return False
-
-    finally:
-        if cursor:
-            cursor.close()
-        if conexion:
-            conexion.close()
+    auth_header = request.headers.get('Authorization')
+    payload = decodificar_token(auth_header)
+    if payload and 'rol' in payload:
+        return payload['rol'] == 'admin'
+    return False
 
 # =========================
 # 🧾 NORMALIZAR GÉNERO
@@ -345,9 +344,21 @@ def login():
                 detalle='Inicio de sesión exitoso'
             )
 
+            try:
+                exp_date = datetime.now(timezone.utc) + timedelta(hours=12)
+                jwt_token = jwt.encode({
+                    'usuario': usuario['usuario'],
+                    'rol': usuario['rol'],
+                    'exp': exp_date
+                }, SECRET_KEY, algorithm='HS256')
+            except Exception as token_err:
+                print(f"ERROR GENERANDO TOKEN JWT: {token_err}")
+                return jsonify({"error": "Error interno generando credenciales"}), 500
+
             return jsonify({
-                "token": "tk_" + usuario['usuario'],
-                "role": usuario['rol']
+                "token": jwt_token,
+                "role": usuario['rol'],
+                "usuario": usuario['usuario']
             }), 200
 
         return jsonify({"error": "No autorizado"}), 401
@@ -366,6 +377,10 @@ def login():
 # =========================
 @app.route('/api/personal', methods=['GET'])
 def obtener_personal():
+    token = request.headers.get('Authorization', '')
+    if not decodificar_token(token):
+        return jsonify({"error": "No autorizado"}), 403
+
     conexion = None
     cursor = None
 
@@ -1207,12 +1222,77 @@ def obtener_personal_pasivo():
         if conexion:
             conexion.close()
 # =========================
+# ⚖️ CATÁLOGO DE BASES LEGALES POR TIPO DE ACCIÓN
+# =========================
+@app.route('/api/base-legal', methods=['GET'])
+def get_base_legal():
+    token = request.headers.get('Authorization', '')
+    if not decodificar_token(token):
+        return jsonify({"error": "No autorizado"}), 403
+
+    try:
+        # Conexión a la base de datos (asegúrate de usar tu función get_db_connection())
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # Consulta SQL simplificada usando solo las columnas existentes
+        query = """
+            SELECT tipo_movimiento, base_legal
+            FROM base_legal_accion
+            ORDER BY tipo_movimiento ASC
+        """
+
+        cursor.execute(query)
+        resultados = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(resultados), 200
+
+    except Exception as e:
+        print(f"Error en /api/base-legal: {str(e)}")
+        return jsonify({"error": "Error al obtener la base legal", "detalles": str(e)}), 500
+
+
+# =========================
+# 💰 ESCALA DE REMUNERACIÓN POR GRUPO OCUPACIONAL
+# =========================
+@app.route('/api/escala-ocupacional', methods=['GET'])
+def get_escala_ocupacional():
+    token = request.headers.get('Authorization', '')
+    if not decodificar_token(token):
+        return jsonify({"error": "No autorizado"}), 403
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT grupo_ocupacional, grado, remuneracion
+            FROM escala_ocupacional
+            WHERE activo = 1
+            ORDER BY grupo_ocupacional ASC
+        """)
+        resultados = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return jsonify(resultados), 200
+
+    except Exception as e:
+        print(f"Error en /api/escala-ocupacional: {str(e)}")
+        return jsonify({"error": "Error al obtener la escala ocupacional", "detalles": str(e)}), 500
+
+
+# =========================
 # 🏛️ AUTORIDADES (CRUD)
 # =========================
 @app.route('/api/autoridades', methods=['GET'])
 def obtener_autoridades():
     token = request.headers.get('Authorization', '')
-    if not token.startswith('tk_'):
+    if not decodificar_token(token):
         return jsonify({"error": "No autorizado"}), 403
 
     conexion = None
@@ -1352,7 +1432,7 @@ def eliminar_autoridad(id):
 @app.route('/api/personal-estructura', methods=['GET'])
 def obtener_personal_estructura():
     token = request.headers.get('Authorization', '')
-    if not token.startswith('tk_'):
+    if not decodificar_token(token):
         return jsonify({"error": "No autorizado"}), 403
 
     conexion = None
@@ -1562,12 +1642,20 @@ def generar_accion():
         escribir_celda(hoja, 'I11', parse_fecha(datos.get('fecha_rige_desde', ''), como_texto=True))
         escribir_celda(hoja, 'M11', parse_fecha(datos.get('fecha_rige_hasta', ''), como_texto=True))
 
-        # ── TIPO DE ACCIÓN (casillas X) ───────────────────────────────────────
-        tipo = (datos.get('tipo_accion') or '').upper()
-        marcas_accion = {
+        # ── TIPO DE ACCIÓN (casillas X) ─────────────────────────────────────────────────────
+        import unicodedata as _ud
+
+        def _norm(t):
+            """Normaliza texto: quita tildes, colapsa espacios, pone en mayúsculas."""
+            t = str(t or '').strip().upper()
+            t = _ud.normalize('NFD', t)
+            t = ''.join(c for c in t if _ud.category(c) != 'Mn')
+            return ' '.join(t.split())
+
+        # Mapa de acciones normalizadas → coordenada Excel
+        MARCAS_ACCION = {
             'INGRESO':               'A14',
             'REINGRESO':             'A15',
-            'RESTITUCIÓN':           'A16',
             'RESTITUCION':           'A16',
             'REINTEGRO':             'A17',
             'ASCENSO':               'A18',
@@ -1576,25 +1664,40 @@ def generar_accion():
             'CAMBIO ADMINISTRATIVO': 'D15',
             'INTERCAMBIO VOLUNTARIO':'D16',
             'LICENCIA':              'D17',
-            'COMISIÓN DE SERVICIOS': 'D18',
             'COMISION DE SERVICIOS': 'D18',
             'SANCIONES':             'D19',
             'INCREMENTO RMU':        'I14',
-            'SUBROGACIÓN':           'I15',
             'SUBROGACION':           'I15',
             'ENCARGO':               'I16',
-            'CESACIÓN DE FUNCIONES': 'I17',
             'CESACION DE FUNCIONES': 'I17',
-            'DESTITUCIÓN':           'I18',
             'DESTITUCION':           'I18',
             'VACACIONES':            'I19',
-            'REVISIÓN CLAS. PUESTO': 'L14',
             'REVISION CLAS. PUESTO': 'L14',
             'OTRO':                  'L15',
         }
-        celda_marca = marcas_accion.get(tipo)
+
+        tipo_raw  = datos.get('tipo_accion') or datos.get('accion_personal') or ''
+        tipo_norm = _norm(tipo_raw)
+
+        celda_marca = MARCAS_ACCION.get(tipo_norm)
+
         if celda_marca:
+            from openpyxl.utils import coordinate_to_tuple as _ctt
+            from openpyxl.styles import Font as _Font
             escribir_celda(hoja, celda_marca, 'X')
+            _r, _c = _ctt(celda_marca)
+            _celda = hoja.cell(row=_r, column=_c)
+            _celda.font = _Font(bold=True, name=_celda.font.name, size=_celda.font.size)
+        else:
+            # Fallback: si no coincide con ninguna opción, marcar OTRO
+            from openpyxl.utils import coordinate_to_tuple as _ctt
+            from openpyxl.styles import Font as _Font
+            escribir_celda(hoja, 'L15', 'X')
+            _r, _c = _ctt('L15')
+            _celda = hoja.cell(row=_r, column=_c)
+            _celda.font = _Font(bold=True, name=_celda.font.name, size=_celda.font.size)
+            if tipo_norm not in ('', 'OTRO'):
+                escribir_celda(hoja, 'L16', tipo_raw.upper())
 
         # ── MOTIVACIÓN / BASE LEGAL ───────────────────────────────────────────
         # A24:O24 = celda grande de motivación
@@ -1653,6 +1756,10 @@ def generar_accion():
         # Autoridad nominadora: nombre en K61:O61, puesto en K62:O62
         escribir_celda(hoja, 'K61', datos.get('nombre_autoridad', ''))
         escribir_celda(hoja, 'K62', datos.get('puesto_autoridad', ''))
+
+        # Responsable de Talento Humano: nombre en C61:E61, puesto en C62:E62
+        escribir_celda(hoja, 'C61', datos.get('nombre_responsable_th', ''))
+        escribir_celda(hoja, 'C62', datos.get('puesto_responsable_th', ''))
 
         # ── ACEPTACIÓN DEL SERVIDOR ───────────────────────────────────────────
         # C74 normalmente tiene fórmula =A6&" "&I6 — sobreescribimos con nombre completo
@@ -1732,7 +1839,7 @@ def nombre_seguro(filename):
 @app.route('/api/historial-acciones/buscar', methods=['GET'])
 def buscar_historial_acciones():
     token = request.headers.get('Authorization', '')
-    if not token.startswith('tk_'):
+    if not decodificar_token(token):
         return jsonify({"error": "No autorizado"}), 403
 
     q = (request.args.get('q') or '').strip()
@@ -1748,7 +1855,7 @@ def buscar_historial_acciones():
 
         # Buscar persona en tabla personal (por cédula, nombre o nro)
         cursor.execute("""
-            SELECT id, nro, cedula, nombres, cargo, unidad, modalidad, rmu
+            SELECT id, nro AS numero_nomina, cedula, nombres, cargo, unidad, modalidad, rmu
             FROM personal
             WHERE cedula = %s
                OR UPPER(nombres) LIKE UPPER(%s)
@@ -1810,26 +1917,27 @@ def buscar_historial_acciones():
         for a in acciones_nuevas:
             a['es_nativo'] = True
             a['nombres'] = persona['nombres'] if persona else ''
-            
+
             # Extraer tipo_accion del JSON si es posible
             try:
                 datos = json.loads(a.get('datos_formulario') or '{}')
                 a['tipo_accion'] = datos.get('tipo_accion') or datos.get('accion_personal') or 'ACCIÓN DE PERSONAL'
+                a['datos_formulario'] = datos
             except:
                 a['tipo_accion'] = 'ACCIÓN DE PERSONAL'
-                
+                a['datos_formulario'] = {}
+
             a['archivo_nombre'] = os.path.basename(a['ruta_pdf_actual']) if a.get('ruta_pdf_actual') else None
-            
+
             # Limpiar datos crudos
-            if 'datos_formulario' in a: del a['datos_formulario']
             if 'ruta_pdf_actual' in a: del a['ruta_pdf_actual']
 
         acciones = acciones_viejas + acciones_nuevas
-        
+
         # Ordenar por fecha_registro descendente
         from datetime import datetime, date
         acciones.sort(
-            key=lambda x: x.get('fecha_registro') if isinstance(x.get('fecha_registro'), datetime) else datetime.min, 
+            key=lambda x: x.get('fecha_registro') if isinstance(x.get('fecha_registro'), datetime) else datetime.min,
             reverse=True
         )
 
@@ -1913,7 +2021,7 @@ def subir_accion():
 @app.route('/api/historial-acciones/<int:id>/descargar', methods=['GET'])
 def descargar_accion(id):
     token = request.headers.get('Authorization', '')
-    if not token.startswith('tk_'):
+    if not decodificar_token(token):
         return jsonify({"error": "No autorizado"}), 403
 
     conexion = None
@@ -1997,6 +2105,10 @@ def eliminar_accion_historial(id):
 
 @app.route('/api/acciones-personal', methods=['POST'])
 def guardar_borrador():
+    token = request.headers.get('Authorization', '')
+    if not decodificar_token(token):
+        return jsonify({"error": "No autorizado"}), 403
+
     datos = request.json
     numero_accion = datos.get('numero_accion')
     cedula = datos.get('cedula')
@@ -2030,6 +2142,10 @@ def preparar_firmas(doc_id):
     4. Crea las firmas pendientes
     5. Bloquea el documento
     """
+    token = request.headers.get('Authorization', '')
+    if not decodificar_token(token):
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+
     try:
         # 1. Obtener documento
         doc = DocumentoService.obtener_documento(doc_id)
@@ -2131,6 +2247,10 @@ def preparar_firmas(doc_id):
 @app.route('/api/acciones-personal/<int:doc_id>/firmas', methods=['GET'])
 def listar_firmas(doc_id):
     """Lista todas las firmas de un documento, con su estado."""
+    token = request.headers.get('Authorization', '')
+    if not decodificar_token(token):
+        return jsonify({"error": "No autorizado"}), 403
+
     firmas = DocumentoService.obtener_firmas_documento(doc_id)
     return jsonify(firmas)
 
@@ -2143,6 +2263,10 @@ def firmar_documento(doc_id):
     Las firmas son independientes: no se valida orden secuencial. La página
     configurada se ajusta automáticamente al número real de páginas del PDF.
     """
+    token = request.headers.get('Authorization', '')
+    if not decodificar_token(token):
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+
     p12_bytes = None
     password = None
     nuevo_pdf_path = None
@@ -2278,21 +2402,19 @@ def firmar_documento(doc_id):
         total_paginas = obtener_total_paginas_pdf(pdf_base)
         conf_seccion = config_firmas.SECCIONES_FIRMA[seccion]
 
-        pagina_configurada = (
-            conf_seccion.get('pagina',
-                conf_seccion.get('page',
-                    conf_seccion.get('on_page', 0)
-                )
-            )
-            if isinstance(conf_seccion, dict)
-            else 0
-        )
-
         posicion_original = (
             conf_seccion.get('posicion')
             if isinstance(conf_seccion, dict)
             else conf_seccion
         )
+
+        pagina_configurada = 0
+        if isinstance(posicion_original, dict):
+            pagina_configurada = posicion_original.get('pagina',
+                posicion_original.get('page',
+                    posicion_original.get('on_page', 0)
+                )
+            )
 
         if posicion_original is None:
             return jsonify({
@@ -2470,6 +2592,10 @@ def firmar_documento(doc_id):
 @app.route('/api/acciones-personal/<int:doc_id>/finalizar', methods=['POST'])
 def finalizar_documento(doc_id):
     """Finaliza un documento si todas las firmas obligatorias están completadas."""
+    token = request.headers.get('Authorization', '')
+    if not decodificar_token(token):
+        return jsonify({"ok": False, "error": "No autorizado"}), 403
+
     exito, error = DocumentoService.verificar_y_finalizar(doc_id)
     if exito:
         return jsonify({
@@ -2483,6 +2609,10 @@ def finalizar_documento(doc_id):
 @app.route('/api/acciones-personal/<int:doc_id>/pdf', methods=['GET'])
 def descargar_pdf(doc_id):
     """Descarga el PDF actual (la última versión firmada o el original)."""
+    token = request.headers.get('Authorization', '')
+    if not decodificar_token(token):
+        return jsonify({'ok': False, 'error': 'No autorizado'}), 403
+
     doc = DocumentoService.obtener_documento(doc_id)
     if not doc:
         return jsonify({'ok': False, 'error': 'Documento no encontrado'}), 404
@@ -2505,6 +2635,10 @@ def descargar_pdf(doc_id):
 @app.route('/api/acciones-personal/<int:doc_id>/excel', methods=['GET'])
 def descargar_excel_documento(doc_id):
     """Descarga el Excel guardado del documento."""
+    token = request.headers.get('Authorization', '')
+    if not decodificar_token(token):
+        return jsonify({'ok': False, 'error': 'No autorizado'}), 403
+
     doc = DocumentoService.obtener_documento(doc_id)
     if not doc:
         return jsonify({'ok': False, 'error': 'Documento no encontrado'}), 404
@@ -2571,25 +2705,61 @@ def _generar_excel_documento(datos, excel_dir, numero_accion):
     escribir_celda(hoja, 'I11', parse_fecha(datos.get('desde', datos.get('fecha_rige_desde', '')), como_texto=True))
     escribir_celda(hoja, 'M11', parse_fecha(datos.get('hasta', datos.get('fecha_rige_hasta', '')), como_texto=True))
 
-    # Tipo de acción
-    tipo = (datos.get('accion_personal', datos.get('tipo_accion', '')) or '').upper()
-    marcas_accion = {
-        'INGRESO': 'A14', 'REINGRESO': 'A15', 'RESTITUCIÓN': 'A16',
-        'RESTITUCION': 'A16', 'REINTEGRO': 'A17', 'ASCENSO': 'A18',
-        'TRASLADO': 'A19', 'TRASPASO': 'D14', 'CAMBIO ADMINISTRATIVO': 'D15',
-        'INTERCAMBIO VOLUNTARIO': 'D16', 'LICENCIA': 'D17',
-        'COMISIÓN DE SERVICIOS': 'D18', 'COMISION DE SERVICIOS': 'D18',
-        'SANCIONES': 'D19', 'INCREMENTO RMU': 'I14',
-        'SUBROGACIÓN': 'I15', 'SUBROGACION': 'I15',
-        'ENCARGO': 'I16', 'CESACIÓN DE FUNCIONES': 'I17',
-        'CESACION DE FUNCIONES': 'I17', 'DESTITUCIÓN': 'I18',
-        'DESTITUCION': 'I18', 'VACACIONES': 'I19',
-        'REVISIÓN CLAS. PUESTO': 'L14', 'REVISION CLAS. PUESTO': 'L14',
-        'OTRO': 'L15',
+    # Tipo de acción — marcado robusto con normalización de tildes y espacios
+    import unicodedata as _ud
+
+    def _norm(t):
+        """Normaliza texto: quita tildes, colapsa espacios, pone en mayúsculas."""
+        t = str(t or '').strip().upper()
+        t = _ud.normalize('NFD', t)
+        t = ''.join(c for c in t if _ud.category(c) != 'Mn')
+        return ' '.join(t.split())
+
+    MARCAS_ACCION = {
+        'INGRESO':               'A14',
+        'REINGRESO':             'A15',
+        'RESTITUCION':           'A16',
+        'REINTEGRO':             'A17',
+        'ASCENSO':               'A18',
+        'TRASLADO':              'A19',
+        'TRASPASO':              'D14',
+        'CAMBIO ADMINISTRATIVO': 'D15',
+        'INTERCAMBIO VOLUNTARIO':'D16',
+        'LICENCIA':              'D17',
+        'COMISION DE SERVICIOS': 'D18',
+        'SANCIONES':             'D19',
+        'INCREMENTO RMU':        'I14',
+        'SUBROGACION':           'I15',
+        'ENCARGO':               'I16',
+        'CESACION DE FUNCIONES': 'I17',
+        'DESTITUCION':           'I18',
+        'VACACIONES':            'I19',
+        'REVISION CLAS. PUESTO': 'L14',
+        'OTRO':                  'L15',
     }
-    celda_marca = marcas_accion.get(tipo)
+
+    tipo_raw = datos.get('accion_personal') or datos.get('tipo_accion') or ''
+    tipo_norm = _norm(tipo_raw)
+
+    celda_marca = MARCAS_ACCION.get(tipo_norm)
+
     if celda_marca:
+        from openpyxl.utils import coordinate_to_tuple as _ctt
+        from openpyxl.styles import Font as _Font
         escribir_celda(hoja, celda_marca, 'X')
+        _r, _c = _ctt(celda_marca)
+        _celda = hoja.cell(row=_r, column=_c)
+        _celda.font = _Font(bold=True, name=_celda.font.name, size=_celda.font.size)
+    else:
+        # Fallback: marcar OTRO y escribir el detalle
+        from openpyxl.utils import coordinate_to_tuple as _ctt
+        from openpyxl.styles import Font as _Font
+        escribir_celda(hoja, 'L15', 'X')
+        _r, _c = _ctt('L15')
+        _celda = hoja.cell(row=_r, column=_c)
+        _celda.font = _Font(bold=True, name=_celda.font.name, size=_celda.font.size)
+        if tipo_norm not in ('', 'OTRO'):
+            escribir_celda(hoja, 'L16', tipo_raw.upper())
 
     # Motivación
     escribir_celda(hoja, 'A24', datos.get('motivo_legal', ''))
@@ -2640,6 +2810,9 @@ def _generar_excel_documento(datos, excel_dir, numero_accion):
     escribir_celda(hoja, 'C62', datos.get('puesto_director_th', ''))
     escribir_celda(hoja, 'K61', datos.get('nombre_autoridad', ''))
     escribir_celda(hoja, 'K62', datos.get('puesto_autoridad', ''))
+
+    escribir_celda(hoja, 'C61', datos.get('nombre_responsable_th', ''))
+    escribir_celda(hoja, 'C62', datos.get('puesto_responsable_th', ''))
 
     # Aceptación del servidor
     escribir_celda(hoja, 'C74', datos.get('aceptacion_servidor', ''))

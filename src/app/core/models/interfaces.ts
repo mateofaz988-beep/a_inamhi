@@ -10,6 +10,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   role: string;
+  usuario: string;
 }
 
 export interface Funcionario {
@@ -92,6 +93,55 @@ export interface HistorialAccion {
   fecha_registro: string;
   archivo_nombre: string | null;
   registrado_por: string;
+}
+
+export interface BaseLegalItem {
+  id: number;
+  tipo_movimiento: string;
+  base_legal: string;
+  activo: number;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+}
+
+export interface FormularioAccionPersonal {
+  numero_accion: string;
+  fecha_elaboracion: string;
+  apellidos: string;
+  nombres: string;
+  cedula: string;
+  desde: string;
+  hasta: string;
+  accion_personal: string;
+  motivo_legal: string;
+  proceso_institucional_actual: string;
+  nivel_gestion_actual: string;
+  unidad: string;
+  lugar_trabajo_actual: string;
+  denominacion_actual: string;
+  grupo_ocupacional: string;
+  partida_actual: string;
+  nivel_gestion_propuesta?: string;
+  proceso_institucional_propuesta?: string;
+  unidad_propuesta?: string;
+  lugar_trabajo_propuesta?: string;
+  denominacion_propuesta?: string;
+  partida_propuesta?: string;
+  nombre_posesion?: string;
+  ciudad: string;
+  aceptacion_servidor?: string;
+  fecha_aceptacion?: string;
+  nombre_director_th?: string;
+  puesto_director_th?: string;
+  nombre_autoridad?: string;
+  puesto_autoridad?: string;
+  elaborado_por?: string;
+  puesto_elaborado?: string;
+  revisado_por?: string;
+  puesto_revisado?: string;
+  registrado_por?: string;
+  puesto_registrado?: string;
+  [key: string]: any;
 }
 
 export interface ApiError {

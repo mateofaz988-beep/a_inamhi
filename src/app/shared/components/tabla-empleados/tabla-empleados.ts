@@ -3,6 +3,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
+import { environment } from '../../../../environments/environment';
 import Swal from 'sweetalert2';
 
 import * as XLSX from 'xlsx-js-style';
@@ -21,7 +22,7 @@ export class TablaEmpleadosComponent implements OnInit {
   editIndex: number | null = null;
   loading = false;
 
-  private readonly API_URL = 'http://localhost:5000/api/personal';
+  private readonly API_URL = `${String(environment.apiUrl || 'http://localhost:5000/api').replace(/\/$/, '')}/personal`;
 
   constructor(
     private http: HttpClient,

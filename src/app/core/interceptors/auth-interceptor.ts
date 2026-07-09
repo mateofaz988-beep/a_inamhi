@@ -11,11 +11,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const token = localStorage.getItem('auth_token');
 
-  // Agregar header Authorization si existe token
+  // Agregar header Authorization si existe token.
+  // El backend (decodificar_token en app.py) exige el prefijo "Bearer ";
+  // este interceptor corre sobre TODAS las peticiones y su setHeaders
+  // sobrescribe cualquier Authorization que un componente haya fijado a
+  // mano, así que si aquí falta el prefijo, ningún endpoint protegido del
+  // backend puede autenticar a nadie, sin importar lo que haga cada
+  // componente individualmente.
   if (token) {
     req = req.clone({
       setHeaders: {
-        Authorization: token
+        Authorization: `Bearer ${token}`
       }
     });
   }

@@ -29,6 +29,9 @@ export class AuthService {
         if (response && response.token) {
           localStorage.setItem('auth_token', response.token);
           localStorage.setItem('user_role', response.role);
+          if (response.usuario) {
+            localStorage.setItem('auth_user', response.usuario);
+          }
         } else {
           throw new Error('Respuesta inválida del servidor');
         }
@@ -70,26 +73,15 @@ export class AuthService {
   // 🔑 TOKEN PARA HEADERS
   // =========================
   getToken(): string {
-    return localStorage.getItem('auth_token') || '';
+    const token = localStorage.getItem('auth_token');
+    return token ? `Bearer ${token}` : '';
   }
 
   // =========================
   // 👤 OBTENER USUARIO
   // =========================
   getUser(): string {
-    const user = localStorage.getItem('auth_user');
-
-    if (user) {
-      return user;
-    }
-
-    const token = this.getToken();
-
-    if (token && token.startsWith('tk_')) {
-      return token.replace('tk_', '');
-    }
-
-    return '';
+    return localStorage.getItem('auth_user') || '';
   }
 
   // =========================

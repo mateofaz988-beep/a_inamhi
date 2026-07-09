@@ -12,6 +12,7 @@ import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
 
 import { AuthService } from '../../core/services/auth';
+import { environment } from '../../../environments/environment';
 
 interface PersonaHistorial {
   cedula: string;
@@ -37,6 +38,7 @@ interface AccionHistorial {
   es_nativo?: boolean | number;
   estado?: string | null;
   estado_documento?: string | null;
+  datos_formulario?: any;
 }
 
 interface FirmaDocumento {
@@ -68,7 +70,9 @@ interface FormularioSubir {
   styleUrls: ['./historial-acciones.scss'],
 })
 export class HistorialAccionesComponent implements OnDestroy {
-  private readonly API_URL = 'http://localhost:5000/api';
+  private readonly API_URL = String(
+    environment.apiUrl || 'http://localhost:5000/api',
+  ).replace(/\/$/, '');
   private readonly BASE = `${this.API_URL}/historial-acciones`;
   private readonly FIRMAS_API = `${this.API_URL}/acciones-personal`;
 

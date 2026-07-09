@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../core/services/auth';
+import { environment } from '../../../environments/environment';
 
 interface Autoridad {
   id:                  number;
@@ -24,7 +25,7 @@ interface Autoridad {
 })
 export class AutoridadesComponent implements OnInit {
 
-  private readonly API = 'http://localhost:5000/api/autoridades';
+  private readonly API = `${String(environment.apiUrl || 'http://localhost:5000/api').replace(/\/$/, '')}/autoridades`;
 
   cargando   = false;
   guardando  = false;

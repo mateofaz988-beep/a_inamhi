@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { AuthService } from '../../core/services/auth';
+import { environment } from '../../../environments/environment';
 
 
 @Component({
@@ -13,7 +14,7 @@ import { AuthService } from '../../core/services/auth';
 })
 export class FuncionariosDesvinculadosComponent implements OnInit {
 
-  private readonly API_URL = 'http://localhost:5000/api/personal/pasivo';
+  private readonly API_URL = `${String(environment.apiUrl || 'http://localhost:5000/api').replace(/\/$/, '')}/personal/pasivo`;
 
   funcionariosPasivos: any[] = [];
   funcionariosFiltrados: any[] = [];

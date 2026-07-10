@@ -16,10 +16,10 @@ SECCIONES_FIRMA = {
         "etiqueta": "Elaborado por",
         "posicion": {
             "pagina": 1,
-            "x1": 40,
-            "y1": 55,
-            "x2": 200,
-            "y2": 125
+            "x1": 45,
+            "y1": 490,
+            "x2": 205,
+            "y2": 560
         }
     },
     "REVISADO_POR": {
@@ -28,10 +28,10 @@ SECCIONES_FIRMA = {
         "etiqueta": "Revisado por",
         "posicion": {
             "pagina": 1,
-            "x1": 220,
-            "y1": 55,
-            "x2": 380,
-            "y2": 125
+            "x1": 225,
+            "y1": 490,
+            "x2": 395,
+            "y2": 560
         }
     },
     "REGISTRADO_POR": {
@@ -40,10 +40,10 @@ SECCIONES_FIRMA = {
         "etiqueta": "Registrado por",
         "posicion": {
             "pagina": 1,
-            "x1": 400,
-            "y1": 55,
-            "x2": 560,
-            "y2": 125
+            "x1": 415,
+            "y1": 490,
+            "x2": 585,
+            "y2": 560
         }
     },
     "DIRECTOR_TALENTO_HUMANO": {
@@ -53,9 +53,9 @@ SECCIONES_FIRMA = {
         "posicion": {
             "pagina": 0,
             "x1": 50,
-            "y1": 35,
+            "y1": 54,
             "x2": 210,
-            "y2": 105
+            "y2": 124
         }
     },
     "AUTORIDAD_NOMINADORA": {
@@ -65,9 +65,9 @@ SECCIONES_FIRMA = {
         "posicion": {
             "pagina": 0,
             "x1": 340,
-            "y1": 35,
+            "y1": 54,
             "x2": 500,
-            "y2": 105
+            "y2": 124
         }
     },
     "ACEPTACION_SERVIDOR": {
@@ -77,9 +77,9 @@ SECCIONES_FIRMA = {
         "posicion": {
             "pagina": 0,
             "x1": 300,
-            "y1": 115,
+            "y1": 138,
             "x2": 460,
-            "y2": 185
+            "y2": 208
         }
     }
 }

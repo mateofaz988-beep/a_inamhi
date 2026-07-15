@@ -1699,16 +1699,30 @@ def generar_accion():
             if tipo_norm not in ('', 'OTRO'):
                 escribir_celda(hoja, 'L16', tipo_raw.upper())
 
+        # ── ESPECIFICACIÓN DE LO SELECCIONADO (G20:O20) ───────────────────────
+        escribir_celda(hoja, 'G20', datos.get('especificacion_seleccion', ''))
+
+        # ── DECLARACIÓN JURADA (número 2 del art. 3 RLOSEP) — M21:O21 ────────
+        declaracion = _norm(datos.get('declaracion_jurada', ''))
+        if declaracion in ('SI', 'SÍ'):
+            escribir_celda(hoja, 'M21', 'SI')
+        elif declaracion in ('NO APLICA', 'NO_APLICA'):
+            escribir_celda(hoja, 'M21', 'NO APLICA')
+
         # ── MOTIVACIÓN / BASE LEGAL ───────────────────────────────────────────
         # A24:O24 = celda grande de motivación
         escribir_celda(hoja, 'A24', datos.get('motivo_legal', ''))
 
         # ── SITUACIÓN ACTUAL ──────────────────────────────────────────────────
         proc_actual  = datos.get('proceso_institucional_actual', '')
-        unidad_act   = datos.get('unidad_administrativa', '')
+        unidad_act   = (
+            datos.get('unidad_actual', '')
+            or datos.get('unidad', '')
+            or datos.get('unidad_administrativa', '')
+        )
         lugar_act    = datos.get('lugar_trabajo_actual', '') or datos.get('ciudad', '')
         denom_act    = datos.get('denominacion_actual', '')  or datos.get('cargo', '')
-        grupo        = datos.get('grupo_ocupacional', '')
+        grupo_act    = datos.get('grupo_actual', '') or datos.get('grupo_ocupacional', '')
         partida_act  = datos.get('partida_actual', '')
 
         nivel_gest_act  = datos.get('nivel_gestion_actual', '')
@@ -1719,15 +1733,20 @@ def generar_accion():
         escribir_celda(hoja, 'B32', unidad_act)
         escribir_celda(hoja, 'B34', lugar_act)
         escribir_celda(hoja, 'B36', denom_act)
-        escribir_celda(hoja, 'B38', grupo)
+        escribir_celda(hoja, 'B38', grupo_act)
         # B40 y B42 son fórmulas VLOOKUP sobre B38 — se recalculan solas al abrir Excel
         escribir_celda(hoja, 'B44', partida_act)
 
         # ── SITUACIÓN PROPUESTA (hereda actual si no se especifica) ───────────
         proc_prop   = datos.get('proceso_institucional_propuesta', '') or proc_actual
-        unidad_prop = datos.get('unidad_administrativa_propuesta', '') or unidad_act
+        unidad_prop = (
+            datos.get('unidad_propuesta', '')
+            or datos.get('unidad_administrativa_propuesta', '')
+            or unidad_act
+        )
         lugar_prop  = datos.get('lugar_trabajo_propuesta', '')  or lugar_act
         denom_prop  = datos.get('denominacion_propuesta', '')   or denom_act
+        grupo_prop  = datos.get('grupo_propuesta', '') or grupo_act
         partida_prop = datos.get('partida_propuesta', '')       or partida_act
 
         escribir_celda(hoja, 'J28', proc_prop)
@@ -1735,7 +1754,7 @@ def generar_accion():
         escribir_celda(hoja, 'J32', unidad_prop)
         escribir_celda(hoja, 'J34', lugar_prop)
         escribir_celda(hoja, 'J36', denom_prop)
-        escribir_celda(hoja, 'J38', grupo)
+        escribir_celda(hoja, 'J38', grupo_prop)
         # J40 y J42 son fórmulas VLOOKUP sobre J38 — se recalculan solas al abrir Excel
         escribir_celda(hoja, 'J44', partida_prop)
 
@@ -1762,8 +1781,16 @@ def generar_accion():
         escribir_celda(hoja, 'C62', datos.get('puesto_responsable_th', ''))
 
         # ── ACEPTACIÓN DEL SERVIDOR ───────────────────────────────────────────
-        # C74 normalmente tiene fórmula =A6&" "&I6 — sobreescribimos con nombre completo
-        escribir_celda(hoja, 'C74', datos.get('aceptacion_servidor', ''))
+        # C74 normalmente tiene fórmula =A6&" "&I6 — sobreescribimos con nombre completo.
+        # Si no llega un valor explícito, se reconstruye a partir de apellidos+nombres
+        # para no dejar la celda en blanco (la fórmula original se pierde al escribir).
+        nombre_aceptacion = (
+            datos.get('aceptacion_servidor', '')
+            or datos.get('nombres_completos', '')
+            or nombre_posesion
+        )
+        if nombre_aceptacion:
+            escribir_celda(hoja, 'C74', nombre_aceptacion)
         # C75 normalmente tiene fórmula =+K5 — sobreescribimos con la fecha de aceptación
         fecha_acep = parse_fecha(
             datos.get('fecha_aceptacion', '') or datos.get('fecha_elaboracion', ''),
@@ -2761,15 +2788,29 @@ def _generar_excel_documento(datos, excel_dir, numero_accion):
         if tipo_norm not in ('', 'OTRO'):
             escribir_celda(hoja, 'L16', tipo_raw.upper())
 
+    # Especificación de lo seleccionado (G20:O20)
+    escribir_celda(hoja, 'G20', datos.get('especificacion_seleccion', ''))
+
+    # Declaración jurada (número 2 del art. 3 RLOSEP) — M21:O21
+    declaracion = _norm(datos.get('declaracion_jurada', ''))
+    if declaracion in ('SI', 'SÍ'):
+        escribir_celda(hoja, 'M21', 'SI')
+    elif declaracion in ('NO APLICA', 'NO_APLICA'):
+        escribir_celda(hoja, 'M21', 'NO APLICA')
+
     # Motivación
     escribir_celda(hoja, 'A24', datos.get('motivo_legal', ''))
 
     # Situación actual
     proc_actual = datos.get('proceso_institucional_actual', '')
-    unidad_act = datos.get('unidad', datos.get('unidad_administrativa', ''))
+    unidad_act = (
+        datos.get('unidad_actual', '')
+        or datos.get('unidad', '')
+        or datos.get('unidad_administrativa', '')
+    )
     lugar_act = datos.get('lugar_trabajo_actual', '') or datos.get('ciudad', '')
     denom_act = datos.get('denominacion_actual', '') or datos.get('cargo', '')
-    grupo = datos.get('grupo_ocupacional', '')
+    grupo_act = datos.get('grupo_actual', '') or datos.get('grupo_ocupacional', '')
     partida_act = datos.get('partida_actual', '')
     nivel_gest_act = datos.get('nivel_gestion_actual', '')
 
@@ -2778,15 +2819,20 @@ def _generar_excel_documento(datos, excel_dir, numero_accion):
     escribir_celda(hoja, 'B32', unidad_act)
     escribir_celda(hoja, 'B34', lugar_act)
     escribir_celda(hoja, 'B36', denom_act)
-    escribir_celda(hoja, 'B38', grupo)
+    escribir_celda(hoja, 'B38', grupo_act)
     escribir_celda(hoja, 'B44', partida_act)
 
     # Situación propuesta
     nivel_gest_prop = datos.get('nivel_gestion_propuesta', '') or nivel_gest_act
     proc_prop = datos.get('proceso_institucional_propuesta', '') or proc_actual
-    unidad_prop = datos.get('unidad_propuesta', datos.get('unidad_administrativa_propuesta', '')) or unidad_act
+    unidad_prop = (
+        datos.get('unidad_propuesta', '')
+        or datos.get('unidad_administrativa_propuesta', '')
+        or unidad_act
+    )
     lugar_prop = datos.get('lugar_trabajo_propuesta', '') or lugar_act
     denom_prop = datos.get('denominacion_propuesta', '') or denom_act
+    grupo_prop = datos.get('grupo_propuesta', '') or grupo_act
     partida_prop = datos.get('partida_propuesta', '') or partida_act
 
     escribir_celda(hoja, 'J28', proc_prop)
@@ -2794,7 +2840,7 @@ def _generar_excel_documento(datos, excel_dir, numero_accion):
     escribir_celda(hoja, 'J32', unidad_prop)
     escribir_celda(hoja, 'J34', lugar_prop)
     escribir_celda(hoja, 'J36', denom_prop)
-    escribir_celda(hoja, 'J38', grupo)
+    escribir_celda(hoja, 'J38', grupo_prop)
     escribir_celda(hoja, 'J44', partida_prop)
 
     # Posesión del puesto
@@ -2815,7 +2861,15 @@ def _generar_excel_documento(datos, excel_dir, numero_accion):
     escribir_celda(hoja, 'C62', datos.get('puesto_responsable_th', ''))
 
     # Aceptación del servidor
-    escribir_celda(hoja, 'C74', datos.get('aceptacion_servidor', ''))
+    # C74 normalmente tiene fórmula =A6&" "&I6 — si no llega un valor explícito,
+    # se reconstruye desde apellidos+nombres para no dejar la celda en blanco.
+    nombre_aceptacion = (
+        datos.get('aceptacion_servidor', '')
+        or datos.get('nombres_completos', '')
+        or nombre_posesion
+    )
+    if nombre_aceptacion:
+        escribir_celda(hoja, 'C74', nombre_aceptacion)
     fecha_acep = parse_fecha(
         datos.get('fecha_aceptacion', '') or datos.get('fecha_elaboracion', ''),
         como_texto=True

@@ -120,6 +120,8 @@ export interface FormularioAccionPersonal {
   desde: string;
   hasta: string;
   accion_personal: string;
+  especificacion_seleccion: string;
+  declaracion_jurada: string;
   motivo_legal: string;
 
   proceso_institucional_actual: string;
@@ -182,7 +184,6 @@ type CampoPuestoResponsable =
 })
 export class SolicitudPermisosComponent implements OnInit {
   catalogoBaseLegal: BaseLegalItem[] = [];
-  baseLegalBloqueada: boolean = false;
 
   private readonly apiBaseUrl = String(
     environment.apiUrl || 'http://localhost:5000/api'
@@ -519,7 +520,6 @@ export class SolicitudPermisosComponent implements OnInit {
   onAccionPersonalChange(accion: string): void {
     if (!accion || this.normalizarTexto(accion) === 'OTRO') {
       this.formulario.motivo_legal = '';
-      this.baseLegalBloqueada = false;
       return;
     }
 
@@ -529,13 +529,8 @@ export class SolicitudPermisosComponent implements OnInit {
       item => this.normalizarTexto(item.tipo_movimiento) === accionNormalizada
     );
 
-    if (baseEncontrada) {
-      this.formulario.motivo_legal = baseEncontrada.base_legal;
-      this.baseLegalBloqueada = true;
-    } else {
-      this.formulario.motivo_legal = '';
-      this.baseLegalBloqueada = false;
-    }
+    // Autocompleta como punto de partida; el usuario puede editarla o ampliarla libremente.
+    this.formulario.motivo_legal = baseEncontrada ? baseEncontrada.base_legal : '';
   }
 
   async consultarCedula(): Promise<void> {
@@ -1430,6 +1425,8 @@ export class SolicitudPermisosComponent implements OnInit {
       desde: fechaActual,
       hasta: fechaActual,
       accion_personal: '',
+      especificacion_seleccion: '',
+      declaracion_jurada: '',
       motivo_legal: '',
 
       proceso_institucional_actual: '',
@@ -1505,6 +1502,10 @@ export class SolicitudPermisosComponent implements OnInit {
 
     if (!f.accion_personal.trim()) {
       return 'Seleccione el tipo de acción de personal.';
+    }
+
+    if (!f.declaracion_jurada.trim()) {
+      return 'Indique si presentó la declaración jurada (número 2 del art. 3 RLOSEP) o si no aplica.';
     }
 
     if (!f.proceso_institucional_actual.trim()) {
@@ -1621,6 +1622,8 @@ export class SolicitudPermisosComponent implements OnInit {
       // ── Tipo de acción — dos alias: el nuevo y el que usa el backend ──────
       accion_personal: f.accion_personal,
       tipo_accion:     f.accion_personal.toUpperCase(),
+      especificacion_seleccion: f.especificacion_seleccion.trim(),
+      declaracion_jurada:       f.declaracion_jurada,
       motivo_legal:    f.motivo_legal || '',
 
       // ── Situación actual ──────────────────────────────────────────────────
@@ -2196,4 +2199,3 @@ export class SolicitudPermisosComponent implements OnInit {
     this.cdr.markForCheck();
   }
 }
-

@@ -4,6 +4,9 @@ import { RouterModule, Routes } from '@angular/router';
 // GUARD FUNCIONAL
 import { adminGuard } from '../../core/guards/admin-guard';
 
+// LAYOUT
+import { AdminLayoutComponent } from './layout/admin-layout/admin-layout';
+
 // PAGES
 import { DashboardComponent } from './pages/dashboard/dashboard';
 
@@ -18,72 +21,58 @@ import { PersonalEstructuraComponent } from '../../components/personal-estructur
 import { HistorialAccionesComponent } from '../../components/historial-acciones/historial-acciones';
 
 const routes: Routes = [
-
-  {
-    path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [adminGuard]
-  },
-
-  {
-    path: 'nuevo-funcionario',
-    component: NuevoFuncionarioComponent,
-    canActivate: [adminGuard]
-  },
-
-  {
-    path: 'funcionarios-desvinculados',
-    component: FuncionariosDesvinculadosComponent,
-    canActivate: [adminGuard]
-  },
-
-  {
-    path: 'auditoria',
-    component: AuditoriaComponent,
-    canActivate: [adminGuard]
-  },
-
-  {
-    path: 'solicitud-permisos',
-    component: SolicitudPermisosComponent,
-    canActivate: [adminGuard]
-  },
-
-  {
-    path: 'usuarios',
-    component: UsuariosComponent,
-    canActivate: [adminGuard]
-  },
-
-  {
-    path: 'autoridades',
-    component: AutoridadesComponent,
-    canActivate: [adminGuard]
-  },
-
-  {
-    path: 'personal-estructura',
-    component: PersonalEstructuraComponent,
-    canActivate: [adminGuard]
-  },
-
-  {
-    path: 'historial-acciones',
-    component: HistorialAccionesComponent,
-    canActivate: [adminGuard]
-  },
-
   {
     path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full'
+    component: AdminLayoutComponent,
+    canActivate: [adminGuard],
+    children: [
+      {
+        path: 'dashboard',
+        component: DashboardComponent
+      },
+      {
+        path: 'nuevo-funcionario',
+        component: NuevoFuncionarioComponent
+      },
+      {
+        path: 'funcionarios-desvinculados',
+        component: FuncionariosDesvinculadosComponent
+      },
+      {
+        path: 'auditoria',
+        component: AuditoriaComponent
+      },
+      {
+        path: 'solicitud-permisos',
+        component: SolicitudPermisosComponent
+      },
+      {
+        path: 'usuarios',
+        component: UsuariosComponent
+      },
+      {
+        path: 'autoridades',
+        component: AutoridadesComponent
+      },
+      {
+        path: 'personal-estructura',
+        component: PersonalEstructuraComponent
+      },
+      {
+        path: 'historial-acciones',
+        component: HistorialAccionesComponent
+      },
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      }
+    ]
   },
-
   {
     path: '**',
     redirectTo: 'dashboard'
   }
-
 ];
 
 @NgModule({

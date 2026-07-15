@@ -295,6 +295,41 @@
           </div>
         </div>
 
+        <div class="control-grid mt-3">
+          <div class="field field-full">
+            <label for="especificacion_seleccion">
+              En caso de requerir especificación de lo seleccionado
+            </label>
+            <input
+              id="especificacion_seleccion"
+              name="especificacion_seleccion"
+              type="text"
+              [(ngModel)]="formulario.especificacion_seleccion"
+              maxlength="250"
+              placeholder="Detalle opcional sobre la acción seleccionada"
+            >
+          </div>
+
+          <div class="field">
+            <label for="declaracion_jurada">
+              ¿Presentó la declaración jurada? (número 2 del art. 3 RLOSEP)
+              <span class="required-mark" aria-hidden="true">*</span>
+            </label>
+            <select
+              id="declaracion_jurada"
+              name="declaracion_jurada"
+              [(ngModel)]="formulario.declaracion_jurada"
+              #declaracionJuradaModel="ngModel"
+              required
+              [class.is-invalid]="declaracionJuradaModel.invalid && declaracionJuradaModel.touched"
+            >
+              <option value="">Seleccione una opción</option>
+              <option value="SI">Sí</option>
+              <option value="NO_APLICA">No aplica</option>
+            </select>
+          </div>
+        </div>
+
         <div class="field mt-3">
           <label for="motivo_legal">
             Base Legal / Explicación
@@ -308,10 +343,11 @@
             required
             rows="3"
             [class.is-invalid]="motivoLegalModel.invalid && motivoLegalModel.touched"
-            [readonly]="baseLegalBloqueada"
-            [class.readonly-control]="baseLegalBloqueada"
             placeholder="Seleccione un tipo de acción o escriba la base legal..."
           ></textarea>
+          <small class="field-help">
+            Se autocompleta según el tipo de acción, pero puede editarla o ampliarla libremente.
+          </small>
         </div>
       </fieldset>
 
@@ -975,7 +1011,20 @@
               <dt>Rige hasta</dt>
               <dd>{{ formatearFechaVisual(formulario.hasta) || '—' }}</dd>
             </div>
+            <div class="preview-item">
+              <dt>Declaración jurada</dt>
+              <dd>
+                {{ formulario.declaracion_jurada === 'SI' ? 'Sí'
+                  : formulario.declaracion_jurada === 'NO_APLICA' ? 'No aplica'
+                  : '—' }}
+              </dd>
+            </div>
           </dl>
+
+          <div class="preview-base-legal mt-3" *ngIf="formulario.especificacion_seleccion">
+            <dt>Especificación de lo seleccionado</dt>
+            <dd>{{ formulario.especificacion_seleccion }}</dd>
+          </div>
 
           <div class="preview-base-legal mt-3" *ngIf="formulario.motivo_legal">
             <dt>Base Legal Aplicada</dt>
@@ -1434,3 +1483,4 @@
     </button>
   </div>
 </section>
+

@@ -1,0 +1,88 @@
+<div class="dashboard-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sidebar-brand">
+      <img src="assets/logo2-.png" class="sidebar-logo">
+      <div class="brand-text">
+        <h2></h2>
+        <span></span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <button class="nav-item" routerLink="/admin/dashboard" routerLinkActive="active">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Inicio</span>
+      </button>
+
+      <button class="nav-item" routerLink="/admin/autoridades" routerLinkActive="active">
+        <i class="bi bi-person-badge-fill"></i>
+        <span>Autoridades</span>
+      </button>
+
+      <button class="nav-item" routerLink="/admin/personal-estructura" routerLinkActive="active">
+        <i class="bi bi-people-fill"></i>
+        <span>Personal RRHH</span>
+      </button>
+
+      <button class="nav-item" routerLink="/admin/nuevo-funcionario" routerLinkActive="active">
+        <i class="bi bi-person-plus-fill"></i>
+        <span>Nuevo Funcionario</span>
+      </button>
+
+      <button class="nav-item" routerLink="/admin/historial-acciones" routerLinkActive="active">
+        <i class="bi bi-archive-fill"></i>
+        <span>Historial AP</span>
+      </button>
+
+      <button class="nav-item" routerLink="/admin/solicitud-permisos" routerLinkActive="active">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>Solicitudes</span>
+      </button>
+
+      <button class="nav-item" routerLink="/admin/auditoria" routerLinkActive="active">
+        <i class="bi bi-clock-history"></i>
+        <span>Auditoría</span>
+      </button>
+
+      <button class="nav-item" routerLink="/admin/usuarios" routerLinkActive="active">
+        <i class="bi bi-people-fill"></i>
+        <span>Usuarios</span>
+      </button>
+
+      <button class="nav-item" routerLink="/admin/funcionarios-desvinculados" routerLinkActive="active">
+        <i class="bi bi-person-dash-fill"></i>
+        <span>Desvinculados</span>
+      </button>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">
+          <i class="bi bi-person-circle"></i>
+        </div>
+
+        <div>
+          <strong>{{ authService.getUser() || 'Usuario' }}</strong>
+          <span>{{ authService.getRole() || 'Sin rol' }}</span>
+        </div>
+      </div>
+
+      <button class="logout-btn" (click)="logout()">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Cerrar sesión</span>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="dashboard-main">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>
